@@ -1,17 +1,4 @@
 repos:
-- repo: local
-  hooks:
-    - id: poetry-update
-      name: Poetry Update
-      entry: poetry update
-      language: system
-      # Optional: specify types or files to trigger this hook
-      # files: pyproject.toml
-      # Always run this hook (not recommended for update; shown for illustrative purposes):
-      always_run: true
-      # Optional: prevent commit if the lock file changes
-      stages: [pre-commit]
-      pass_filenames: false
 -   repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v3.2.0
     hooks:
