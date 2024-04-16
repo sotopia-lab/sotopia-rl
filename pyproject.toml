@@ -1,0 +1,44 @@
+[tool.poetry]
+name = "sotopia-rl"
+version = "0.0.1"
+description = "Online RL framework for sotopia social agents."
+authors = ["Haofei Yu <yuhaofei44@gmail.com>"]
+license = "MIT License"
+readme = "README.md"
+
+
+[tool.poetry.dependencies]
+python = ">=3.8, <3.12"
+mypy = "^1.8.0"
+pydantic = "^1.9.0"
+
+
+[tool.poetry.group.dev.dependencies]
+pre-commit = "*"
+nbmake = "*"
+types-setuptools = "*"
+
+[tool.poetry.group.test.dependencies]
+pytest = "*"
+pytest-asyncio = "*"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.mypy]
+mypy_path = "stubs"
+strict = true
+plugins = [
+    "pydantic.mypy"
+]
+
+[[tool.mypy.overrides]]
+module = "transformers.*"
+ignore_missing_imports = true
+
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
