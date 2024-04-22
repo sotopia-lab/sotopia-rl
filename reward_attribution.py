@@ -67,8 +67,8 @@ def generate_single_reward_prompt(conversation, goal, score, agent):
     prompt += "Conversation:\n"
     key_utterance_dict = OrderedDict()
     for i, (speaker, utterance) in enumerate(conversation):
-        prompt += f"Utterance {i//2 + 1} by {speaker}: {utterance}\n"
-        key_utterance_dict[f"Utterance {i//2 + 1} by {speaker}"] = [utterance, -1]
+        prompt += f"Utterance {i//2} by {speaker}: {utterance}\n"
+        key_utterance_dict[f"Utterance {i//2} by {speaker}"] = [utterance, -1]
     prompt +="\n" + get_epilogue_instructions(agent)
     return prompt, key_utterance_dict
 
@@ -96,7 +96,7 @@ for episode in tqdm(data):
         for key in key_prompt_dict:
             if agent in key and key in reward_scores:
                 key_prompt_dict[key][1] = reward_scores[key]
-        results.append({"episode_id": episode["episode_id"], "scenario": episode["scenario"], "agent": agent, "goal": goals[agent], "rewarded_utterances": key_prompt_dict, "is_first_speaker": agent == agents[0]})
+        results.append({"episode_id": episode["episode_id"], "scenario": episode["scenario"], "agent": agent, "goal": goals[agent], "score": episode["scores"][agent], "rewarded_utterances": key_prompt_dict, "is_first_speaker": agent == agents[0]})
         
         with open("openai_log_reward_attribution.jsonl", 'a') as f:
             f.write(json.dumps(results[-1]) + "\n")
