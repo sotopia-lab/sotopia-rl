@@ -86,12 +86,12 @@ with open("openai_log_reward_attribution.jsonl", 'w') as f:
 
 print(len(data))
 results = []
-for episode in tqdm(data[1:]):
+for episode in tqdm(data):
     conversation, goals = parse_conversation(episode)
     agents = list(goals.keys())
     for agent in agents:
         prompt, key_prompt_dict  = generate_single_reward_prompt(conversation, goals[agent], episode['scores'][agent], agent)
-        import pdb; pdb.set_trace()
+        # import pdb; pdb.set_trace()
         reward_scores = json.loads(assign_rewards_for_conversation(prompt))
         for key in key_prompt_dict:
             if agent in key and key in reward_scores:
