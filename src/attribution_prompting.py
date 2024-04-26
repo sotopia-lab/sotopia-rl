@@ -3,6 +3,7 @@ import os
 from collections import OrderedDict
 from pprint import pprint
 
+import jsonlines
 from openai import OpenAI
 from tqdm import tqdm
 
@@ -87,12 +88,10 @@ def assign_attributions_for_conversation(prompt):
 
 
 if __name__ == "__main__":
-    # Main code execution with modified approach
-    with open("example_episodes_with_scores.jsonl", "r") as f:
-        data = [json.loads(line, object_hook=OrderedDict) for line in f]
-
-    with open("openai_log_attribution.jsonl", "w") as f:
-        f.write("")
+    with jsonlines.open(
+        "../data/example_episodes_with_scores.jsonl", "r"
+    ) as reader:
+        data = list(reader)
 
     print(len(data))
     results = []
@@ -104,9 +103,6 @@ if __name__ == "__main__":
                 conversation, goals[agent], episode["scores"][agent], agent
             )
             attribution_scores = assign_attributions_for_conversation(prompt)
-            import pdb
-
-            pdb.set_trace()
             for key in key_prompt_dict:
                 if agent in key and key in attribution_scores:
                     key_prompt_dict[key][1] = attribution_scores[key]
@@ -116,10 +112,13 @@ if __name__ == "__main__":
                     "scenario": episode["scenario"],
                     "agent": agent,
                     "goal": goals[agent],
-                    "attributioned_utterances": key_prompt_dict,
+                    "attributed_utterances": key_prompt_dict,
                     "is_first_speaker": agent == agents[0],
+                    "goal_score": episode["scores"][agent],
                 }
             )
 
-            with open("openai_log_attribution_attribution.jsonl", "a") as f:
-                f.write(json.dumps(results[-1]) + "\n")
+            with jsonlines.open(
+                "../data/openai_log_attribution.jsonl", "w"
+            ) as writer:
+                writer.write_all(results)
