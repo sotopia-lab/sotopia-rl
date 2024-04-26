@@ -1,3 +1,3 @@
 openai_api.key
-*.jsonl
+episodes.jsonl
 credentials.json
