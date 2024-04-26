@@ -7,8 +7,8 @@ from openai import OpenAI
 from tqdm import tqdm
 
 # Set environment variables for OpenAI API
-with open("openai_api.key", "r") as f:
-    os.environ["OPENAI_API_KEY"] = f.readline().strip()
+# with open("openai_api.key", "r") as f:
+#    os.environ["OPENAI_API_KEY"] = f.readline().strip()
 
 client = OpenAI()
 
@@ -45,29 +45,29 @@ def parse_conversation(episode):
 
 
 PRELOGUE_INSTRUCTIONS = """
-For this task, you will receive the dialogue history between two conversational agents, the social goal of one of the agents, and the final reward score recieved by this agent. Your objective is to assess how much each of the agent's utterance (marked by the agent's name and the utterance number) contributed to the final reward score.
+For this task, you will receive the dialogue history between two conversational agents, the social goal of one of the agents, and the final goal achieving score recieved by this agent. Your objective is to assess how much each of the agent's utterance (marked by the agent's name and the utterance number) contributed to the final goal achieving score.
 """
 
 
 def get_epilogue_instructions(agent):
     return f"""
-Please provide a score between 0 and 10 for each of the utterances made by {agent}. If you believe an utterance had no impact on the final reward score, please provide a score of 0. If you believe an utterance had a significant impact on the final reward score, please provide a score of 10. If you believe an utterance had a moderate impact on the final reward score, please provide a score of 5. You can provide any score between 0 and 10 based on your judgment.
+Please provide a score between 0 and 3 for each of the utterances made by {agent}. If you believe an utterance had no impact on the final goal achieving score, please provide a score of 0. If you believe an utterance had a significant impact on the final goal achieving score, please provide a score of 3. If you believe an utterance had a moderate impact on the final goal achieving score, please provide a score of 1 or 2. You can provide any score between 0 and 3 based on your judgment.
 
 Please format your response as JSON with the following structure:
 {{
-    "Utterance 1 by {agent}": 5,
-    "Utterance 2 by {agent}": 7,
+    "Utterance 1 by {agent}": 0,
+    "Utterance 2 by {agent}": 2,
     ...
 }}
 The utterance numbers should correspond to their order in the conversation. Each score should reflect how much the utterance contributed to achieving the agent's goals.
 """
 
 
-def generate_single_reward_prompt(conversation, goal, score, agent):
-    """Generate a single prompt for GPT based on the entire conversation, agent's goals, and final reward."""
+def generate_single_attribution_prompt(conversation, goal, score, agent):
+    """Generate a single prompt for GPT based on the entire conversation, agent's goals, and final goal achieving score."""
     prompt = f"{PRELOGUE_INSTRUCTIONS}\n\n"
     prompt += f"Agent Goal: {goal}\n\n"
-    prompt += f"Final Reward Received: {score}\n\n"
+    prompt += f"Final goal achieving score: {score}\n\n"
     prompt += "Conversation:\n"
     key_utterance_dict = OrderedDict()
     for i, (speaker, utterance) in enumerate(conversation):
@@ -80,10 +80,10 @@ def generate_single_reward_prompt(conversation, goal, score, agent):
     return prompt, key_utterance_dict
 
 
-def assign_rewards_for_conversation(prompt):
-    """Assign rewards to the entire conversation based on a GPT response."""
+def assign_attributions_for_conversation(prompt):
+    """Assign attributions to the entire conversation based on a GPT response."""
     response = openai_call(prompt)
-    return response
+    return json.loads(response)
 
 
 if __name__ == "__main__":
@@ -91,7 +91,7 @@ if __name__ == "__main__":
     with open("example_episodes_with_scores.jsonl", "r") as f:
         data = [json.loads(line, object_hook=OrderedDict) for line in f]
 
-    with open("openai_log_reward_attribution.jsonl", "w") as f:
+    with open("openai_log_attribution.jsonl", "w") as f:
         f.write("")
 
     print(len(data))
@@ -100,26 +100,26 @@ if __name__ == "__main__":
         conversation, goals = parse_conversation(episode)
         agents = list(goals.keys())
         for agent in agents:
-            prompt, key_prompt_dict = generate_single_reward_prompt(
+            prompt, key_prompt_dict = generate_single_attribution_prompt(
                 conversation, goals[agent], episode["scores"][agent], agent
             )
+            attribution_scores = assign_attributions_for_conversation(prompt)
             import pdb
 
             pdb.set_trace()
-            reward_scores = json.loads(assign_rewards_for_conversation(prompt))
             for key in key_prompt_dict:
-                if agent in key and key in reward_scores:
-                    key_prompt_dict[key][1] = reward_scores[key]
+                if agent in key and key in attribution_scores:
+                    key_prompt_dict[key][1] = attribution_scores[key]
             results.append(
                 {
                     "episode_id": episode["episode_id"],
                     "scenario": episode["scenario"],
                     "agent": agent,
                     "goal": goals[agent],
-                    "rewarded_utterances": key_prompt_dict,
+                    "attributioned_utterances": key_prompt_dict,
                     "is_first_speaker": agent == agents[0],
                 }
             )
 
-            with open("openai_log_reward_attribution.jsonl", "a") as f:
+            with open("openai_log_attribution_attribution.jsonl", "a") as f:
                 f.write(json.dumps(results[-1]) + "\n")
