@@ -15,9 +15,10 @@ client = OpenAI()
 
 
 def openai_call(prompt):
+    model_name = "gpt-4-turbo-preview"
     """Make a call to OpenAI API with a specific prompt."""
     response = client.chat.completions.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4-turbo",
         messages=[{"role": "user", "content": prompt}],
         temperature=0.7,
         max_tokens=1024,
@@ -25,7 +26,12 @@ def openai_call(prompt):
         frequency_penalty=0,
         presence_penalty=0,
     )
-    return response.choices[0].message.content
+    # not robust
+    reply = response.choices[0].message.content
+    if "gpt-4" in model_name:
+        # extract { ... } from the response
+        reply = reply[reply.find("{") : reply.rfind("}") + 1]
+    return reply
 
 
 def parse_conversation(episode):
@@ -47,6 +53,10 @@ def parse_conversation(episode):
 
 PRELOGUE_INSTRUCTIONS = """
 For this task, you will receive the dialogue history between two conversational agents, the social goal of one of the agents, and the final goal achieving score recieved by this agent. Your objective is to assess how much each of the agent's utterance (marked by the agent's name and the utterance number) contributed to the final goal achieving score.
+
+There should be one critical utterances that decides the goal achieving score. The critical utterance should be labeled as 3. After identifying the critical utterance, you should assign 0 to the rest of the utterances.
+
+For the goal achieving score, if it is <5, the agent fails, so you need to think which utterance is the most important one that leads to the failure of the goal and assign the critical utterance that leads to the failure to be "3". If it is >=5, the agent succeeds, so you need to think which utterances is the most important one that leads to the success and assign that utterance to be "3".
 """
 
 
@@ -72,8 +82,8 @@ def generate_single_attribution_prompt(conversation, goal, score, agent):
     prompt += "Conversation:\n"
     key_utterance_dict = OrderedDict()
     for i, (speaker, utterance) in enumerate(conversation):
-        prompt += f"Utterance {i//2 + 1} by {speaker}: {utterance}\n"
-        key_utterance_dict[f"Utterance {i//2 + 1} by {speaker}"] = [
+        prompt += f"Utterance {i//2} by {speaker}: {utterance}\n"
+        key_utterance_dict[f"Utterance {i//2} by {speaker}"] = [
             utterance,
             -1,
         ]
