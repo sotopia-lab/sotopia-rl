@@ -38,7 +38,7 @@ def add_responses_to_sheet(log, form_uris):
         # print(f"Log: {log[i]}")
         print(f"Form ID: {form_id}")
         # print(f"Form schema: {form_schema}")
-        # print(f"Responses: {responses}")
+        print(f"Responses: {responses}")
         for key in log[i]['rewarded_utterances']:
             print(f"  Key: {key}")
             for item in form_schema['items']:
@@ -57,9 +57,10 @@ def add_responses_to_sheet(log, form_uris):
                         print(f"  Response ID: {response_id}")
                         if len(log[i]['rewarded_utterances'][key]) == 2:
                             log[i]['rewarded_utterances'][key].append({})
-                        log[i]['rewarded_utterances'][key][2].update({response_id: int(response_item['textAnswers']['answers'][0]['value'])})
+                        log[i]['rewarded_utterances'][key][2].update({response['lastSubmittedTime']: int(response_item['textAnswers']['answers'][0]['value'])})
                         break
         print(f"Updated log")
+        break
     return log
 
 if __name__ == "__main__":
