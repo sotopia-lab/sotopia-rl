@@ -60,7 +60,6 @@ def add_responses_to_sheet(log, form_uris):
                         log[i]['rewarded_utterances'][key][2].update({response['lastSubmittedTime']: int(response_item['textAnswers']['answers'][0]['value'])})
                         break
         print(f"Updated log")
-        break
     return log
 
 if __name__ == "__main__":
