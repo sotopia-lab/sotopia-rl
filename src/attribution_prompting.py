@@ -7,18 +7,13 @@ import jsonlines
 from openai import OpenAI
 from tqdm import tqdm
 
-# Set environment variables for OpenAI API
-# with open("openai_api.key", "r") as f:
-#    os.environ["OPENAI_API_KEY"] = f.readline().strip()
-
 client = OpenAI()
 
-
 def openai_call(prompt):
-    model_name = "gpt-4-turbo-preview"
+    model_name = "gpt-3.5-turbo"
     """Make a call to OpenAI API with a specific prompt."""
     response = client.chat.completions.create(
-        model="gpt-4-turbo",
+        model=model_name,
         messages=[{"role": "user", "content": prompt}],
         temperature=0.7,
         max_tokens=1024,
@@ -105,7 +100,7 @@ if __name__ == "__main__":
 
     print(len(data))
     results = []
-    for episode in tqdm(data[1:]):
+    for episode in tqdm(data):
         conversation, goals = parse_conversation(episode)
         agents = list(goals.keys())
         for agent in agents:
