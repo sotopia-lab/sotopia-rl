@@ -91,7 +91,6 @@ for episode in tqdm(data):
     agents = list(goals.keys())
     for agent in agents:
         prompt, key_prompt_dict  = generate_single_reward_prompt(conversation, goals[agent], episode['scores'][agent], agent)
-        # import pdb; pdb.set_trace()
         reward_scores = json.loads(assign_rewards_for_conversation(prompt))
         for key in key_prompt_dict:
             if agent in key and key in reward_scores:

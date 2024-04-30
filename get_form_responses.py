@@ -63,10 +63,6 @@ def add_responses_to_sheet(log, form_uris):
     return log
 
 if __name__ == "__main__":
-    # form_id = '1q_rV-4pvw78o_zAmsyjitMR7R7KO-EsJpRDBQFBVxY8'  # Replace 'your-form-id-here' with your actual Google Form ID
-    # responses = get_form_responses(form_id)
-    # print(get_form(form_id))
-    # print_responses(responses)
     with open("openai_log_reward_attribution.jsonl", "r") as f:
         log = [json.loads(line) for line in f]
     
