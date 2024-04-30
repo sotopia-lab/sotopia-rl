@@ -24,15 +24,25 @@ def hard_code_key(attributed_utterances):
 def build_paired_scores(
     human_attributed_utterances, prompt_attributed_utterances
 ):
+    # import pdb; pdb.set_trace()
     paired_scores = []
+    seen_3 = False
     for key in human_attributed_utterances:
         human_scores = human_attributed_utterances[key][-1]
         prompt_score = prompt_attributed_utterances[key][-1]
         if isinstance(human_scores, dict) and prompt_score != -1:
-            human_score = 0
-            for key, score in human_scores.items():
-                human_score += score
-            human_score /= len(human_scores)
+            # human_score = 0
+            # for key, score in human_scores.items():
+            #     human_score += score
+            # human_score /= len(human_scores)
+            sorted_human_scores = sorted(human_scores.items(), key=lambda x: x[0])
+            # human_score = sorted_human_scores[0][1]
+            ann0, ann1 = sorted_human_scores[0][1], sorted_human_scores[1][1]
+            if seen_3:
+                ann1 = 0
+            if ann1 == 3 and not seen_3:
+                seen_3 = True
+            human_score = ann1
             paired_scores.append((human_score, prompt_score))
     return paired_scores
 
