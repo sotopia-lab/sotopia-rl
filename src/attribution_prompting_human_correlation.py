@@ -1,8 +1,10 @@
+from typing import Any, Iterable, Iterator, Optional, TextIO, Tuple
+
 import jsonlines
 from scipy.stats import spearmanr
 
 
-def read_data():
+def read_data() -> Tuple[Iterable[Any], Iterable[Any]]:
     with jsonlines.open("../data/openai_log_attribution.jsonl", "r") as reader:
         prompting_dataset = list(reader)
 
@@ -35,7 +37,9 @@ def build_paired_scores(
             # for key, score in human_scores.items():
             #     human_score += score
             # human_score /= len(human_scores)
-            sorted_human_scores = sorted(human_scores.items(), key=lambda x: x[0])
+            sorted_human_scores = sorted(
+                human_scores.items(), key=lambda x: x[0]
+            )
             # human_score = sorted_human_scores[0][1]
             ann0, ann1 = sorted_human_scores[0][1], sorted_human_scores[1][1]
             if seen_3:

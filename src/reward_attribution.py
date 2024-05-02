@@ -6,25 +6,13 @@ from pprint import pprint
 from openai import OpenAI
 from tqdm import tqdm
 
+from utils.openai_call import openai_call
+
 # Set environment variables for OpenAI API
 with open("openai_api.key", "r") as f:
     os.environ["OPENAI_API_KEY"] = f.readline().strip()
 
 client = OpenAI()
-
-
-def openai_call(prompt):
-    """Make a call to OpenAI API with a specific prompt."""
-    response = client.chat.completions.create(
-        model="gpt-3.5-turbo",
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.7,
-        max_tokens=1024,
-        top_p=1,
-        frequency_penalty=0,
-        presence_penalty=0,
-    )
-    return response.choices[0].message.content
 
 
 def parse_conversation(episode):
