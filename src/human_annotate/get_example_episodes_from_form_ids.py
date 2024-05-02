@@ -2,7 +2,7 @@ import json
 
 from tqdm import tqdm
 
-from google_form_api_wrapper import get_form
+from human_annotate.google_form_api_wrapper import get_form
 from utils.goal_score_extract import extract_goal_scores
 
 with open("../sotopia_episodes_v1.jsonl", "r") as f:

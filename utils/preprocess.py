@@ -1,5 +1,6 @@
 import json
 from collections import OrderedDict
+from typing import Any, Dict, List, Tuple
 
 
 def parse_conversation(episode):
@@ -17,6 +18,18 @@ def parse_conversation(episode):
             continue  # Skip any unparsable utterances
         parsed_conversation.append((speaker, utterance))
     return parsed_conversation, goals
+
+
+def extract_goal_scores(data: List) -> List:
+    new_data = []
+    for episode in data:
+        scores = {}
+        for i in range(2):
+            agent = list(episode["agents_background"].keys())[i]
+            scores[agent] = episode["rewards"][i]["goal"]
+        new_episode = {**episode, "scores": scores}
+        new_data.append(new_episode)
+    return new_data
 
 
 with open("example_episodes.jsonl", "r") as f:

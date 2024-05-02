@@ -5,7 +5,7 @@ import numpy as np
 from scipy.stats import spearmanr
 
 sys.path.append("../")
-from utils.fleiss_kappa import fleiss_kappa
+from utils.correlation import fleiss_kappa
 
 
 def read_data():

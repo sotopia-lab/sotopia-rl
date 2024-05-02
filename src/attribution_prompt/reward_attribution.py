@@ -6,7 +6,7 @@ from pprint import pprint
 from openai import OpenAI
 from tqdm import tqdm
 
-from utils.openai_call import openai_call
+from utils.openai import openai_call
 
 # Set environment variables for OpenAI API
 with open("openai_api.key", "r") as f:
