@@ -2,6 +2,7 @@ import json
 import os
 from collections import OrderedDict
 from pprint import pprint
+from typing import Any, Dict, List, Tuple
 
 import jsonlines
 from openai import OpenAI
@@ -9,7 +10,8 @@ from tqdm import tqdm
 
 client = OpenAI()
 
-def openai_call(prompt):
+
+def openai_call(prompt: str) -> str:
     model_name = "gpt-3.5-turbo"
     """Make a call to OpenAI API with a specific prompt."""
     response = client.chat.completions.create(
@@ -29,7 +31,9 @@ def openai_call(prompt):
     return reply
 
 
-def parse_conversation(episode):
+def parse_conversation(
+    episode: Dict[str, Any]
+) -> Tuple[List[Tuple[str, str]], Dict[str, str]]:
     """Extract and parse conversation and goals from the episode."""
     conversation = episode["social_interactions"].split("\n\n")
     goals = episode["social_goals"]
