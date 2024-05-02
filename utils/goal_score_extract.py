@@ -1,4 +1,7 @@
-def extract_goal_scores(data):
+from typing import Dict, List
+
+
+def extract_goal_scores(data: List) -> List:
     new_data = []
     for episode in data:
         scores = {}
