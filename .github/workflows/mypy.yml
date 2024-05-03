@@ -21,4 +21,6 @@ jobs:
       run: |
         # Run this mypy instance against our main package.
         poetry run pip install types-protobuf==4.24.0.4
+        poetry run pip install pandas-stubs
+        poetry run pip install types-tqdm
         poetry run mypy --strict .
