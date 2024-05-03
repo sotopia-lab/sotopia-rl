@@ -1,54 +1,24 @@
 import json
 import os
+import sys
+
+sys.path.append("../")
 from collections import OrderedDict
 from pprint import pprint
+from typing import Any, Dict, List, Tuple
 
 import jsonlines
 from openai import OpenAI
 from tqdm import tqdm
+
+from utils.openai import openai_call
+from utils.preprocess import parse_conversation
 
 # Set environment variables for OpenAI API
 # with open("openai_api.key", "r") as f:
 #    os.environ["OPENAI_API_KEY"] = f.readline().strip()
 
 client = OpenAI()
-
-
-def openai_call(prompt):
-    model_name = "gpt-3.5-turbo"
-    """Make a call to OpenAI API with a specific prompt."""
-    response = client.chat.completions.create(
-        model=model_name,
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.7,
-        max_tokens=1024,
-        top_p=1,
-        frequency_penalty=0,
-        presence_penalty=0,
-    )
-    # not robust
-    reply = response.choices[0].message.content
-    if "gpt-4" in model_name:
-        # extract { ... } from the response
-        reply = reply[reply.find("{") : reply.rfind("}") + 1]
-    return reply
-
-
-def parse_conversation(episode):
-    """Extract and parse conversation and goals from the episode."""
-    conversation = episode["social_interactions"].split("\n\n")
-    goals = episode["social_goals"]
-    agent1, agent2 = list(goals.keys())
-    parsed_conversation = []
-    for i, utterance in enumerate(conversation):
-        if utterance.startswith(agent1):
-            speaker = agent1
-        elif utterance.startswith(agent2):
-            speaker = agent2
-        else:
-            continue  # Skip any unparsable utterances
-        parsed_conversation.append((speaker, utterance))
-    return parsed_conversation, goals
 
 
 PRELOGUE_INSTRUCTIONS = """
@@ -60,7 +30,7 @@ For the goal achieving score, if it is <5, the agent fails, so you need to think
 """
 
 
-def get_epilogue_instructions(agent):
+def get_epilogue_instructions(agent: str) -> str:
     return f"""
 Please provide YES or NO for each of the utterances made by {agent}. If you believe an utterance directly leads to the success or failure of the agent's goal, assign it as 'YES'. Otherwise, assign it as 'NO'.
 
@@ -74,7 +44,9 @@ The utterance numbers should correspond to their order in the conversation. Each
 """
 
 
-def generate_single_attribution_prompt(conversation, goal, score, agent):
+def generate_single_attribution_prompt(
+    conversation: List[Tuple[str, str]], goal: str, score: float, agent: str
+) -> Tuple[str, Dict[str, List[Any]]]:
     """Generate a single prompt for GPT based on the entire conversation, agent's goals, and final goal achieving score."""
     prompt = f"{PRELOGUE_INSTRUCTIONS}\n\n"
     prompt += f"Agent Goal: {goal}\n\n"
@@ -91,7 +63,7 @@ def generate_single_attribution_prompt(conversation, goal, score, agent):
     return prompt, key_utterance_dict
 
 
-def assign_attributions_for_conversation(prompt):
+def assign_attributions_for_conversation(prompt: str) -> Dict[str, int] | Any:
     """Assign attributions to the entire conversation based on a GPT response."""
     response = openai_call(prompt)
     return json.loads(response)

@@ -1,6 +1,7 @@
 import json
 from collections import OrderedDict
 from pprint import pprint
+from typing import Any
 
 import rich
 
@@ -8,7 +9,7 @@ with open("../data/openai_log_attribution.jsonl", "r") as f:
     logs = [json.loads(line, object_hook=OrderedDict) for line in f]
 
 
-def render_log(log):
+def render_log(log: OrderedDict[str, Any]) -> None:
     print(log["scenario"] + "\n")
     print("Agent: " + log["agent"] + "\n")
     print("Goal: " + log["goal"] + "\n")
@@ -24,6 +25,3 @@ def render_log(log):
 
         print()
     print("goal achieving score: ", log["goal_score"])
-
-
-render_log(logs[11])

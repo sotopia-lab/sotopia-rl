@@ -18,25 +18,6 @@ for episode in episodes:
     num_turns.append(episode["social_interactions"].count("said:"))
     len_episodes.append(len(episode["social_interactions"]))
 
-# # plot distribution of number of turns
-# import matplotlib.pyplot as plt
-# import numpy as np
-
-# plt.hist(num_turns, bins=np.arange(0, 50, 1))
-# plt.xlabel("Number of Utterances")
-# plt.ylabel("Frequency")
-# plt.title("Distribution of Number of Turns in Episodes")
-# plt.savefig("num_turns.png")
-
-# # plot distribution of length of episodes
-# plt.hist(len_episodes, bins=np.arange(0, 200, 1))
-# plt.xlabel("Length of Episode")
-# plt.ylabel("Frequency")
-# plt.title("Distribution of Length of Episodes")
-# plt.savefig("len_episodes.png")
-
-# exit()
-
 qualifying_episodes = []
 for episode in episodes:
     if (
@@ -73,7 +54,7 @@ print("forms_left: " + str(len(forms_left)))
 forms_left = [form.strip() for form in forms_left]
 
 
-def extract_scenario(text):
+def extract_scenario(text: str) -> str:
     match = re.search(r"Scenario:\n(.*?)(?=\n\n|$)", text, re.DOTALL)
     if match:
         return match.group(1).strip()
@@ -107,39 +88,3 @@ for episode in qualifying_episodes:
 with open("example_episodes.jsonl", "w") as f:
     for episode in example_episodes:
         f.write(json.dumps(episode) + "\n")
-
-# example_episodes = []
-# visited_codename = set()
-# count = 0
-# for episode in episodes:
-#     if episode['codename'] not in visited_codename \
-#             and episode['rewards'][0]['goal'] > 7 and episode['rewards'][1]['goal'] > 7:
-#                 count += 1
-#                 example_episodes.append(episode)
-#                 visited_codename.add(episode['codename'])
-#     if count == 10:
-#         break
-
-# count = 0
-# for episode in episodes:
-#     if episode['codename'] not in visited_codename \
-#             and abs( episode['rewards'][0]['goal'] - episode['rewards'][1]['goal'] ) > 4:
-#                 count += 1
-#                 example_episodes.append(episode)
-#                 visited_codename.add(episode['codename'])
-#     if count == 10:
-#         break
-
-# count = 0
-# for episode in episodes:
-#     if episode['codename'] not in visited_codename \
-#             and abs( episode['rewards'][0]['goal'] < 2 - episode['rewards'][1]['goal'] ) < 2:
-#                 count += 1
-#                 example_episodes.append(episode)
-#                 visited_codename.add(episode['codename'])
-#     if count == 10:
-#         break
-
-# with open("example_episodes.jsonl", 'w') as f:
-#     for episode in example_episodes:
-#         f.write(json.dumps(episode) + "\n")

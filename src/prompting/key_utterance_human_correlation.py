@@ -5,10 +5,12 @@ import numpy as np
 from scipy.stats import spearmanr
 
 sys.path.append("../")
+from typing import Any, Iterable, List, Tuple
+
 from utils.correlation import fleiss_kappa
 
 
-def read_data():
+def read_data() -> Tuple[Iterable[Any], Iterable[Any]]:
     with jsonlines.open(
         "../data/openai_log_key_utterance.jsonl", "r"
     ) as reader:
@@ -19,7 +21,7 @@ def read_data():
     return prompting_dataset, human_dataset
 
 
-def hard_code_key(attributed_utterances):
+def hard_code_key(attributed_utterances: Any) -> Any:
     new_attributed_utterances = {}
     for key in attributed_utterances:
         utterance_num = int(key.split(" ")[1])
@@ -30,8 +32,8 @@ def hard_code_key(attributed_utterances):
 
 
 def build_paired_scores(
-    human_attributed_utterances, prompt_attributed_utterances
-):
+    human_attributed_utterances: Any, prompt_attributed_utterances: Any
+) -> List[Tuple[int, int]]:
     paired_scores = []
     for key in human_attributed_utterances:
         human_scores = human_attributed_utterances[key][-1]

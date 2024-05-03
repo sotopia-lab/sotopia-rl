@@ -1,11 +1,13 @@
 import json
 from datetime import datetime
 
+from sklearn.metrics import cohen_kappa_score
+
 with open("../data/human_log_attribution.jsonl", "r") as f:
     data = [json.loads(line) for line in f]
 
 
-def convert_to_unix_timestamp_milliseconds(date_time):
+def convert_to_unix_timestamp_milliseconds(date_time: str) -> int:
     timestamp_dt = datetime.fromisoformat(date_time.rstrip("Z"))
     unix_timestamp_milliseconds = int(timestamp_dt.timestamp() * 1000)
     return unix_timestamp_milliseconds
@@ -39,8 +41,6 @@ for res in result:
     ann1.append(lis[1][1])
 
 # calculate cohens kappa
-from sklearn.metrics import cohen_kappa_score
-
 kappa = cohen_kappa_score(ann0, ann1)
 
 print(f"Cohen's Kappa: {kappa}")

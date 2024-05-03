@@ -72,7 +72,7 @@ print("forms_left: " + str(len(forms_left)))
 forms_left = [form.strip() for form in forms_left]
 
 
-def extract_scenario(text):
+def extract_scenario(text: str) -> str:
     match = re.search(r"Scenario:\n(.*?)(?=\n\n|$)", text, re.DOTALL)
     if match:
         return match.group(1).strip()

@@ -1,7 +1,8 @@
 import numpy as np
+from numpy.typing import NDArray
 
 
-def fleiss_kappa(ratings: np.ndarray) -> float:
+def fleiss_kappa(ratings: NDArray[np.int_]) -> float:
     n, k = ratings.shape  # n is number of items, k is number of raters
     N = np.sum(
         ratings[0]
@@ -18,5 +19,5 @@ def fleiss_kappa(ratings: np.ndarray) -> float:
     P_e = np.sum(p**2)
 
     # Calculating kappa
-    kappa = (P_o - P_e) / (1 - P_e)
+    kappa = float((P_o - P_e) / (1 - P_e))
     return kappa

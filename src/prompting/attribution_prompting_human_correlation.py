@@ -1,4 +1,12 @@
-from typing import Any, Iterable, Iterator, Optional, TextIO, Tuple
+from typing import (
+    Any,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    TextIO,
+    Tuple,
+)
 
 import jsonlines
 from scipy.stats import spearmanr
@@ -13,7 +21,7 @@ def read_data() -> Tuple[Iterable[Any], Iterable[Any]]:
     return prompting_dataset, human_dataset
 
 
-def hard_code_key(attributed_utterances):
+def hard_code_key(attributed_utterances: Any) -> Any:
     new_attributed_utterances = {}
     for key in attributed_utterances:
         utterance_num = int(key.split(" ")[1])
@@ -24,8 +32,8 @@ def hard_code_key(attributed_utterances):
 
 
 def build_paired_scores(
-    human_attributed_utterances, prompt_attributed_utterances
-):
+    human_attributed_utterances: Any, prompt_attributed_utterances: Any
+) -> List[Tuple[int, int]]:
     # import pdb; pdb.set_trace()
     paired_scores = []
     seen_3 = False

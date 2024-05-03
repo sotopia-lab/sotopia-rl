@@ -1,4 +1,7 @@
 import json
+import sys
+
+sys.path.append("../")
 import os
 from collections import OrderedDict
 from pprint import pprint
@@ -38,7 +41,7 @@ The utterance numbers should correspond to their order in the conversation. Each
 
 
 def generate_single_attribution_prompt(
-    conversation: List[Tuple[str, str]], goal: str, score: int, agent: str
+    conversation: List[Tuple[str, str]], goal: str, score: float, agent: str
 ) -> Tuple[str, Dict[str, List[Any]]]:
     """Generate a single prompt for GPT based on the entire conversation, agent's goals, and final goal achieving score."""
     prompt = f"{PRELOGUE_INSTRUCTIONS}\n\n"
@@ -64,7 +67,7 @@ def assign_attributions_for_conversation(prompt: str) -> Dict[str, int] | Any:
 
 if __name__ == "__main__":
     with jsonlines.open(
-        "../data/example_episodes_with_scores.jsonl", "r"
+        "../../data/example_episodes_with_scores.jsonl", "r"
     ) as reader:
         data = list(reader)
 
@@ -74,6 +77,9 @@ if __name__ == "__main__":
         conversation, goals = parse_conversation(episode)
         agents = list(goals.keys())
         for agent in agents:
+            import pdb
+
+            pdb.set_trace()
             prompt, key_prompt_dict = generate_single_attribution_prompt(
                 conversation, goals[agent], episode["scores"][agent], agent
             )
@@ -94,6 +100,6 @@ if __name__ == "__main__":
             )
 
             with jsonlines.open(
-                "../data/openai_log_attribution.jsonl", "w"
+                "../../data/openai_log_attribution.jsonl", "w"
             ) as writer:
                 writer.write_all(results)
