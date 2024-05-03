@@ -1,12 +1,7 @@
 import numpy as np
 
 
-def fleiss_kappa(ratings):
-    """
-    Calculate Fleiss' Kappa for a set of ratings.
-    :param ratings: 2D numpy array where rows are items and columns are raters.
-    :return: Fleiss' Kappa score.
-    """
+def fleiss_kappa(ratings: np.ndarray) -> float:
     n, k = ratings.shape  # n is number of items, k is number of raters
     N = np.sum(
         ratings[0]

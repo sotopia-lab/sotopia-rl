@@ -1,8 +1,7 @@
 from openai import OpenAI
 
 
-def openai_call(prompt):
-    """Make a call to OpenAI API with a specific prompt."""
+def openai_call(prompt: str) -> str | None:
     client = OpenAI()
     response = client.chat.completions.create(
         model="gpt-3.5-turbo",
