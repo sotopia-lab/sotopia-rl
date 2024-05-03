@@ -3,4 +3,5 @@ sotopia_episodes_v1.jsonl
 credentials.json
 *.jsonl
 **/__pycache__/*
+**/archive/*
 !.gitkeep
