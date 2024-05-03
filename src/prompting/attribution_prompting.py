@@ -1,8 +1,6 @@
 import json
-import sys
-
-sys.path.append("../")
 import os
+import sys
 from collections import OrderedDict
 from pprint import pprint
 from typing import Any, Dict, List, Tuple
@@ -11,8 +9,8 @@ import jsonlines
 from openai import OpenAI
 from tqdm import tqdm
 
-from utils.openai import openai_call
-from utils.preprocess import parse_conversation
+from ..utils.openai import openai_call
+from ..utils.preprocess import parse_conversation
 
 client = OpenAI()
 
@@ -41,7 +39,10 @@ The utterance numbers should correspond to their order in the conversation. Each
 
 
 def generate_single_attribution_prompt(
-    conversation: List[Tuple[str, str]], goal: str, score: float, agent: str
+    conversation: List[Tuple[str, str]],
+    goal: Dict[str, Any],
+    score: float,
+    agent: str,
 ) -> Tuple[str, Dict[str, List[Any]]]:
     """Generate a single prompt for GPT based on the entire conversation, agent's goals, and final goal achieving score."""
     prompt = f"{PRELOGUE_INSTRUCTIONS}\n\n"
@@ -62,7 +63,10 @@ def generate_single_attribution_prompt(
 def assign_attributions_for_conversation(prompt: str) -> Dict[str, int] | Any:
     """Assign attributions to the entire conversation based on a GPT response."""
     response = openai_call(prompt)
-    return json.loads(response)
+    if response is None:
+        return None
+    else:
+        return json.loads(response)
 
 
 if __name__ == "__main__":
@@ -77,9 +81,6 @@ if __name__ == "__main__":
         conversation, goals = parse_conversation(episode)
         agents = list(goals.keys())
         for agent in agents:
-            import pdb
-
-            pdb.set_trace()
             prompt, key_prompt_dict = generate_single_attribution_prompt(
                 conversation, goals[agent], episode["scores"][agent], agent
             )

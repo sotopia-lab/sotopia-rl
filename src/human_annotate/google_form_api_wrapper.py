@@ -21,14 +21,14 @@ def authenticate_google_services() -> GoogleResource:
     return service
 
 
-def get_form(form_id: str) -> Dict[str, Any]:
+def get_form(form_id: str) -> Dict[str, Any] | Any:
     """Fetch and return a specified Google Form."""
     service = authenticate_google_services()
     form = service.forms().get(formId=form_id).execute()
     return form
 
 
-def get_form_responses(form_id: str) -> List[Dict[str, Any]]:
+def get_form_responses(form_id: str) -> List[Dict[str, Any]] | Any:
     """Fetch and return all responses from a specified Google Form."""
     service = authenticate_google_services()
     results = service.forms().responses().list(formId=form_id).execute()

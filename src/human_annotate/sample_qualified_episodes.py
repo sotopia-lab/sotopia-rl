@@ -4,7 +4,7 @@ from collections import defaultdict
 
 from tqdm import tqdm
 
-from human_annotate.get_form_responses import get_form
+from .get_form_responses import get_form
 
 with open("sotopia_episodes_v1.jsonl", "r") as f:
     episodes = [json.loads(line) for line in f]
