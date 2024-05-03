@@ -8,7 +8,7 @@ readme = "README.md"
 
 
 [tool.poetry.dependencies]
-python = ">=3.8, <3.12"
+python = ">=3.9, <3.12"
 mypy = "^1.8.0"
 pydantic = "^1.9.0"
 datasets = "^1.12.0"
