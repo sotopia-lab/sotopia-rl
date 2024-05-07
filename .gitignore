@@ -5,3 +5,5 @@ credentials.json
 **/__pycache__/*
 **/archive/*
 !.gitkeep
+*.DS_Store
+*.pkl
