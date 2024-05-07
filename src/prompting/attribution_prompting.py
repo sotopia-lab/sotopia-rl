@@ -18,7 +18,7 @@ client = OpenAI()
 PRELOGUE_INSTRUCTIONS = """
 For this task, you will receive the dialogue history between two conversational agents, the social goal of one of the agents, and the final goal achieving score recieved by this agent. Your objective is to assess how much each of the agent's utterance (marked by the agent's name and the utterance number) contributed to the final goal achieving score.
 
-There should be one critical utterances that decides the goal achieving score. The critical utterance should be labeled as 3. After identifying the critical utterance, you should assign 0 to the rest of the utterances.
+There should be one critical utterances that decides the goal achieving score. The critical utterance should be labeled as 3.
 
 For the goal achieving score, if it is <5, the agent fails, so you need to think which utterance is the most important one that leads to the failure of the goal and assign the critical utterance that leads to the failure to be "3". If it is >=5, the agent succeeds, so you need to think which utterances is the most important one that leads to the success and assign that utterance to be "3".
 """
