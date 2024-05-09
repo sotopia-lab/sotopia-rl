@@ -34,8 +34,3 @@ def get_form_responses(form_id: str) -> List[Dict[str, Any]] | Any:
     results = service.forms().responses().list(formId=form_id).execute()
     responses = results.get("responses", [])
     return responses
-
-
-def print_responses(responses: List[Dict[str, Any]]) -> None:
-    """Print the responses nicely formatted."""
-    print(json.dumps(responses, indent=4))
