@@ -9,8 +9,43 @@ import jsonlines
 from openai import OpenAI
 from tqdm import tqdm
 
-from ..utils.openai import openai_call
-from ..utils.preprocess import parse_conversation
+# from ..utils.openai import openai_call
+# from ..utils.preprocess import parse_conversation
+from openai import OpenAI
+
+
+def openai_call(prompt: str) -> str | None:
+    client = OpenAI()
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.7,
+        max_tokens=1024,
+        top_p=1,
+        frequency_penalty=0,
+        presence_penalty=0,
+    )
+    return response.choices[0].message.content
+
+def parse_conversation(
+    episode: Dict[str, Any]
+) -> Tuple[List[Tuple[str, str]], Dict[str, Dict[str, Any]]]:
+    """Extract and parse conversation and goals from the episode."""
+    conversation = episode["social_interactions"].split("\n\n")
+    goals = episode["social_goals"]
+    agent1, agent2 = list(goals.keys())
+    parsed_conversation = []
+    for utterance in conversation:
+        if utterance.startswith(agent1):
+            speaker = agent1
+        elif utterance.startswith(agent2):
+            speaker = agent2
+        else:
+            continue  # Skip any unparsable utterances
+        parsed_conversation.append(
+            (speaker, utterance[len(speaker) + 1 :].strip())
+        )  # Strip the speaker from the utterance
+    return parsed_conversation, goals
 
 client = OpenAI()
 
@@ -18,15 +53,15 @@ client = OpenAI()
 PRELOGUE_INSTRUCTIONS = """
 For this task, you will receive the dialogue history between two conversational agents, the social goal of one of the agents, and the final goal achieving score recieved by this agent. Your objective is to assess how much each of the agent's utterance (marked by the agent's name and the utterance number) contributed to the final goal achieving score.
 
-There should be one critical utterances that decides the goal achieving score. The critical utterance should be labeled as 3. After identifying the critical utterance, you should assign 0 to the rest of the utterances.
+There should be one critical utterances that decides the goal achieving score. The critical utterance should be labeled as 3.
 
 For the goal achieving score, if it is <5, the agent fails, so you need to think which utterance is the most important one that leads to the failure of the goal and assign the critical utterance that leads to the failure to be "3". If it is >=5, the agent succeeds, so you need to think which utterances is the most important one that leads to the success and assign that utterance to be "3".
 """
 
 
-def get_epilogue_instructions(agent: str) -> str:
+def get_epilogue_instructions(agent: str, goal: str) -> str:
     return f"""
-Please provide a score between 0 and 3 for each of the utterances made by {agent}. If you believe an utterance had no impact on the final goal achieving score, please provide a score of 0. If you believe an utterance had a significant impact on the final goal achieving score, please provide a score of 3. If you believe an utterance had a moderate impact on the final goal achieving score, please provide a score of 1 or 2. You can provide any score between 0 and 3 based on your judgment.
+Please provide a score between 0 and 3 for each of the utterances made by {agent}. If you believe an utterance had no impact on the final goal achieving score, please provide a score of 0. If you believe an utterance had a significant impact on the final goal achieving score, please provide a score of 3. If you believe an utterance had a moderate impact on the final goal achieving score, please provide a score of 1 or 2. You can provide any score between 0 and 3 based on your judgment. Note that throughout the conversation, the agent's goal is to {goal}. Note that you can only assign one utterance a score of 3. If you believe that multiple utterances are critical, please assign the score of 3 to the most critical utterance.
 
 Please format your response as JSON with the following structure:
 {{
@@ -56,7 +91,7 @@ def generate_single_attribution_prompt(
             utterance,
             -1,
         ]
-    prompt += "\n" + get_epilogue_instructions(agent)
+    prompt += "\n" + get_epilogue_instructions(agent, goal[agent])
     return prompt, key_utterance_dict
 
 
@@ -71,7 +106,7 @@ def assign_attributions_for_conversation(prompt: str) -> Dict[str, int] | Any:
 
 if __name__ == "__main__":
     with jsonlines.open(
-        "../../data/example_episodes_with_scores.jsonl", "r"
+        "../data/example_episodes_with_scores.jsonl", "r"
     ) as reader:
         data = list(reader)
 
@@ -101,6 +136,6 @@ if __name__ == "__main__":
             )
 
             with jsonlines.open(
-                "../../data/openai_log_attribution.jsonl", "w"
+                "../data/openai_log_attribution.jsonl", "w"
             ) as writer:
                 writer.write_all(results)

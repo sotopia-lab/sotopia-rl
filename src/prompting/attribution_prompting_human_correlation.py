@@ -50,11 +50,11 @@ def build_paired_scores(
             )
             # human_score = sorted_human_scores[0][1]
             ann0, ann1 = sorted_human_scores[0][1], sorted_human_scores[1][1]
-            if seen_3:
-                ann1 = 0
-            if ann1 == 3 and not seen_3:
-                seen_3 = True
-            human_score = ann1
+            # if seen_3:
+            #     ann1 = 0
+            # if ann1 == 3 and not seen_3:
+            #     seen_3 = True
+            human_score = ann0
             paired_scores.append((human_score, prompt_score))
     return paired_scores
 
@@ -62,6 +62,7 @@ def build_paired_scores(
 if __name__ == "__main__":
     prompting_dataset, human_dataset = read_data()
     paired_scores_dataset = []
+    paired_convs = []
     for human_data in human_dataset:
         for prompt_data in prompting_dataset:
             if (
@@ -77,7 +78,9 @@ if __name__ == "__main__":
                 paired_scores = build_paired_scores(
                     human_attributed_utterances, prompt_attributed_utterances
                 )
+                # import pdb; pdb.set_trace()
                 paired_scores_dataset += paired_scores
+                paired_convs.append(paired_scores)
                 break
     human_scores = [score[0] for score in paired_scores_dataset]
     prompt_scores = [score[1] for score in paired_scores_dataset]
@@ -88,5 +91,25 @@ if __name__ == "__main__":
     avg_diff = sum(
         [abs(score[0] - score[1]) for score in paired_scores_dataset]
     ) / len(paired_scores_dataset)
-    print("agreeement rate: {}".format(agreement_rate))
     print("average difference: {}".format(avg_diff))
+    print("spearman correlation: {}".format(spearman_corr))
+    print("exact match: {}".format(agreement_rate))
+    
+    # import pdb; pdb.set_trace()
+    agreement_list = []
+    agreement_linient_list = []
+    for i, conv in enumerate(paired_convs):
+        human_scores = [score[0] for score in conv]
+        prompt_scores = [score[1] for score in conv]
+        human_key_utterance = human_scores.index(3) if 3 in human_scores else -1
+        prompt_key_utterance = prompt_scores.index(3) if 3 in prompt_scores else -1
+        if human_key_utterance == prompt_key_utterance:
+            agreement_list.append(1)
+        else:
+            agreement_list.append(0)
+        if human_key_utterance != -1 and prompt_key_utterance != -1:
+            agreement_linient_list.append(1)
+        else:
+            agreement_linient_list.append(0)
+    print("agreement rate: {}".format(sum(agreement_list) / len(agreement_list)))
+    print("agreement linient rate: {}".format(sum(agreement_linient_list) / len(agreement_linient_list)))
