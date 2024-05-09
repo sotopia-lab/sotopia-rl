@@ -50,11 +50,11 @@ def build_paired_scores(
             )
             # human_score = sorted_human_scores[0][1]
             ann0, ann1 = sorted_human_scores[0][1], sorted_human_scores[1][1]
-            if seen_3:
-                ann1 = 0
-            if ann1 == 3 and not seen_3:
-                seen_3 = True
-            human_score = ann1
+            # if seen_3:
+            #     ann1 = 0
+            # if ann1 == 3 and not seen_3:
+            #     seen_3 = True
+            human_score = ann0
             paired_scores.append((human_score, prompt_score))
     return paired_scores
 
@@ -91,8 +91,9 @@ if __name__ == "__main__":
     avg_diff = sum(
         [abs(score[0] - score[1]) for score in paired_scores_dataset]
     ) / len(paired_scores_dataset)
-    print("agreeement rate: {}".format(agreement_rate))
     print("average difference: {}".format(avg_diff))
+    print("spearman correlation: {}".format(spearman_corr))
+    print("exact match: {}".format(agreement_rate))
     
     # import pdb; pdb.set_trace()
     agreement_list = []

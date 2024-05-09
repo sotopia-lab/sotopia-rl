@@ -1,7 +1,8 @@
 import json
 from datetime import datetime
 
-from sklearn.metrics import cohen_kappa_score
+# from sklearn.metrics import cohen_kappa_score
+from scipy.stats import spearmanr
 
 with open("../data/human_log_attribution.jsonl", "r") as f:
     data = [json.loads(line) for line in f]
@@ -45,9 +46,9 @@ for res in result:
     ann1.append(lis[1][1])
 
 # calculate cohens kappa
-kappa = cohen_kappa_score(ann0, ann1)
+spearmanr = spearmanr(ann0, ann1)
 
-print(f"Cohen's Kappa: {kappa}")
+print(f"spearmanr: {spearmanr}")
 print(f"Count of single annotated: {count_single}")
 print(f"Count of double annotated: {count_double}")
 
@@ -56,8 +57,11 @@ count_exact_match = 0
 for i in range(len(ann0)):
     if ann0[i] == ann1[i]:
         count_exact_match += 1
+
+average_difference = sum([abs(a - b) for a, b in zip(ann0, ann1)]) / len(ann0)
 print(f"Count of exact match: {count_exact_match}")
 print(f"Percentage of exact match: {count_exact_match / len(ann0)}")
+print(f"Average difference: {average_difference}")
 
 agreement_list = []
 agreement_linient_list = []
