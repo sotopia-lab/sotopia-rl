@@ -1,5 +1,6 @@
 import json
 from datetime import datetime
+from typing import Tuple
 
 # from sklearn.metrics import cohen_kappa_score
 from scipy.stats import spearmanr
@@ -46,9 +47,9 @@ for res in result:
     ann1.append(lis[1][1])
 
 # calculate cohens kappa
-spearmanr = spearmanr(ann0, ann1)
+corr: Tuple[float, float] = spearmanr(ann0, ann1)
 
-print(f"spearmanr: {spearmanr}")
+print(f"spearmanr: {corr}")
 print(f"Count of single annotated: {count_single}")
 print(f"Count of double annotated: {count_double}")
 

@@ -91,7 +91,7 @@ def generate_single_attribution_prompt(
             utterance,
             -1,
         ]
-    prompt += "\n" + get_epilogue_instructions(agent, goal)
+    prompt += "\n" + get_epilogue_instructions(agent, goal[agent])
     return prompt, key_utterance_dict
 
 
