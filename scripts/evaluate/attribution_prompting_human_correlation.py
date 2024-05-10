@@ -34,7 +34,6 @@ def hard_code_key(attributed_utterances: Any) -> Any:
 def build_paired_scores(
     human_attributed_utterances: Any, prompt_attributed_utterances: Any
 ) -> List[Tuple[int, int]]:
-    # import pdb; pdb.set_trace()
     paired_scores = []
     seen_3 = False
     for key in human_attributed_utterances:
@@ -95,7 +94,6 @@ if __name__ == "__main__":
     print("spearman correlation: {}".format(spearman_corr))
     print("exact match: {}".format(agreement_rate))
     
-    # import pdb; pdb.set_trace()
     agreement_list = []
     agreement_linient_list = []
     for i, conv in enumerate(paired_convs):

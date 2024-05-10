@@ -1,3 +1,4 @@
+import os
 import json
 from collections import OrderedDict
 from typing import Any, Dict, List, Tuple
@@ -36,8 +37,8 @@ def extract_goal_scores(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     return new_data
 
 
-def add_score() -> None:
-    with open("example_episodes.jsonl", "r") as f:
+def add_score(data_dir) -> None:
+    with open(os.path.join(data_dir, "example_episodes.jsonl"), "r") as f:
         data = [json.loads(line, object_pairs_hook=OrderedDict) for line in f]
 
     new_data = []
@@ -49,6 +50,6 @@ def add_score() -> None:
         new_episode = {**episode, "scores": scores}
         new_data.append(new_episode)
 
-    with open("example_episodes_with_scores.jsonl", "w") as f:
+    with open(os.path.join(data_dir, "example_episodes_with_scores.jsonl"), "w") as f:
         for episode in new_data:
             f.write(json.dumps(episode) + "\n")

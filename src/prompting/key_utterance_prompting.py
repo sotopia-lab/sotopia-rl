@@ -1,7 +1,6 @@
 import json
 import os
 from collections import OrderedDict
-from pprint import pprint
 from typing import Any, Dict, List, Tuple
 
 import jsonlines
@@ -11,12 +10,7 @@ from tqdm import tqdm
 from ..utils.openai import openai_call
 from ..utils.preprocess import parse_conversation
 
-# Set environment variables for OpenAI API
-# with open("openai_api.key", "r") as f:
-#    os.environ["OPENAI_API_KEY"] = f.readline().strip()
-
 client = OpenAI()
-
 
 PRELOGUE_INSTRUCTIONS = """
 For this task, you will receive the dialogue history between two conversational agents, the social goal of one of the agents, and the final goal achieving score recieved by this agent. Your objective is to find the critical utterances (might be one utterance or more than one utterance) that directly decide the success or failure of the agent's goal.
@@ -74,9 +68,9 @@ def assign_key_utterances_for_conversation(
         return json.loads(response)
 
 
-if __name__ == "__main__":
+def generate_key_utterance_recognition(data_dir):
     with jsonlines.open(
-        "../data/example_episodes_with_scores.jsonl", "r"
+        os.join.path(data_dir, "example_episodes_with_scores.jsonl"), "r"
     ) as reader:
         data = list(reader)
 
@@ -108,6 +102,6 @@ if __name__ == "__main__":
             )
 
             with jsonlines.open(
-                "../data/openai_log_key_utterance.jsonl", "w"
+                os.join.path(data_dir, "../data/openai_log_key_utterance.jsonl"), "w"
             ) as writer:
                 writer.write_all(results)
