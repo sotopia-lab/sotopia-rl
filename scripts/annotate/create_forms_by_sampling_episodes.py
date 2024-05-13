@@ -7,7 +7,7 @@ from src.human_annotate.episode_sampling import sample_episodes
 from src.prompting.attribution_prompting import generate_reward_attribution
 from src.human_annotate.form_creation import create_forms
 
-def main(data_dir, llm_name, gcp_key):
+def main(data_dir: str, llm_name: str, gcp_key: str) -> None:
     sample_episodes(data_dir)
     add_score(data_dir)
     generate_reward_attribution(data_dir, llm_name)

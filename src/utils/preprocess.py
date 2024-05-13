@@ -37,7 +37,7 @@ def extract_goal_scores(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     return new_data
 
 
-def add_score(data_dir) -> None:
+def add_score(data_dir: str) -> None:
     with open(os.path.join(data_dir, "example_episodes.jsonl"), "r") as f:
         data = [json.loads(line, object_pairs_hook=OrderedDict) for line in f]
 

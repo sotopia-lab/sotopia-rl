@@ -68,9 +68,9 @@ def assign_key_utterances_for_conversation(
         return json.loads(response)
 
 
-def generate_key_utterance_recognition(data_dir):
+def generate_key_utterance_recognition(data_dir: str) -> None:
     with jsonlines.open(
-        os.join.path(data_dir, "example_episodes_with_scores.jsonl"), "r"
+        os.path.join(data_dir, "example_episodes_with_scores.jsonl"), "r"
     ) as reader:
         data = list(reader)
 
@@ -102,6 +102,6 @@ def generate_key_utterance_recognition(data_dir):
             )
 
             with jsonlines.open(
-                os.join.path(data_dir, "../data/openai_log_key_utterance.jsonl"), "w"
+                os.path.join(data_dir, "../data/openai_log_key_utterance.jsonl"), "w"
             ) as writer:
                 writer.write_all(results)

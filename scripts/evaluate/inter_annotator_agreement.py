@@ -1,6 +1,6 @@
 import json
 from datetime import datetime
-from typing import Tuple
+from typing import Tuple, Dict, Any
 
 from scipy.stats import spearmanr
 
@@ -12,7 +12,7 @@ def convert_to_unix_timestamp_milliseconds(date_time: str) -> int:
     unix_timestamp_milliseconds = int(timestamp_dt.timestamp() * 1000)
     return unix_timestamp_milliseconds
 
-def preprocessing(data):
+def preprocessing(data: list[Dict[str, Any]]) -> Tuple[list[Any], list[Any], list[Any]]:
     count_single = 0
     count_double = 0
     result = []
@@ -39,7 +39,7 @@ def preprocessing(data):
     print(f"Count of double annotated: {count_double}")
     return result, convs, key_uttrs
 
-def calc_correlation(result: list):
+def calc_correlation(result: list[Any]) -> None:
     ann0 = []
     ann1 = []
     for res in result:
@@ -66,7 +66,7 @@ def calc_correlation(result: list):
     print(f"Percentage of exact match: {count_exact_match / len(ann0)}")
     print(f"Average difference: {average_difference}")
 
-def calc_3_agreement(convs: list):
+def calc_3_agreement(convs: list[Any]) -> None:
     agreement_list = []
     agreement_linient_list = []
     for conv in convs:
@@ -88,7 +88,7 @@ def calc_3_agreement(convs: list):
     print("3 Rating Agreement Rate: ", sum(agreement_list) / len(agreement_list))
     print("3 Rating Agreement Linient Rate: ", sum(agreement_linient_list) / len(agreement_linient_list))
 
-def calc_key_uttr_agreement(convs: list):
+def calc_key_uttr_agreement(convs: list[Any]) -> None:
     agreement_list = []
     agreement_linient_list = []
     ann0, ann1 = [], []

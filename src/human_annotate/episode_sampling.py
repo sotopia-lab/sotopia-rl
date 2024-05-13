@@ -1,7 +1,8 @@
 import os
 import json
+from typing import Dict, Any
 
-def select_qualifying_episodes(episodes):
+def select_qualifying_episodes(episodes: list[Dict[str, Any]]) -> list[Dict[str, Any]]:
     num_turns = []
     len_episodes = []
     for episode in episodes:
@@ -32,7 +33,7 @@ def select_qualifying_episodes(episodes):
             qualifying_episodes.append(episode)
     return qualifying_episodes
 
-def create_non_repeating_sample_episodes(qualifying_episodes, num_episodes=30):
+def create_non_repeating_sample_episodes(qualifying_episodes: list[Dict[str, Any]], num_episodes: int=30) -> list[Dict[str, Any]]:
     example_episodes = []
     visited_codename = set()
     for episode in qualifying_episodes:
@@ -46,7 +47,7 @@ def create_non_repeating_sample_episodes(qualifying_episodes, num_episodes=30):
             break
     return example_episodes
 
-def sample_episodes(data_dir, num_episodes=30):
+def sample_episodes(data_dir: str, num_episodes: int=30) -> None:
     with open(os.path.join(data_dir, "sotopia_episodes_v1.jsonl"), "r") as f:
         episodes = [json.loads(line) for line in f]
     

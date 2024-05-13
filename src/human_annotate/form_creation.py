@@ -18,7 +18,7 @@ def format_goals(text: str) -> str:
     text = text.replace("</strategy_hint>", "")
     return text
 
-def create_forms(data_dir, gcp_key) -> None:
+def create_forms(data_dir: str, gcp_key: str) -> None:
     with open(os.path.join(data_dir, "openai_log_attribution.jsonl"), "r") as f:
         all_data: List[Dict[str, Any]] = [json.loads(line) for line in f]
 
@@ -78,7 +78,7 @@ def create_forms(data_dir, gcp_key) -> None:
         requests.append(background_request)
         
         # Add question about the user's name
-        request: Dict[str, Any] = {
+        user_name_request: Dict[str, Any] = {
             "createItem": {
                 "item": {
                     "title": "Please enter your name",
@@ -94,7 +94,7 @@ def create_forms(data_dir, gcp_key) -> None:
                 "location": {"index": 1},
             }
         }
-        requests.append(deepcopy(request))
+        requests.append(deepcopy(user_name_request))
         
         # Add questions for each utterance
         index: int = 2
@@ -138,7 +138,7 @@ def create_forms(data_dir, gcp_key) -> None:
                 index += 1
                 
                 # Add question for key utterance
-                request: Dict[str, Any] = {
+                request = {
                     "createItem": {
                         "item": {
                             "title": "Was this utterance a key utterance?",
@@ -161,7 +161,7 @@ def create_forms(data_dir, gcp_key) -> None:
                 requests.append(deepcopy(request))
                 index += 1
             else:
-                request: Dict[str, Any] = {
+                request = {
                     "createItem": {
                         "item": {"title": full_text, "textItem": {}},
                         "location": {"index": index},

@@ -8,7 +8,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 GoogleResource = Any
 
 
-def authenticate_google_services(gcp_key) -> GoogleResource:
+def authenticate_google_services(gcp_key: str) -> GoogleResource:
     """Authenticate and return Google service client."""
     scopes = [
         "https://www.googleapis.com/auth/forms",
