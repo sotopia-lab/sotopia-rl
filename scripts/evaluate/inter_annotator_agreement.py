@@ -93,6 +93,7 @@ def calc_key_uttr_agreement(convs: list[Any]) -> None:
     agreement_linient_list = []
     ann0, ann1 = [], []
     for conv in convs:
+        # import pdb; pdb.set_trace()
         for pair in conv:
             # import pdb; pdb.set_trace()
             lis = []
@@ -104,8 +105,8 @@ def calc_key_uttr_agreement(convs: list[Any]) -> None:
                 continue
             assert lis[0][0] != lis[1][0]
             # import pdb; pdb.set_trace()
-            ann0.append(1 if lis[0][1] == "YES" else 0)
-            ann1.append(1 if lis[1][1] == "YES" else 0)
+            ann0.append(1 if lis[0][1] == "Yes" else 0)
+            ann1.append(1 if lis[1][1] == "Yes" else 0)
         # import pdb; pdb.set_trace()
         # count the number of exact match
     print(len(ann0))
@@ -123,6 +124,29 @@ def calc_key_uttr_agreement(convs: list[Any]) -> None:
         
     print("Key Utterance Agreement Rate: ", sum(agreement_list) / len(agreement_list))
     print("Key Utterance Agreement Linient Rate: ", sum(agreement_linient_list) / len(agreement_linient_list))
+    print("Confusion Matrix with Annotator 0 as Ground Truth:")
+    # calculate confusion matrix with annotator 0 as ground truth
+    tp, tn, fp, fn = 0, 0, 0, 0
+    for i in range(len(ann0)):
+        if ann0[i] == 1:
+            if ann1[i] == 1:
+                tp += 1
+            else:
+                fn += 1
+        else:
+            if ann1[i] == 1:
+                fp += 1
+            else:
+                tn += 1
+    print(f"True Positive: {tp}")
+    print(f"True Negative: {tn}")
+    print(f"False Positive: {fp}")
+    print(f"False Negative: {fn}")
+    
+    print(f"Precision: {tp / (tp + fp)}")
+    print(f"Recall: {tp / (tp + fn)}")
+    print(f"Specificity: {tn / (tn + fp)}")
+    print(f"F1 Score: {2 * tp / (2 * tp + fp + fn)}")
 
 if __name__ == "__main__":
     result, convs, key_uttrs = preprocessing(data)

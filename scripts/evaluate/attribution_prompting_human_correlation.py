@@ -1,3 +1,4 @@
+import argparse
 from typing import (
     Any,
     Iterable,
@@ -7,16 +8,17 @@ from typing import (
     TextIO,
     Tuple,
 )
+import os
 
 import jsonlines
 from scipy.stats import spearmanr
 
 
-def read_data() -> Tuple[Iterable[Any], Iterable[Any]]:
-    with jsonlines.open("../data/openai_log_attribution.jsonl", "r") as reader:
+def read_data(data_dir: str) -> Tuple[Iterable[Any], Iterable[Any]]:
+    with jsonlines.open(os.path.join(data_dir, "openai_log_attribution.jsonl"), "r") as reader:
         prompting_dataset = list(reader)
 
-    with jsonlines.open("../data/human_log_attribution.jsonl", "r") as reader:
+    with jsonlines.open(os.path.join(data_dir, "human_log_attribution.jsonl"), "r") as reader:
         human_dataset = list(reader)
     return prompting_dataset, human_dataset
 
@@ -32,34 +34,27 @@ def hard_code_key(attributed_utterances: Any) -> Any:
 
 
 def build_paired_scores(
-    human_attributed_utterances: Any, prompt_attributed_utterances: Any
+    human_attributed_utterances: Any, prompt_attributed_utterances: Any, average: bool = False, annotator: int = 0
 ) -> List[Tuple[int, int]]:
     paired_scores = []
-    seen_3 = False
     for key in human_attributed_utterances:
-        human_scores = human_attributed_utterances[key][-1]
+        human_scores = human_attributed_utterances[key][-2]
         prompt_score = prompt_attributed_utterances[key][-1]
         if isinstance(human_scores, dict) and prompt_score != -1:
-            # human_score = 0
-            # for key, score in human_scores.items():
-            #     human_score += score
-            # human_score /= len(human_scores)
             sorted_human_scores = sorted(
                 human_scores.items(), key=lambda x: x[0]
             )
-            # human_score = sorted_human_scores[0][1]
             ann0, ann1 = sorted_human_scores[0][1], sorted_human_scores[1][1]
-            # if seen_3:
-            #     ann1 = 0
-            # if ann1 == 3 and not seen_3:
-            #     seen_3 = True
-            human_score = ann0
+            if average:
+                human_score = (ann0 + ann1) / 2
+            else:
+                human_score = ann0 if annotator == 0 else ann1
             paired_scores.append((human_score, prompt_score))
     return paired_scores
 
 
-if __name__ == "__main__":
-    prompting_dataset, human_dataset = read_data()
+def main(data_dir: str, average: bool, annotator: int) -> None:
+    prompting_dataset, human_dataset = read_data(data_dir)
     paired_scores_dataset = []
     paired_convs = []
     for human_data in human_dataset:
@@ -75,9 +70,8 @@ if __name__ == "__main__":
                     "attributed_utterances"
                 ]
                 paired_scores = build_paired_scores(
-                    human_attributed_utterances, prompt_attributed_utterances
+                    human_attributed_utterances, prompt_attributed_utterances, average=average, annotator=annotator
                 )
-                # import pdb; pdb.set_trace()
                 paired_scores_dataset += paired_scores
                 paired_convs.append(paired_scores)
                 break
@@ -94,20 +88,30 @@ if __name__ == "__main__":
     print("spearman correlation: {}".format(spearman_corr))
     print("exact match: {}".format(agreement_rate))
     
-    agreement_list = []
-    agreement_linient_list = []
+    agreement_3_list = []
+    agreement_3_linient_list = []
     for i, conv in enumerate(paired_convs):
         human_scores = [score[0] for score in conv]
         prompt_scores = [score[1] for score in conv]
         human_key_utterance = human_scores.index(3) if 3 in human_scores else -1
         prompt_key_utterance = prompt_scores.index(3) if 3 in prompt_scores else -1
         if human_key_utterance == prompt_key_utterance:
-            agreement_list.append(1)
+            agreement_3_list.append(1)
         else:
-            agreement_list.append(0)
+            agreement_3_list.append(0)
         if human_key_utterance != -1 and prompt_key_utterance != -1:
-            agreement_linient_list.append(1)
+            agreement_3_linient_list.append(1)
         else:
-            agreement_linient_list.append(0)
-    print("agreement rate: {}".format(sum(agreement_list) / len(agreement_list)))
-    print("agreement linient rate: {}".format(sum(agreement_linient_list) / len(agreement_linient_list)))
+            agreement_3_linient_list.append(0)
+    print("agreement rate: {}".format(sum(agreement_3_list) / len(agreement_3_list)))
+    print("agreement linient rate: {}".format(sum(agreement_3_linient_list) / len(agreement_3_linient_list)))
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Process some integers.")
+    parser.add_argument('--data_dir', type=str, required=True, help='Directory containing data files')
+    parser.add_argument('--average', action='store_true', help='Whether to average the human scores')
+    parser.add_argument('--annotator', type=int, required=False, help='Which human annotator to use')
+    
+    args = parser.parse_args()
+    print(args.data_dir, args.average, args.annotator)
+    main(args.data_dir, args.average, args.annotator)

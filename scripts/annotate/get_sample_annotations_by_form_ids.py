@@ -8,7 +8,7 @@ from src.prompting.attribution_prompting import generate_reward_attribution
 
 def main(data_dir: str, llm_name: str, gcp_key: str) -> None:
     # get_episodes_from_form_ids(data_dir, gcp_key)
-    generate_reward_attribution(data_dir, llm_name)
+    # generate_reward_attribution(data_dir, llm_name)
     retrieve_responses(data_dir, gcp_key)
 
 if __name__ == '__main__':
