@@ -1,6 +1,5 @@
 import json
 import os
-import sys
 from collections import OrderedDict
 from pprint import pprint
 from typing import Any, Dict, List, Tuple
@@ -29,7 +28,7 @@ def openai_call(prompt: str) -> str | None:
 
 def parse_conversation(
     episode: Dict[str, Any]
-) -> Tuple[List[Tuple[str, str]], Dict[str, Dict[str, Any]]]:
+) -> Tuple[List[Tuple[str, str]], Dict[str, str]]:
     """Extract and parse conversation and goals from the episode."""
     conversation = episode["social_interactions"].split("\n\n")
     goals = episode["social_goals"]
@@ -75,23 +74,24 @@ The utterance numbers should correspond to their order in the conversation. Each
 
 def generate_single_attribution_prompt(
     conversation: List[Tuple[str, str]],
-    goal: Dict[str, Any],
+    goal: str,
     score: float,
     agent: str,
+    llm: str = "gpt-3.5-turbo",
 ) -> Tuple[str, Dict[str, List[Any]]]:
     """Generate a single prompt for GPT based on the entire conversation, agent's goals, and final goal achieving score."""
     prompt = f"{PRELOGUE_INSTRUCTIONS}\n\n"
     prompt += f"Agent Goal: {goal}\n\n"
     prompt += f"Final goal achieving score: {score}\n\n"
     prompt += "Conversation:\n"
-    key_utterance_dict = OrderedDict()
+    key_utterance_dict: Dict[str, List[Any]] = OrderedDict()
     for i, (speaker, utterance) in enumerate(conversation):
         prompt += f"Utterance {i//2} by {speaker}: {utterance}\n"
         key_utterance_dict[f"Utterance {i//2} by {speaker}"] = [
             utterance,
             -1,
         ]
-    prompt += "\n" + get_epilogue_instructions(agent, goal[agent])
+    prompt += "\n" + get_epilogue_instructions(agent, goal)
     return prompt, key_utterance_dict
 
 
@@ -104,9 +104,9 @@ def assign_attributions_for_conversation(prompt: str) -> Dict[str, int] | Any:
         return json.loads(response)
 
 
-if __name__ == "__main__":
+def generate_reward_attribution(data_dir: str, llm_name: str="gpt-3.5-turbo") -> None:
     with jsonlines.open(
-        "../data/example_episodes_with_scores.jsonl", "r"
+        os.path.join(data_dir, "example_episodes_with_scores.jsonl"), "r"
     ) as reader:
         data = list(reader)
 
@@ -117,7 +117,7 @@ if __name__ == "__main__":
         agents = list(goals.keys())
         for agent in agents:
             prompt, key_prompt_dict = generate_single_attribution_prompt(
-                conversation, goals[agent], episode["scores"][agent], agent
+                conversation, goals[agent], episode["scores"][agent], agent, llm=llm_name
             )
             attribution_scores = assign_attributions_for_conversation(prompt)
             for key in key_prompt_dict:
@@ -136,6 +136,6 @@ if __name__ == "__main__":
             )
 
             with jsonlines.open(
-                "../data/openai_log_attribution.jsonl", "w"
+                os.path.join(data_dir, "openai_log_attribution.jsonl"), "w"
             ) as writer:
                 writer.write_all(results)
