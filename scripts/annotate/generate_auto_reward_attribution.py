@@ -15,5 +15,6 @@ if __name__ == '__main__':
     parser.add_argument('--llm_name', type=str, required=True, help='Name of the language model')
     
     args = parser.parse_args()
+    print(args.data_dir, args.llm_name)
     
     main(args.data_dir, args.llm_name)

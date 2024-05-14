@@ -1,5 +1,6 @@
 import json
 import os
+import re
 from collections import OrderedDict
 from pprint import pprint
 from typing import Any, Dict, List, Tuple
@@ -13,10 +14,10 @@ from tqdm import tqdm
 from openai import OpenAI
 
 
-def openai_call(prompt: str) -> str | None:
+def openai_call(prompt: str, model: str = "gpt-3.5-turbo") -> str | None:
     client = OpenAI()
     response = client.chat.completions.create(
-        model="gpt-3.5-turbo",
+        model=model,
         messages=[{"role": "user", "content": prompt}],
         temperature=0.7,
         max_tokens=1024,
@@ -50,18 +51,16 @@ client = OpenAI()
 
 
 PRELOGUE_INSTRUCTIONS = """
-For this task, you will receive the dialogue history between two conversational agents, the social goal of one of the agents, and the final goal achieving score recieved by this agent. Your objective is to assess how much each of the agent's utterance (marked by the agent's name and the utterance number) contributed to the final goal achieving score.
+For this task, you will receive the dialogue history between two conversational agents, the social goal of one of the agents, and the final goal achieving score recieved by this agent. Your objective is to assess how much each of the agent's utterance (marked by the agent's name and the utterance number) contributed to the final goal achieving score. You also need to consider the response of the other agent in the conversation to evaluate the impact of the utterance. 
 
-There should be one critical utterances that decides the goal achieving score. The critical utterance should be labeled as 3.
+For the goal achieving score, if it is <5, the agent fails, so you need to think which utterance is the most important one that leads to the failure of the goal and assign the critical utterance that leads to the failure to be 3. If it is >=5, the agent succeeds, so you need to think which utterance is the most important one that leads to the success of the goal and assign the critical utterance that leads to the success to be 3. 
 
-For the goal achieving score, if it is <5, the agent fails, so you need to think which utterance is the most important one that leads to the failure of the goal and assign the critical utterance that leads to the failure to be "3". If it is >=5, the agent succeeds, so you need to think which utterances is the most important one that leads to the success and assign that utterance to be "3".
+Following the same logic, if you believe an utterance had no impact on the final goal achieving score, please provide a score of 0. If you believe an utterance had a significant impact on the final goal achieving score, please provide a score of 3. If you believe an utterance had a moderate impact on the final goal achieving score, please provide a score of 1 or 2. As a special case, if you believe an utterance is redundant and unnecessary, please provide a score of -1.
 """
 
 
-def get_epilogue_instructions(agent: str, goal: str) -> str:
+def get_epilogue_instructions(agent: str, goal: str, score: int) -> str:
     return f"""
-Please provide a score between 0 and 3 for each of the utterances made by {agent}. If you believe an utterance had no impact on the final goal achieving score, please provide a score of 0. If you believe an utterance had a significant impact on the final goal achieving score, please provide a score of 3. If you believe an utterance had a moderate impact on the final goal achieving score, please provide a score of 1 or 2. You can provide any score between 0 and 3 based on your judgment. Note that throughout the conversation, the agent's goal is to {goal}. Note that you can only assign one utterance a score of 3. If you believe that multiple utterances are critical, please assign the score of 3 to the most critical utterance.
-
 Please format your response as JSON with the following structure:
 {{
     "Utterance 1 by {agent}": 0,
@@ -69,6 +68,10 @@ Please format your response as JSON with the following structure:
     ...
 }}
 The utterance numbers should correspond to their order in the conversation. Each score should reflect how much the utterance contributed to achieving the agent's goals.
+
+For the goal achieving score, if it is <5, the agent fails, so you need to think which utterance is the most important one that leads to the failure of the goal and assign the critical utterance that leads to the failure to be 3. If it is >=5, the agent succeeds, so you need to think which utterance is the most important one that leads to the success of the goal and assign the critical utterance that leads to the success to be 3. 
+
+Following the same logic, if you believe an utterance had no impact on the final goal achieving score, please provide a score of 0. If you believe an utterance had a significant impact on the final goal achieving score, please provide a score of 3. If you believe an utterance had a moderate impact on the final goal achieving score, please provide a score of 1 or 2. As a special case, if you believe an utterance is redundant and unnecessary, please provide a score of -1.
 """
 
 
@@ -77,10 +80,11 @@ def generate_single_attribution_prompt(
     goal: str,
     score: float,
     agent: str,
-    llm: str = "gpt-3.5-turbo",
 ) -> Tuple[str, Dict[str, List[Any]]]:
     """Generate a single prompt for GPT based on the entire conversation, agent's goals, and final goal achieving score."""
     prompt = f"{PRELOGUE_INSTRUCTIONS}\n\n"
+    prompt += f"Conversation between two agents:\n\n"
+    prompt += f"Agent for Evaluation: {agent}\n\n"
     prompt += f"Agent Goal: {goal}\n\n"
     prompt += f"Final goal achieving score: {score}\n\n"
     prompt += "Conversation:\n"
@@ -89,20 +93,39 @@ def generate_single_attribution_prompt(
         prompt += f"Utterance {i//2} by {speaker}: {utterance}\n"
         key_utterance_dict[f"Utterance {i//2} by {speaker}"] = [
             utterance,
-            -1,
+            0,
         ]
-    prompt += "\n" + get_epilogue_instructions(agent, goal)
+    prompt += "\n" + get_epilogue_instructions(agent, goal, score)
     return prompt, key_utterance_dict
 
 
-def assign_attributions_for_conversation(prompt: str) -> Dict[str, int] | Any:
+def assign_attributions_for_conversation(prompt: str, llm_name: str = "gpt-3.5-turbo") -> Dict[str, int] | Any:
     """Assign attributions to the entire conversation based on a GPT response."""
-    response = openai_call(prompt)
+    response = openai_call(prompt, llm_name)
     if response is None:
-        return None
+        print("Failed to get response from OpenAI; returning empty dictionary")
+        return {}
     else:
-        return json.loads(response)
+        try:
+            result = json.loads(response)
+        except json.JSONDecodeError:
+            print("Failed to decode JSON response; trying to extract JSON string from response")
+            try:
+                result = json.loads(extract_json(response))
+            except json.JSONDecodeError:
+                print("Failed to decode JSON string from response after extracting it; returning empty dictionary")
+                return {}
+        return result
+        
 
+def extract_json(text):
+    # Use regex to find the JSON string within the text
+    match = re.search(r'```json\n(.*?)\n```', text, re.DOTALL)
+    if match:
+        json_str = match.group(1)
+        return json_str
+    else:
+        return None
 
 def generate_reward_attribution(data_dir: str, llm_name: str="gpt-3.5-turbo") -> None:
     with jsonlines.open(
@@ -117,9 +140,9 @@ def generate_reward_attribution(data_dir: str, llm_name: str="gpt-3.5-turbo") ->
         agents = list(goals.keys())
         for agent in agents:
             prompt, key_prompt_dict = generate_single_attribution_prompt(
-                conversation, goals[agent], episode["scores"][agent], agent, llm=llm_name
+                conversation, goals[agent], episode["scores"][agent], agent
             )
-            attribution_scores = assign_attributions_for_conversation(prompt)
+            attribution_scores = assign_attributions_for_conversation(prompt, llm_name=llm_name)
             for key in key_prompt_dict:
                 if agent in key and key in attribution_scores:
                     key_prompt_dict[key][1] = attribution_scores[key]
