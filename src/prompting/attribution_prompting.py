@@ -59,7 +59,7 @@ Following the same logic, if you believe an utterance had no impact on the final
 """
 
 
-def get_epilogue_instructions(agent: str, goal: str, score: int) -> str:
+def get_epilogue_instructions(agent: str, goal: str, score: float) -> str:
     return f"""
 Please format your response as JSON with the following structure:
 {{
