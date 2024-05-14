@@ -59,7 +59,7 @@ Following the same logic, if you believe an utterance had no impact on the final
 """
 
 
-def get_epilogue_instructions(agent: str, goal: str, score: int) -> str:
+def get_epilogue_instructions(agent: str, goal: str, score: float) -> str:
     return f"""
 Please format your response as JSON with the following structure:
 {{
@@ -110,15 +110,15 @@ def assign_attributions_for_conversation(prompt: str, llm_name: str = "gpt-3.5-t
             result = json.loads(response)
         except json.JSONDecodeError:
             print("Failed to decode JSON response; trying to extract JSON string from response")
-            try:
-                result = json.loads(extract_json(response))
-            except json.JSONDecodeError:
-                print("Failed to decode JSON string from response after extracting it; returning empty dictionary")
+            response = extract_json(response)
+            if response is None:
+                print("Failed to extract JSON string from response; returning empty dictionary")
                 return {}
+            result = json.loads(response)
         return result
         
 
-def extract_json(text):
+def extract_json(text: str) -> str | None:
     # Use regex to find the JSON string within the text
     match = re.search(r'```json\n(.*?)\n```', text, re.DOTALL)
     if match:
