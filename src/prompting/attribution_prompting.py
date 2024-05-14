@@ -109,20 +109,21 @@ def assign_attributions_for_conversation(prompt: str, llm_name: str = "gpt-3.5-t
         try:
             result = json.loads(response)
         except json.JSONDecodeError:
-            print("Failed to decode JSON response; trying to extract JSON string from response")
-            response = extract_json(response)
-            if response is None:
+            # import pdb; pdb.set_trace()
+            formatted_response = extract_json(response)
+            if formatted_response is None:
                 print("Failed to extract JSON string from response; returning empty dictionary")
+                print(response)
                 return {}
-            result = json.loads(response)
+            result = json.loads(formatted_response)
         return result
         
 
 def extract_json(text: str) -> str | None:
     # Use regex to find the JSON string within the text
-    match = re.search(r'```json\n(.*?)\n```', text, re.DOTALL)
+    match = re.search(r'\{\n.*?\n\}', text, re.DOTALL)
     if match:
-        json_str = match.group(1)
+        json_str = match.group(0)
         return json_str
     else:
         return None
