@@ -33,7 +33,10 @@ def select_qualifying_episodes(episodes: list[Dict[str, Any]]) -> list[Dict[str,
             qualifying_episodes.append(episode)
     return qualifying_episodes
 
-def create_non_repeating_sample_episodes(qualifying_episodes: list[Dict[str, Any]], num_episodes: int=30) -> list[Dict[str, Any]]:
+def create_non_repeating_sample_episodes(qualifying_episodes: list[Dict[str, Any]], num_episodes: int) -> list[Dict[str, Any]]:
+    if num_episodes == -1:
+        return qualifying_episodes
+    
     example_episodes = []
     visited_codename = set()
     for episode in qualifying_episodes:

@@ -67,14 +67,6 @@ def add_responses_to_sheet(
         print(f"Responses: {responses}")
         for key in log[i]["attributed_utterances"]:
             print(f"  Key: {key}")
-            # item = next(
-            #     (
-            #         item
-            #         for item in form_schema["items"]
-            #         if item["title"].split(":")[0] == key
-            #     ),
-            #     None,
-            # )
             item, next_item = None, None
             for item_idx in range(len(form_schema["items"])):
                 item = form_schema["items"][item_idx]
@@ -83,48 +75,37 @@ def add_responses_to_sheet(
                         next_item = form_schema["items"][item_idx + 1]
                     break
             
-            # import pdb; pdb.set_trace()
             if item and "questionItem" in item:
                 question_id = item["questionItem"]["question"]["questionId"]
                 for response in responses:
-                    response_id = response["responseId"]
-                    for _, response_item in response["answers"].items():
-                        response_question_id = response_item["questionId"]
-                        if response_question_id == question_id:
-                            print(f"  Response ID: {response_id}")
-                            if len(log[i]["attributed_utterances"][key]) == 2:
-                                log[i]["attributed_utterances"][key].append({})
-                            # import pdb; pdb.set_trace()
-                            log[i]["attributed_utterances"][key][2].update(
-                                {
-                                    response["lastSubmittedTime"]: int(
-                                        response_item["textAnswers"][
-                                            "answers"
-                                        ][0]["value"]
-                                    )
-                                }
+                    response_answer = response["answers"][question_id]
+                    if len(log[i]["attributed_utterances"][key]) == 2:
+                        log[i]["attributed_utterances"][key].append({})
+                    log[i]["attributed_utterances"][key][2].update(
+                        {
+                            response["lastSubmittedTime"]: int(
+                                response_answer["textAnswers"][
+                                    "answers"
+                                ][0]["value"]
                             )
-                            break
+                        }
+                    )
                 if next_item and "questionItem" in next_item:
-                    question_id = next_item["questionItem"]["question"]["questionId"]
+                    next_question_id = next_item["questionItem"]["question"]["questionId"]
                     for response in responses:
-                        response_id = response["responseId"]
-                        for _, response_item in response["answers"].items():
-                            response_question_id = response_item["questionId"]
-                            if response_question_id == question_id:
-                                print(f"  Response ID: {response_id}")
-                                if len(log[i]["attributed_utterances"][key]) == 3:
-                                    log[i]["attributed_utterances"][key].append({})
-                                log[i]["attributed_utterances"][key][3].update(
-                                    {
-                                        response["lastSubmittedTime"]: str(
-                                            response_item["textAnswers"][
-                                                "answers"
-                                            ][0]["value"]
-                                        )
-                                    }
+                        next_response_answer = response["answers"][next_question_id]
+                        if len(log[i]["attributed_utterances"][key]) == 3:
+                            log[i]["attributed_utterances"][key].append({})
+                        log[i]["attributed_utterances"][key][3].update(
+                            {
+                                response["lastSubmittedTime"]: str(
+                                    next_response_answer["textAnswers"][
+                                        "answers"
+                                    ][0]["value"]
                                 )
-                                break
+                            }
+                        )
+                    print(log[i]["attributed_utterances"][key][3])
             else:
                 print("  No question item found")
         print(f"Updated log")
