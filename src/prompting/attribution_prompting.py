@@ -59,7 +59,7 @@ Following the same logic, if you believe an utterance had no impact on the final
 """
 
 
-def get_epilogue_instructions(agent: str, goal: str, score: float) -> str:
+def get_epilogue_instructions(agent: str, goal: str, score: int) -> str:
     return f"""
 Please format your response as JSON with the following structure:
 {{
@@ -68,10 +68,6 @@ Please format your response as JSON with the following structure:
     ...
 }}
 The utterance numbers should correspond to their order in the conversation. Each score should reflect how much the utterance contributed to achieving the agent's goals.
-
-For the goal achieving score, if it is <5, the agent fails, so you need to think which utterance is the most important one that leads to the failure of the goal and assign the critical utterance that leads to the failure to be 3. If it is >=5, the agent succeeds, so you need to think which utterance is the most important one that leads to the success of the goal and assign the critical utterance that leads to the success to be 3. 
-
-Following the same logic, if you believe an utterance had no impact on the final goal achieving score, please provide a score of 0. If you believe an utterance had a significant impact on the final goal achieving score, please provide a score of 3. If you believe an utterance had a moderate impact on the final goal achieving score, please provide a score of 1 or 2. As a special case, if you believe an utterance is redundant and unnecessary, please provide a score of -1.
 """
 
 
@@ -109,7 +105,6 @@ def assign_attributions_for_conversation(prompt: str, llm_name: str = "gpt-3.5-t
         try:
             result = json.loads(response)
         except json.JSONDecodeError:
-            # import pdb; pdb.set_trace()
             formatted_response = extract_json(response)
             if formatted_response is None:
                 print("Failed to extract JSON string from response; returning empty dictionary")
@@ -128,12 +123,15 @@ def extract_json(text: str) -> str | None:
     else:
         return None
 
-def generate_reward_attribution(data_dir: str, llm_name: str="gpt-3.5-turbo") -> None:
+def generate_reward_attribution(data_dir: str, 
+                                llm_name: str="gpt-3.5-turbo",
+                                input_file: str="example_episodes_with_scores.jsonl",
+                                output_file: str="openai_log_attribution.jsonl",) -> None:
     with jsonlines.open(
-        os.path.join(data_dir, "example_episodes_with_scores.jsonl"), "r"
+        os.path.join(data_dir, input_file), "r"
     ) as reader:
         data = list(reader)
-
+    # import pdb; pdb.set_trace()
     print(len(data))
     results = []
     for episode in tqdm(data):
@@ -160,6 +158,6 @@ def generate_reward_attribution(data_dir: str, llm_name: str="gpt-3.5-turbo") ->
             )
 
             with jsonlines.open(
-                os.path.join(data_dir, "openai_log_attribution.jsonl"), "w"
+                os.path.join(data_dir, output_file), "w"
             ) as writer:
                 writer.write_all(results)
