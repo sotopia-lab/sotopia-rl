@@ -22,7 +22,7 @@ For the goal achieving score, if it is <5, the agent fails, so you need to think
 """
 
 
-def get_epilogue_instructions(agent: str, goal: str, score: int) -> str:
+def get_epilogue_instructions(agent: str) -> str:
     return f"""
 Please provide YES or NO for each of the utterances made by {agent}. If you believe an utterance directly leads to the success or failure of the agent's goal, assign it as 'YES'. Otherwise, assign it as 'NO'.
 
@@ -54,7 +54,7 @@ def generate_single_key_utterance_prompt(
             utterance,
             -1,
         ]
-    prompt += "\n" + get_epilogue_instructions(agent, goal, score)
+    prompt += "\n" + get_epilogue_instructions(agent)
     return prompt, key_utterance_dict
 
 

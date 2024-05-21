@@ -1,7 +1,7 @@
 from openai import OpenAI
 
 
-def openai_call(prompt: str, model="gpt-3.5-turbo") -> str | None:
+def openai_call(prompt: str, model: str="gpt-3.5-turbo") -> str | None:
     client = OpenAI()
     response = client.chat.completions.create(
         model=model,

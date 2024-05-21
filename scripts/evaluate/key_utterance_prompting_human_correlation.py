@@ -44,7 +44,7 @@ def answer_to_score(answer: str) -> int:
 
 def build_paired_scores(
     human_attributed_utterances: Any, prompt_attributed_utterances: Any, average: bool = False, annotator: int = 0
-) -> List[Tuple[int, int]]:
+) -> List[Tuple[float, Any]]:
     paired_scores = []
     for key in human_attributed_utterances:
         human_scores = human_attributed_utterances[key][-1]
