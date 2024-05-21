@@ -9,13 +9,14 @@ from typing import (
     Tuple,
 )
 import os
+import random
 
 import jsonlines
 from scipy.stats import spearmanr
 
 
 def read_data(data_dir: str) -> Tuple[Iterable[Any], Iterable[Any]]:
-    with jsonlines.open(os.path.join(data_dir, "openai_log_attribution.jsonl"), "r") as reader:
+    with jsonlines.open(os.path.join(data_dir, "openai_log_key_utterance.jsonl"), "r") as reader:
         prompting_dataset = list(reader)
 
     with jsonlines.open(os.path.join(data_dir, "human_log_attribution.jsonl"), "r") as reader:
@@ -32,23 +33,32 @@ def hard_code_key(attributed_utterances: Any) -> Any:
         new_attributed_utterances[new_key] = attributed_utterances[key]
     return new_attributed_utterances
 
+def answer_to_score(answer: str) -> int:
+    if "yes" in answer.lower():
+        return 1
+    elif "no" in answer.lower():
+        return 0
+    else:
+        print("Invalid answer, generating random score")
+        return random.choice([0, 1])
 
 def build_paired_scores(
     human_attributed_utterances: Any, prompt_attributed_utterances: Any, average: bool = False, annotator: int = 0
 ) -> List[Tuple[int, int]]:
     paired_scores = []
     for key in human_attributed_utterances:
-        human_scores = human_attributed_utterances[key][-2]
+        human_scores = human_attributed_utterances[key][-1]
         prompt_score = prompt_attributed_utterances[key][-1]
         if isinstance(human_scores, dict) and prompt_score != -1:
             sorted_human_scores = sorted(
                 human_scores.items(), key=lambda x: x[0]
             )
-            ann0, ann1 = sorted_human_scores[0][1], sorted_human_scores[1][1]
+            ann0, ann1 = answer_to_score(sorted_human_scores[0][1]), answer_to_score(sorted_human_scores[1][1])
             if average:
                 human_score = (ann0 + ann1) / 2
             else:
                 human_score = ann0 if annotator == 0 else ann1
+            prompt_score = answer_to_score(prompt_score)
             paired_scores.append((human_score, prompt_score))
     return paired_scores
 
@@ -66,7 +76,7 @@ def main(data_dir: str, average: bool, annotator: int) -> None:
                     "attributed_utterances"
                 ]
                 prompt_attributed_utterances = prompt_data[
-                    "attributed_utterances"
+                    "key_utterance_judgement"
                 ]
                 paired_scores = build_paired_scores(
                     human_attributed_utterances, prompt_attributed_utterances, average=average, annotator=annotator
@@ -84,24 +94,29 @@ def main(data_dir: str, average: bool, annotator: int) -> None:
     ) / len(paired_scores_dataset)
     print("average difference: {}".format(avg_diff))
     print("spearman correlation: {}".format(spearman_corr))
-    print("exact match: {}".format(agreement_rate))
+    # print("exact match: {}".format(agreement_rate))
     
-    human_3_scores = [1 if score == 3 else 0 for score in human_scores]
-    prompt_3_scores = [1 if score == 3 else 0 for score in prompt_scores]
     #calculate the accuracy
-    accuracy = sum([1 for i in range(len(human_3_scores)) if human_3_scores[i] == prompt_3_scores[i]]) / len(human_3_scores)
+    accuracy = sum([1 for i in range(len(human_scores)) if human_scores[i] == prompt_scores[i]]) / len(human_scores)
     print("Accuracy: {}".format(accuracy))
+    # import pdb; pdb.set_trace()
     # calculate the F1 score
-    tp = sum([1 for i in range(len(human_3_scores)) if human_3_scores[i] == 1 and prompt_3_scores[i] == 1])
-    fp = sum([1 for i in range(len(human_3_scores)) if human_3_scores[i] == 0 and prompt_3_scores[i] == 1])
-    fn = sum([1 for i in range(len(human_3_scores)) if human_3_scores[i] == 1 and prompt_3_scores[i] == 0])
+    tp, fp, tn, fn = 0, 0, 0, 0
+    for i in range(len(human_scores)):
+        if human_scores[i] == 1 and prompt_scores[i] == 1:
+            tp += 1
+        elif human_scores[i] == 1 and prompt_scores[i] == 0:
+            fn += 1
+        elif human_scores[i] == 0 and prompt_scores[i] == 1:
+            fp += 1
+        else:
+            tn += 1
     precision = tp / (tp + fp)
     recall = tp / (tp + fn)
     f1 = 2 * precision * recall / (precision + recall)
     print("Precision: {}".format(precision))
     print("Recall: {}".format(recall))
     print("F1 score: {}".format(f1))
-    #print(f"{avg_diff} {spearman_corr} {agreement_rate} {agreement_rate} {f1} {precision} {recall}")
     print("{:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.3f}".format(avg_diff, spearman_corr, agreement_rate, f1, precision, recall))
 
 if __name__ == "__main__":
