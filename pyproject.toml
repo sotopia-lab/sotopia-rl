@@ -38,6 +38,9 @@ strict = true
 plugins = [
     "pydantic.mypy"
 ]
+exclude = [
+    'src/llmtuner'
+]
 
 [[tool.mypy.overrides]]
 module = "transformers.*"
