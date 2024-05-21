@@ -6,10 +6,12 @@ from typing import Any, Dict, List, Optional, Tuple
 from yaml import safe_dump
 
 from ..extras.constants import RUNNING_LOG, TRAINER_CONFIG, TRAINER_LOG
-from ..extras.packages import is_gradio_available, is_matplotlib_available
+from ..extras.packages import (
+    is_gradio_available,
+    is_matplotlib_available,
+)
 from ..extras.ploting import gen_loss_plot
 from .locales import ALERTS
-
 
 if is_gradio_available():
     import gradio as gr
@@ -38,13 +40,22 @@ def check_json_schema(text: str, lang: str) -> None:
 
 def clean_cmd(args: Dict[str, Any]) -> Dict[str, Any]:
     no_skip_keys = ["packing"]
-    return {k: v for k, v in args.items() if (k in no_skip_keys) or (v is not None and v is not False and v != "")}
+    return {
+        k: v
+        for k, v in args.items()
+        if (k in no_skip_keys)
+        or (v is not None and v is not False and v != "")
+    }
 
 
 def gen_cmd(args: Dict[str, Any]) -> str:
     args["plot_loss"] = args.get("do_train", None)
     current_devices = os.environ.get("CUDA_VISIBLE_DEVICES", "0")
-    cmd_lines = ["CUDA_VISIBLE_DEVICES={} llamafactory-cli train ".format(current_devices)]
+    cmd_lines = [
+        "CUDA_VISIBLE_DEVICES={} llamafactory-cli train ".format(
+            current_devices
+        )
+    ]
     for k, v in clean_cmd(args).items():
         cmd_lines.append("    --{} {} ".format(k, str(v)))
 
@@ -63,7 +74,9 @@ def get_time() -> str:
     return datetime.now().strftime(r"%Y-%m-%d-%H-%M-%S")
 
 
-def get_trainer_info(output_path: os.PathLike, do_train: bool) -> Tuple[str, "gr.Slider", Optional["gr.Plot"]]:
+def get_trainer_info(
+    output_path: os.PathLike, do_train: bool
+) -> Tuple[str, "gr.Slider", Optional["gr.Plot"]]:
     running_log = ""
     running_progress = gr.Slider(visible=False)
     running_loss = None
@@ -89,7 +102,9 @@ def get_trainer_info(output_path: os.PathLike, do_train: bool) -> Tuple[str, "gr
                 latest_log["elapsed_time"],
                 latest_log["remaining_time"],
             )
-            running_progress = gr.Slider(label=label, value=percentage, visible=True)
+            running_progress = gr.Slider(
+                label=label, value=percentage, visible=True
+            )
 
             if do_train and is_matplotlib_available():
                 running_loss = gr.Plot(gen_loss_plot(trainer_log))
@@ -101,7 +116,9 @@ def save_cmd(args: Dict[str, Any]) -> str:
     output_dir = args["output_dir"]
     os.makedirs(output_dir, exist_ok=True)
 
-    with open(os.path.join(output_dir, TRAINER_CONFIG), "w", encoding="utf-8") as f:
+    with open(
+        os.path.join(output_dir, TRAINER_CONFIG), "w", encoding="utf-8"
+    ) as f:
         safe_dump(clean_cmd(args), f)
 
     return os.path.join(output_dir, TRAINER_CONFIG)

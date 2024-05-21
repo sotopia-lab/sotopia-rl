@@ -11,7 +11,6 @@ from trl.trainer.utils import disable_dropout_in_model
 from ...extras.constants import IGNORE_INDEX
 from ..utils import create_custom_optimzer, create_custom_scheduler
 
-
 if TYPE_CHECKING:
     from transformers import PreTrainedModel
 
@@ -48,25 +47,34 @@ class CustomORPOTrainer(DPOTrainer):
         if finetuning_args.use_badam:
             from badam import clip_grad_norm_for_sparse_tensor
 
-            self.accelerator.clip_grad_norm_ = MethodType(clip_grad_norm_for_sparse_tensor, self.accelerator)
+            self.accelerator.clip_grad_norm_ = MethodType(
+                clip_grad_norm_for_sparse_tensor, self.accelerator
+            )
 
     def create_optimizer(self) -> "torch.optim.Optimizer":
         if self.optimizer is None:
-            self.optimizer = create_custom_optimzer(self.model, self.args, self.finetuning_args)
+            self.optimizer = create_custom_optimzer(
+                self.model, self.args, self.finetuning_args
+            )
         return super().create_optimizer()
 
     def create_scheduler(
-        self, num_training_steps: int, optimizer: Optional["torch.optim.Optimizer"] = None
+        self,
+        num_training_steps: int,
+        optimizer: Optional["torch.optim.Optimizer"] = None,
     ) -> "torch.optim.lr_scheduler.LRScheduler":
         create_custom_scheduler(self.args, num_training_steps, optimizer)
         return super().create_scheduler(num_training_steps, optimizer)
 
-    def odds_ratio_loss(self, chosen_logps: "torch.Tensor", rejected_logps: "torch.Tensor") -> "torch.Tensor":
+    def odds_ratio_loss(
+        self, chosen_logps: "torch.Tensor", rejected_logps: "torch.Tensor"
+    ) -> "torch.Tensor":
         r"""
         Computes ORPO's odds ratio (OR) loss.
         """
         log_odds = (chosen_logps - rejected_logps) - (
-            torch.log1p(-torch.exp(chosen_logps)) - torch.log1p(-torch.exp(rejected_logps))
+            torch.log1p(-torch.exp(chosen_logps))
+            - torch.log1p(-torch.exp(rejected_logps))
         )
         odds_ratio_loss = -F.logsigmoid(log_odds)
         return odds_ratio_loss
@@ -78,7 +86,10 @@ class CustomORPOTrainer(DPOTrainer):
         Computes the average log probabilities of the labels under the given logits.
         """
         all_logits: "torch.Tensor" = model(
-            input_ids=batch["input_ids"], attention_mask=batch["attention_mask"], return_dict=True, use_cache=False
+            input_ids=batch["input_ids"],
+            attention_mask=batch["attention_mask"],
+            return_dict=True,
+            use_cache=False,
         ).logits.to(torch.float32)
 
         all_logps = self.get_batch_logps(
@@ -103,7 +114,12 @@ class CustomORPOTrainer(DPOTrainer):
         Computes the ORPO loss and other metrics for the given batch of inputs for train or test.
         """
         metrics = {}
-        chosen_logps, rejected_logps, chosen_logits, rejected_logits = self.concatenated_forward(model, batch)
+        (
+            chosen_logps,
+            rejected_logps,
+            chosen_logits,
+            rejected_logits,
+        ) = self.concatenated_forward(model, batch)
         sft_loss = -chosen_logps
         odds_ratio_loss = self.odds_ratio_loss(chosen_logps, rejected_logps)
         batch_loss = (sft_loss + self.beta * odds_ratio_loss).mean()
@@ -113,15 +129,33 @@ class CustomORPOTrainer(DPOTrainer):
         reward_accuracies = (chosen_rewards > rejected_rewards).float()
 
         prefix = "eval_" if train_eval == "eval" else ""
-        metrics["{}rewards/chosen".format(prefix)] = chosen_rewards.mean().cpu()
-        metrics["{}rewards/rejected".format(prefix)] = rejected_rewards.mean().cpu()
-        metrics["{}rewards/accuracies".format(prefix)] = reward_accuracies.mean().cpu()
-        metrics["{}rewards/margins".format(prefix)] = (chosen_rewards - rejected_rewards).mean().cpu()
-        metrics["{}logps/rejected".format(prefix)] = rejected_logps.detach().mean().cpu()
-        metrics["{}logps/chosen".format(prefix)] = chosen_logps.detach().mean().cpu()
-        metrics["{}logits/rejected".format(prefix)] = rejected_logits.detach().mean().cpu()
-        metrics["{}logits/chosen".format(prefix)] = chosen_logits.detach().mean().cpu()
+        metrics[
+            "{}rewards/chosen".format(prefix)
+        ] = chosen_rewards.mean().cpu()
+        metrics[
+            "{}rewards/rejected".format(prefix)
+        ] = rejected_rewards.mean().cpu()
+        metrics[
+            "{}rewards/accuracies".format(prefix)
+        ] = reward_accuracies.mean().cpu()
+        metrics["{}rewards/margins".format(prefix)] = (
+            (chosen_rewards - rejected_rewards).mean().cpu()
+        )
+        metrics["{}logps/rejected".format(prefix)] = (
+            rejected_logps.detach().mean().cpu()
+        )
+        metrics["{}logps/chosen".format(prefix)] = (
+            chosen_logps.detach().mean().cpu()
+        )
+        metrics["{}logits/rejected".format(prefix)] = (
+            rejected_logits.detach().mean().cpu()
+        )
+        metrics["{}logits/chosen".format(prefix)] = (
+            chosen_logits.detach().mean().cpu()
+        )
         metrics["{}sft_loss".format(prefix)] = sft_loss.detach().mean().cpu()
-        metrics["{}odds_ratio_loss".format(prefix)] = odds_ratio_loss.detach().mean().cpu()
+        metrics["{}odds_ratio_loss".format(prefix)] = (
+            odds_ratio_loss.detach().mean().cpu()
+        )
 
         return batch_loss, metrics

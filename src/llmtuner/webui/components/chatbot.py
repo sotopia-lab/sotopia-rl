@@ -4,7 +4,6 @@ from ...data import Role
 from ...extras.packages import is_gradio_available
 from ..utils import check_json_schema
 
-
 if is_gradio_available():
     import gradio as gr
 
@@ -25,7 +24,10 @@ def create_chat_box(
             with gr.Column(scale=4):
                 with gr.Row():
                     with gr.Column():
-                        role = gr.Dropdown(choices=[Role.USER.value, Role.OBSERVATION.value], value=Role.USER.value)
+                        role = gr.Dropdown(
+                            choices=[Role.USER.value, Role.OBSERVATION.value],
+                            value=Role.USER.value,
+                        )
                         system = gr.Textbox(show_label=False)
                         tools = gr.Textbox(show_label=False, lines=3)
 
@@ -36,12 +38,21 @@ def create_chat_box(
                 submit_btn = gr.Button(variant="primary")
 
             with gr.Column(scale=1):
-                max_new_tokens = gr.Slider(minimum=8, maximum=4096, value=512, step=1)
-                top_p = gr.Slider(minimum=0.01, maximum=1.0, value=0.7, step=0.01)
-                temperature = gr.Slider(minimum=0.01, maximum=1.5, value=0.95, step=0.01)
+                max_new_tokens = gr.Slider(
+                    minimum=8, maximum=4096, value=512, step=1
+                )
+                top_p = gr.Slider(
+                    minimum=0.01, maximum=1.0, value=0.7, step=0.01
+                )
+                temperature = gr.Slider(
+                    minimum=0.01, maximum=1.5, value=0.95, step=0.01
+                )
                 clear_btn = gr.Button()
 
-    tools.input(check_json_schema, inputs=[tools, engine.manager.get_elem_by_id("top.lang")])
+    tools.input(
+        check_json_schema,
+        inputs=[tools, engine.manager.get_elem_by_id("top.lang")],
+    )
 
     submit_btn.click(
         engine.chatter.append,
@@ -49,7 +60,16 @@ def create_chat_box(
         [chatbot, messages, query],
     ).then(
         engine.chatter.stream,
-        [chatbot, messages, system, tools, image, max_new_tokens, top_p, temperature],
+        [
+            chatbot,
+            messages,
+            system,
+            tools,
+            image,
+            max_new_tokens,
+            top_p,
+            temperature,
+        ],
         [chatbot, messages],
     )
     clear_btn.click(lambda: ([], []), outputs=[chatbot, messages])

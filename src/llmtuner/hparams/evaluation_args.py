@@ -16,7 +16,9 @@ class EvaluationArguments:
     )
     task_dir: str = field(
         default="evaluation",
-        metadata={"help": "Path to the folder containing the evaluation datasets."},
+        metadata={
+            "help": "Path to the folder containing the evaluation datasets."
+        },
     )
     batch_size: int = field(
         default=4,

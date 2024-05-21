@@ -8,16 +8,21 @@ from transformers.integrations import is_deepspeed_zero3_enabled
 
 from ..extras.logging import get_logger
 from ..extras.misc import infer_optim_dtype
-from .utils.attention import configure_attn_implementation, print_attn_implementation
+from .utils.attention import (
+    configure_attn_implementation,
+    print_attn_implementation,
+)
 from .utils.checkpointing import prepare_model_for_training
 from .utils.embedding import resize_embedding_layer
 from .utils.longlora import configure_longlora
 from .utils.moe import add_z3_leaf_module, configure_moe
 from .utils.quantization import configure_quantization
 from .utils.rope import configure_rope
-from .utils.valuehead import configure_valuehead, prepare_valuehead_model
+from .utils.valuehead import (
+    configure_valuehead,
+    prepare_valuehead_model,
+)
 from .utils.visual import autocast_projector_dtype
-
 
 if TYPE_CHECKING:
     from transformers import PretrainedConfig, PreTrainedTokenizer
@@ -43,7 +48,9 @@ def patch_config(
     add_valuehead: bool,
 ) -> None:
     if model_args.compute_dtype is None:  # priority: bf16 > fp16 > fp32
-        model_args.compute_dtype = infer_optim_dtype(model_dtype=getattr(config, "torch_dtype", None))
+        model_args.compute_dtype = infer_optim_dtype(
+            model_dtype=getattr(config, "torch_dtype", None)
+        )
 
     configure_attn_implementation(config, model_args)
     configure_rope(config, model_args, is_trainable)
@@ -60,11 +67,21 @@ def patch_config(
 
     if getattr(config, "model_type", None) == "qwen":
         setattr(config, "use_flash_attn", model_args.flash_attn)
-        for dtype_name, dtype in [("fp16", torch.float16), ("bf16", torch.bfloat16), ("fp32", torch.float32)]:
+        for dtype_name, dtype in [
+            ("fp16", torch.float16),
+            ("bf16", torch.bfloat16),
+            ("fp32", torch.float32),
+        ]:
             setattr(config, dtype_name, model_args.compute_dtype == dtype)
 
-    if getattr(config, "model_type", None) == "qwen2" and is_trainable and model_args.flash_attn:
-        setattr(config, "use_cache", False)  # qwen2 does not support use_cache when using flashattn
+    if (
+        getattr(config, "model_type", None) == "qwen2"
+        and is_trainable
+        and model_args.flash_attn
+    ):
+        setattr(
+            config, "use_cache", False
+        )  # qwen2 does not support use_cache when using flashattn
 
     init_kwargs["torch_dtype"] = model_args.compute_dtype
     if not is_deepspeed_zero3_enabled():
@@ -122,16 +139,30 @@ def patch_valuehead_model(model: "AutoModelForCausalLMWithValueHead") -> None:
         if isinstance(self.pretrained_model, PreTrainedModel):
             self.pretrained_model.tie_weights()
 
-    def get_input_embeddings(self: "AutoModelForCausalLMWithValueHead") -> torch.nn.Module:
+    def get_input_embeddings(
+        self: "AutoModelForCausalLMWithValueHead",
+    ) -> torch.nn.Module:
         if isinstance(self.pretrained_model, PreTrainedModel):
             return self.pretrained_model.get_input_embeddings()
 
-    def create_or_update_model_card(self: "AutoModelForCausalLMWithValueHead", output_dir: str) -> None:
+    def create_or_update_model_card(
+        self: "AutoModelForCausalLMWithValueHead", output_dir: str
+    ) -> None:
         if isinstance(self.pretrained_model, PeftModel):
             self.pretrained_model.create_or_update_model_card(output_dir)
 
-    ignore_modules = [name for name, _ in model.named_parameters() if "pretrained_model" in name]
+    ignore_modules = [
+        name
+        for name, _ in model.named_parameters()
+        if "pretrained_model" in name
+    ]
     setattr(model, "_keys_to_ignore_on_save", ignore_modules)
     setattr(model, "tie_weights", MethodType(tie_weights, model))
-    setattr(model, "get_input_embeddings", MethodType(get_input_embeddings, model))
-    setattr(model, "create_or_update_model_card", MethodType(create_or_update_model_card, model))
+    setattr(
+        model, "get_input_embeddings", MethodType(get_input_embeddings, model)
+    )
+    setattr(
+        model,
+        "create_or_update_model_card",
+        MethodType(create_or_update_model_card, model),
+    )

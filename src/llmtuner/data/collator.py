@@ -11,7 +11,9 @@ class PairwiseDataCollatorWithPadding(DataCollatorForSeq2Seq):
     Data collator for pairwise data.
     """
 
-    def _pad_labels(self, batch: torch.Tensor, positions: List[Tuple[int, int]]) -> torch.Tensor:
+    def _pad_labels(
+        self, batch: torch.Tensor, positions: List[Tuple[int, int]]
+    ) -> torch.Tensor:
         r"""
         Masks out the input ids except for the responses.
         """
@@ -24,9 +26,13 @@ class PairwiseDataCollatorWithPadding(DataCollatorForSeq2Seq):
             padded_tensor = self.label_pad_token_id * torch.ones_like(feature)
             padded_tensor[start:end] = feature[start:end]
             padded_labels.append(padded_tensor)
-        return torch.stack(padded_labels, dim=0).contiguous()  # in contiguous memory
+        return torch.stack(
+            padded_labels, dim=0
+        ).contiguous()  # in contiguous memory
 
-    def __call__(self, features: Sequence[Dict[str, Any]]) -> Dict[str, torch.Tensor]:
+    def __call__(
+        self, features: Sequence[Dict[str, Any]]
+    ) -> Dict[str, torch.Tensor]:
         r"""
         Pads batched data to the longest sequence in the batch.
 
@@ -37,7 +43,9 @@ class PairwiseDataCollatorWithPadding(DataCollatorForSeq2Seq):
         label_positions = []
         for key in ("chosen_ids", "rejected_ids"):
             for feature in features:
-                prompt_len, answer_len = len(feature["prompt_ids"]), len(feature[key])
+                prompt_len, answer_len = len(feature["prompt_ids"]), len(
+                    feature[key]
+                )
                 concatenated_features.append(
                     {
                         "input_ids": feature["prompt_ids"] + feature[key],

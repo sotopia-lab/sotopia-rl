@@ -2,7 +2,6 @@ from typing import TYPE_CHECKING
 
 from ...extras.constants import MOD_SUPPORTED_MODELS
 
-
 if TYPE_CHECKING:
     from transformers import PretrainedConfig, PreTrainedModel
 
@@ -16,7 +15,9 @@ def load_mod_pretrained_model(**init_kwargs) -> "PreTrainedModel":
 
 
 def convert_pretrained_model_to_mod(
-    model: "PreTrainedModel", config: "PretrainedConfig", model_args: "ModelArguments"
+    model: "PreTrainedModel",
+    config: "PretrainedConfig",
+    model_args: "ModelArguments",
 ) -> "PreTrainedModel":
     from MoD import apply_mod_to_hf
 

@@ -1,6 +1,14 @@
 import json
 import os
-from typing import TYPE_CHECKING, Dict, Generator, List, Optional, Sequence, Tuple
+from typing import (
+    TYPE_CHECKING,
+    Dict,
+    Generator,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+)
 
 from numpy.typing import NDArray
 
@@ -10,7 +18,6 @@ from ..extras.misc import torch_gc
 from ..extras.packages import is_gradio_available
 from .common import get_save_dir
 from .locales import ALERTS
-
 
 if TYPE_CHECKING:
     from ..chat import BaseEngine
@@ -22,7 +29,12 @@ if is_gradio_available():
 
 
 class WebChatModel(ChatModel):
-    def __init__(self, manager: "Manager", demo_mode: bool = False, lazy_init: bool = True) -> None:
+    def __init__(
+        self,
+        manager: "Manager",
+        demo_mode: bool = False,
+        lazy_init: bool = True,
+    ) -> None:
         self.manager = manager
         self.demo_mode = demo_mode
         self.engine: Optional["BaseEngine"] = None
@@ -30,12 +42,20 @@ class WebChatModel(ChatModel):
         if not lazy_init:  # read arguments from command line
             super().__init__()
 
-        if demo_mode and os.environ.get("DEMO_MODEL") and os.environ.get("DEMO_TEMPLATE"):  # load demo model
+        if (
+            demo_mode
+            and os.environ.get("DEMO_MODEL")
+            and os.environ.get("DEMO_TEMPLATE")
+        ):  # load demo model
             model_name_or_path = os.environ.get("DEMO_MODEL")
             template = os.environ.get("DEMO_TEMPLATE")
             infer_backend = os.environ.get("DEMO_BACKEND", "huggingface")
             super().__init__(
-                dict(model_name_or_path=model_name_or_path, template=template, infer_backend=infer_backend)
+                dict(
+                    model_name_or_path=model_name_or_path,
+                    template=template,
+                    infer_backend=infer_backend,
+                )
             )
 
     @property
@@ -63,7 +83,11 @@ class WebChatModel(ChatModel):
         if get("top.adapter_path"):
             adapter_name_or_path = ",".join(
                 [
-                    get_save_dir(get("top.model_name"), get("top.finetuning_type"), adapter)
+                    get_save_dir(
+                        get("top.model_name"),
+                        get("top.finetuning_type"),
+                        adapter,
+                    )
                     for adapter in get("top.adapter_path")
                 ]
             )
@@ -75,12 +99,16 @@ class WebChatModel(ChatModel):
             model_name_or_path=get("top.model_path"),
             adapter_name_or_path=adapter_name_or_path,
             finetuning_type=get("top.finetuning_type"),
-            quantization_bit=int(get("top.quantization_bit")) if get("top.quantization_bit") in ["8", "4"] else None,
+            quantization_bit=int(get("top.quantization_bit"))
+            if get("top.quantization_bit") in ["8", "4"]
+            else None,
             template=get("top.template"),
             flash_attn="fa2" if get("top.booster") == "flashattn2" else "auto",
             use_unsloth=(get("top.booster") == "unsloth"),
             visual_inputs=get("top.visual_inputs"),
-            rope_scaling=get("top.rope_scaling") if get("top.rope_scaling") in ["linear", "dynamic"] else None,
+            rope_scaling=get("top.rope_scaling")
+            if get("top.rope_scaling") in ["linear", "dynamic"]
+            else None,
             infer_backend=get("infer.infer_backend"),
         )
         super().__init__(args)
@@ -107,7 +135,11 @@ class WebChatModel(ChatModel):
         role: str,
         query: str,
     ) -> Tuple[List[List[Optional[str]]], List[Dict[str, str]], str]:
-        return chatbot + [[query, None]], messages + [{"role": role, "content": query}], ""
+        return (
+            chatbot + [[query, None]],
+            messages + [{"role": role, "content": query}],
+            "",
+        )
 
     def stream(
         self,
@@ -119,11 +151,19 @@ class WebChatModel(ChatModel):
         max_new_tokens: int,
         top_p: float,
         temperature: float,
-    ) -> Generator[Tuple[List[List[Optional[str]]], List[Dict[str, str]]], None, None]:
+    ) -> Generator[
+        Tuple[List[List[Optional[str]]], List[Dict[str, str]]], None, None
+    ]:
         chatbot[-1][1] = ""
         response = ""
         for new_text in self.stream_chat(
-            messages, system, tools, image, max_new_tokens=max_new_tokens, top_p=top_p, temperature=temperature
+            messages,
+            system,
+            tools,
+            image,
+            max_new_tokens=max_new_tokens,
+            top_p=top_p,
+            temperature=temperature,
         ):
             response += new_text
             if tools:
@@ -134,11 +174,17 @@ class WebChatModel(ChatModel):
             if isinstance(result, tuple):
                 name, arguments = result
                 arguments = json.loads(arguments)
-                tool_call = json.dumps({"name": name, "arguments": arguments}, ensure_ascii=False)
-                output_messages = messages + [{"role": Role.FUNCTION.value, "content": tool_call}]
+                tool_call = json.dumps(
+                    {"name": name, "arguments": arguments}, ensure_ascii=False
+                )
+                output_messages = messages + [
+                    {"role": Role.FUNCTION.value, "content": tool_call}
+                ]
                 bot_text = "```json\n" + tool_call + "\n```"
             else:
-                output_messages = messages + [{"role": Role.ASSISTANT.value, "content": result}]
+                output_messages = messages + [
+                    {"role": Role.ASSISTANT.value, "content": result}
+                ]
                 bot_text = result
 
             chatbot[-1][1] = bot_text

@@ -8,7 +8,6 @@ from .eval.evaluator import run_eval
 from .train.tuner import export_model, run_exp
 from .webui.interface import run_web_demo, run_web_ui
 
-
 USAGE = """
 Usage:
     llamafactory-cli api -h: launch an API server

@@ -6,7 +6,6 @@ from ...train.tuner import export_model
 from ..common import get_save_dir
 from ..locales import ALERTS
 
-
 if is_gradio_available():
     import gradio as gr
 
@@ -43,7 +42,10 @@ def save_model(
         error = ALERTS["err_no_path"][lang]
     elif not export_dir:
         error = ALERTS["err_no_export_dir"][lang]
-    elif export_quantization_bit in GPTQ_BITS and not export_quantization_dataset:
+    elif (
+        export_quantization_bit in GPTQ_BITS
+        and not export_quantization_dataset
+    ):
         error = ALERTS["err_no_dataset"][lang]
     elif export_quantization_bit not in GPTQ_BITS and not adapter_path:
         error = ALERTS["err_no_adapter"][lang]
@@ -57,7 +59,10 @@ def save_model(
 
     if adapter_path:
         adapter_name_or_path = ",".join(
-            [get_save_dir(model_name, finetuning_type, adapter) for adapter in adapter_path]
+            [
+                get_save_dir(model_name, finetuning_type, adapter)
+                for adapter in adapter_path
+            ]
         )
     else:
         adapter_name_or_path = None
@@ -71,7 +76,9 @@ def save_model(
         export_dir=export_dir,
         export_hub_model_id=export_hub_model_id or None,
         export_size=export_size,
-        export_quantization_bit=int(export_quantization_bit) if export_quantization_bit in GPTQ_BITS else None,
+        export_quantization_bit=int(export_quantization_bit)
+        if export_quantization_bit in GPTQ_BITS
+        else None,
         export_quantization_dataset=export_quantization_dataset,
         export_device=export_device,
         export_legacy_format=export_legacy_format,
@@ -86,7 +93,9 @@ def save_model(
 def create_export_tab(engine: "Engine") -> Dict[str, "Component"]:
     with gr.Row():
         export_size = gr.Slider(minimum=1, maximum=100, value=1, step=1)
-        export_quantization_bit = gr.Dropdown(choices=["none", "8", "4", "3", "2"], value="none")
+        export_quantization_bit = gr.Dropdown(
+            choices=["none", "8", "4", "3", "2"], value="none"
+        )
         export_quantization_dataset = gr.Textbox(value="data/c4_demo.json")
         export_device = gr.Radio(choices=["cpu", "cuda"], value="cpu")
         export_legacy_format = gr.Checkbox()

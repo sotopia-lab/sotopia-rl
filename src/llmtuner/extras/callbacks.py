@@ -16,23 +16,35 @@ from .constants import TRAINER_LOG
 from .logging import LoggerHandler, get_logger
 from .misc import fix_valuehead_checkpoint
 
-
 if TYPE_CHECKING:
-    from transformers import TrainerControl, TrainerState, TrainingArguments
+    from transformers import (
+        TrainerControl,
+        TrainerState,
+        TrainingArguments,
+    )
 
 
 logger = get_logger(__name__)
 
 
 class FixValueHeadModelCallback(TrainerCallback):
-    def on_save(self, args: "TrainingArguments", state: "TrainerState", control: "TrainerControl", **kwargs):
+    def on_save(
+        self,
+        args: "TrainingArguments",
+        state: "TrainerState",
+        control: "TrainerControl",
+        **kwargs
+    ):
         r"""
         Event called after a checkpoint save.
         """
         if args.should_save:
             fix_valuehead_checkpoint(
                 model=kwargs.pop("model"),
-                output_dir=os.path.join(args.output_dir, "{}-{}".format(PREFIX_CHECKPOINT_DIR, state.global_step)),
+                output_dir=os.path.join(
+                    args.output_dir,
+                    "{}-{}".format(PREFIX_CHECKPOINT_DIR, state.global_step),
+                ),
                 safe_serialization=args.save_safetensors,
             )
 
@@ -80,7 +92,9 @@ class LogCallback(TrainerCallback):
         self.remaining_time = str(timedelta(seconds=int(remaining_time)))
 
     def _write_log(self, output_dir: str, logs: Dict[str, Any]) -> None:
-        with open(os.path.join(output_dir, TRAINER_LOG), "a", encoding="utf-8") as f:
+        with open(
+            os.path.join(output_dir, TRAINER_LOG), "a", encoding="utf-8"
+        ) as f:
             f.write(json.dumps(logs) + "\n")
 
     def _create_thread_pool(self, output_dir: str) -> None:
@@ -92,7 +106,13 @@ class LogCallback(TrainerCallback):
             self.thread_pool.shutdown(wait=True)
             self.thread_pool = None
 
-    def on_init_end(self, args: "TrainingArguments", state: "TrainerState", control: "TrainerControl", **kwargs):
+    def on_init_end(
+        self,
+        args: "TrainingArguments",
+        state: "TrainerState",
+        control: "TrainerControl",
+        **kwargs
+    ):
         r"""
         Event called at the end of the initialization of the `Trainer`.
         """
@@ -101,10 +121,18 @@ class LogCallback(TrainerCallback):
             and os.path.exists(os.path.join(args.output_dir, TRAINER_LOG))
             and args.overwrite_output_dir
         ):
-            logger.warning("Previous trainer log in this folder will be deleted.")
+            logger.warning(
+                "Previous trainer log in this folder will be deleted."
+            )
             os.remove(os.path.join(args.output_dir, TRAINER_LOG))
 
-    def on_train_begin(self, args: "TrainingArguments", state: "TrainerState", control: "TrainerControl", **kwargs):
+    def on_train_begin(
+        self,
+        args: "TrainingArguments",
+        state: "TrainerState",
+        control: "TrainerControl",
+        **kwargs
+    ):
         r"""
         Event called at the beginning of training.
         """
@@ -113,13 +141,25 @@ class LogCallback(TrainerCallback):
             self._reset(max_steps=state.max_steps)
             self._create_thread_pool(output_dir=args.output_dir)
 
-    def on_train_end(self, args: "TrainingArguments", state: "TrainerState", control: "TrainerControl", **kwargs):
+    def on_train_end(
+        self,
+        args: "TrainingArguments",
+        state: "TrainerState",
+        control: "TrainerControl",
+        **kwargs
+    ):
         r"""
         Event called at the end of training.
         """
         self._close_thread_pool()
 
-    def on_substep_end(self, args: "TrainingArguments", state: "TrainerState", control: "TrainerControl", **kwargs):
+    def on_substep_end(
+        self,
+        args: "TrainingArguments",
+        state: "TrainerState",
+        control: "TrainerControl",
+        **kwargs
+    ):
         r"""
         Event called at the end of an substep during gradient accumulation.
         """
@@ -127,7 +167,13 @@ class LogCallback(TrainerCallback):
             control.should_epoch_stop = True
             control.should_training_stop = True
 
-    def on_step_end(self, args: "TrainingArguments", state: "TrainerState", control: "TrainerControl", **kwargs):
+    def on_step_end(
+        self,
+        args: "TrainingArguments",
+        state: "TrainerState",
+        control: "TrainerControl",
+        **kwargs
+    ):
         r"""
         Event called at the end of a training step.
         """
@@ -135,19 +181,37 @@ class LogCallback(TrainerCallback):
             control.should_epoch_stop = True
             control.should_training_stop = True
 
-    def on_evaluate(self, args: "TrainingArguments", state: "TrainerState", control: "TrainerControl", **kwargs):
+    def on_evaluate(
+        self,
+        args: "TrainingArguments",
+        state: "TrainerState",
+        control: "TrainerControl",
+        **kwargs
+    ):
         r"""
         Event called after an evaluation phase.
         """
         self._close_thread_pool()
 
-    def on_predict(self, args: "TrainingArguments", state: "TrainerState", control: "TrainerControl", **kwargs):
+    def on_predict(
+        self,
+        args: "TrainingArguments",
+        state: "TrainerState",
+        control: "TrainerControl",
+        **kwargs
+    ):
         r"""
         Event called after a successful prediction.
         """
         self._close_thread_pool()
 
-    def on_log(self, args: "TrainingArguments", state: "TrainerState", control: "TrainerControl", **kwargs):
+    def on_log(
+        self,
+        args: "TrainingArguments",
+        state: "TrainerState",
+        control: "TrainerControl",
+        **kwargs
+    ):
         r"""
         Event called after logging the last logs.
         """
@@ -165,12 +229,16 @@ class LogCallback(TrainerCallback):
             accuracy=state.log_history[-1].get("rewards/accuracies", None),
             learning_rate=state.log_history[-1].get("learning_rate", None),
             epoch=state.log_history[-1].get("epoch", None),
-            percentage=round(self.cur_steps / self.max_steps * 100, 2) if self.max_steps != 0 else 100,
+            percentage=round(self.cur_steps / self.max_steps * 100, 2)
+            if self.max_steps != 0
+            else 100,
             elapsed_time=self.elapsed_time,
             remaining_time=self.remaining_time,
         )
         logs = {k: v for k, v in logs.items() if v is not None}
-        if self.webui_mode and all(key in logs for key in ["loss", "learning_rate", "epoch"]):
+        if self.webui_mode and all(
+            key in logs for key in ["loss", "learning_rate", "epoch"]
+        ):
             logger.info(
                 "{{'loss': {:.4f}, 'learning_rate': {:2.4e}, 'epoch': {:.2f}}}".format(
                     logs["loss"], logs["learning_rate"], logs["epoch"]
@@ -181,7 +249,11 @@ class LogCallback(TrainerCallback):
             self.thread_pool.submit(self._write_log, args.output_dir, logs)
 
     def on_prediction_step(
-        self, args: "TrainingArguments", state: "TrainerState", control: "TrainerControl", **kwargs
+        self,
+        args: "TrainingArguments",
+        state: "TrainerState",
+        control: "TrainerControl",
+        **kwargs
     ):
         r"""
         Event called after a prediction step.
@@ -206,7 +278,9 @@ class LogCallback(TrainerCallback):
                 logs = dict(
                     current_steps=self.cur_steps,
                     total_steps=self.max_steps,
-                    percentage=round(self.cur_steps / self.max_steps * 100, 2) if self.max_steps != 0 else 100,
+                    percentage=round(self.cur_steps / self.max_steps * 100, 2)
+                    if self.max_steps != 0
+                    else 100,
                     elapsed_time=self.elapsed_time,
                     remaining_time=self.remaining_time,
                 )

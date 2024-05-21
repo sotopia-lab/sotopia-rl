@@ -4,7 +4,11 @@ from typing import TYPE_CHECKING, Dict, Tuple
 
 import torch
 from peft import PeftModel
-from transformers import InfNanRemoveLogitsProcessor, LogitsProcessorList, PreTrainedModel
+from transformers import (
+    InfNanRemoveLogitsProcessor,
+    LogitsProcessorList,
+    PreTrainedModel,
+)
 from transformers.utils import (
     SAFE_WEIGHTS_NAME,
     WEIGHTS_NAME,
@@ -18,7 +22,6 @@ from transformers.utils.versions import require_version
 
 from .constants import V_HEAD_SAFE_WEIGHTS_NAME, V_HEAD_WEIGHTS_NAME
 from .logging import get_logger
-
 
 _is_fp16_available = is_torch_npu_available() or is_torch_cuda_available()
 try:
@@ -59,11 +62,19 @@ class AverageMeter:
 
 def check_dependencies() -> None:
     if int(os.environ.get("DISABLE_VERSION_CHECK", "0")):
-        logger.warning("Version checking has been disabled, may lead to unexpected behaviors.")
+        logger.warning(
+            "Version checking has been disabled, may lead to unexpected behaviors."
+        )
     else:
-        require_version("transformers>=4.37.2", "To fix: pip install transformers>=4.37.2")
-        require_version("datasets>=2.14.3", "To fix: pip install datasets>=2.14.3")
-        require_version("accelerate>=0.27.2", "To fix: pip install accelerate>=0.27.2")
+        require_version(
+            "transformers>=4.37.2", "To fix: pip install transformers>=4.37.2"
+        )
+        require_version(
+            "datasets>=2.14.3", "To fix: pip install datasets>=2.14.3"
+        )
+        require_version(
+            "accelerate>=0.27.2", "To fix: pip install accelerate>=0.27.2"
+        )
         require_version("peft>=0.10.0", "To fix: pip install peft>=0.10.0")
         require_version("trl>=0.8.1", "To fix: pip install trl>=0.8.1")
 
@@ -81,7 +92,9 @@ def count_parameters(model: torch.nn.Module) -> Tuple[int, int]:
 
         # Due to the design of 4bit linear layers from bitsandbytes, multiply the number of parameters by 2
         if param.__class__.__name__ == "Params4bit":
-            if hasattr(param, "quant_storage") and hasattr(param.quant_storage, "itemsize"):
+            if hasattr(param, "quant_storage") and hasattr(
+                param.quant_storage, "itemsize"
+            ):
                 num_bytes = param.quant_storage.itemsize
             elif hasattr(param, "element_size"):  # for older pytorch version
                 num_bytes = param.element_size()
@@ -98,7 +111,9 @@ def count_parameters(model: torch.nn.Module) -> Tuple[int, int]:
 
 
 def fix_valuehead_checkpoint(
-    model: "AutoModelForCausalLMWithValueHead", output_dir: str, safe_serialization: bool
+    model: "AutoModelForCausalLMWithValueHead",
+    output_dir: str,
+    safe_serialization: bool,
 ) -> None:
     r"""
     The model is already unwrapped.
@@ -119,10 +134,14 @@ def fix_valuehead_checkpoint(
 
         path_to_checkpoint = os.path.join(output_dir, SAFE_WEIGHTS_NAME)
         with safe_open(path_to_checkpoint, framework="pt", device="cpu") as f:
-            state_dict: Dict[str, torch.Tensor] = {key: f.get_tensor(key) for key in f.keys()}
+            state_dict: Dict[str, torch.Tensor] = {
+                key: f.get_tensor(key) for key in f.keys()
+            }
     else:
         path_to_checkpoint = os.path.join(output_dir, WEIGHTS_NAME)
-        state_dict: Dict[str, torch.Tensor] = torch.load(path_to_checkpoint, map_location="cpu")
+        state_dict: Dict[str, torch.Tensor] = torch.load(
+            path_to_checkpoint, map_location="cpu"
+        )
 
     decoder_state_dict = {}
     v_head_state_dict = {}
@@ -134,13 +153,21 @@ def fix_valuehead_checkpoint(
 
     os.remove(path_to_checkpoint)
     model.pretrained_model.save_pretrained(
-        output_dir, state_dict=decoder_state_dict or None, safe_serialization=safe_serialization
+        output_dir,
+        state_dict=decoder_state_dict or None,
+        safe_serialization=safe_serialization,
     )
 
     if safe_serialization:
-        save_file(v_head_state_dict, os.path.join(output_dir, V_HEAD_SAFE_WEIGHTS_NAME), metadata={"format": "pt"})
+        save_file(
+            v_head_state_dict,
+            os.path.join(output_dir, V_HEAD_SAFE_WEIGHTS_NAME),
+            metadata={"format": "pt"},
+        )
     else:
-        torch.save(v_head_state_dict, os.path.join(output_dir, V_HEAD_WEIGHTS_NAME))
+        torch.save(
+            v_head_state_dict, os.path.join(output_dir, V_HEAD_WEIGHTS_NAME)
+        )
 
     logger.info("Value head model saved at: {}".format(output_dir))
 
@@ -218,10 +245,20 @@ def try_download_model_from_ms(model_args: "ModelArguments") -> str:
     try:
         from modelscope import snapshot_download
 
-        revision = "master" if model_args.model_revision == "main" else model_args.model_revision
-        return snapshot_download(model_args.model_name_or_path, revision=revision, cache_dir=model_args.cache_dir)
+        revision = (
+            "master"
+            if model_args.model_revision == "main"
+            else model_args.model_revision
+        )
+        return snapshot_download(
+            model_args.model_name_or_path,
+            revision=revision,
+            cache_dir=model_args.cache_dir,
+        )
     except ImportError:
-        raise ImportError("Please install modelscope via `pip install modelscope -U`")
+        raise ImportError(
+            "Please install modelscope via `pip install modelscope -U`"
+        )
 
 
 def use_modelscope() -> bool:

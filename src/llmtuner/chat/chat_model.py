@@ -1,12 +1,20 @@
 import asyncio
 from threading import Thread
-from typing import TYPE_CHECKING, Any, AsyncGenerator, Dict, Generator, List, Optional, Sequence
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    AsyncGenerator,
+    Dict,
+    Generator,
+    List,
+    Optional,
+    Sequence,
+)
 
 from ..extras.misc import torch_gc
 from ..hparams import get_infer_args
 from .hf_engine import HuggingfaceEngine
 from .vllm_engine import VllmEngine
-
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
@@ -21,16 +29,29 @@ def _start_background_loop(loop: asyncio.AbstractEventLoop) -> None:
 
 class ChatModel:
     def __init__(self, args: Optional[Dict[str, Any]] = None) -> None:
-        model_args, data_args, finetuning_args, generating_args = get_infer_args(args)
+        (
+            model_args,
+            data_args,
+            finetuning_args,
+            generating_args,
+        ) = get_infer_args(args)
         if model_args.infer_backend == "huggingface":
-            self.engine: "BaseEngine" = HuggingfaceEngine(model_args, data_args, finetuning_args, generating_args)
+            self.engine: "BaseEngine" = HuggingfaceEngine(
+                model_args, data_args, finetuning_args, generating_args
+            )
         elif model_args.infer_backend == "vllm":
-            self.engine: "BaseEngine" = VllmEngine(model_args, data_args, finetuning_args, generating_args)
+            self.engine: "BaseEngine" = VllmEngine(
+                model_args, data_args, finetuning_args, generating_args
+            )
         else:
-            raise NotImplementedError("Unknown backend: {}".format(model_args.infer_backend))
+            raise NotImplementedError(
+                "Unknown backend: {}".format(model_args.infer_backend)
+            )
 
         self._loop = asyncio.new_event_loop()
-        self._thread = Thread(target=_start_background_loop, args=(self._loop,), daemon=True)
+        self._thread = Thread(
+            target=_start_background_loop, args=(self._loop,), daemon=True
+        )
         self._thread.start()
         asyncio.run_coroutine_threadsafe(self.engine.start(), self._loop)
 
@@ -42,7 +63,10 @@ class ChatModel:
         image: Optional["NDArray"] = None,
         **input_kwargs,
     ) -> List["Response"]:
-        task = asyncio.run_coroutine_threadsafe(self.achat(messages, system, tools, image, **input_kwargs), self._loop)
+        task = asyncio.run_coroutine_threadsafe(
+            self.achat(messages, system, tools, image, **input_kwargs),
+            self._loop,
+        )
         return task.result()
 
     async def achat(
@@ -53,7 +77,9 @@ class ChatModel:
         image: Optional["NDArray"] = None,
         **input_kwargs,
     ) -> List["Response"]:
-        return await self.engine.chat(messages, system, tools, image, **input_kwargs)
+        return await self.engine.chat(
+            messages, system, tools, image, **input_kwargs
+        )
 
     def stream_chat(
         self,
@@ -63,10 +89,14 @@ class ChatModel:
         image: Optional["NDArray"] = None,
         **input_kwargs,
     ) -> Generator[str, None, None]:
-        generator = self.astream_chat(messages, system, tools, image, **input_kwargs)
+        generator = self.astream_chat(
+            messages, system, tools, image, **input_kwargs
+        )
         while True:
             try:
-                task = asyncio.run_coroutine_threadsafe(generator.__anext__(), self._loop)
+                task = asyncio.run_coroutine_threadsafe(
+                    generator.__anext__(), self._loop
+                )
                 yield task.result()
             except StopAsyncIteration:
                 break
@@ -79,7 +109,9 @@ class ChatModel:
         image: Optional["NDArray"] = None,
         **input_kwargs,
     ) -> AsyncGenerator[str, None]:
-        async for new_token in self.engine.stream_chat(messages, system, tools, image, **input_kwargs):
+        async for new_token in self.engine.stream_chat(
+            messages, system, tools, image, **input_kwargs
+        ):
             yield new_token
 
     def get_scores(
@@ -87,7 +119,9 @@ class ChatModel:
         batch_input: List[str],
         **input_kwargs,
     ) -> List[float]:
-        task = asyncio.run_coroutine_threadsafe(self.aget_scores(batch_input, **input_kwargs), self._loop)
+        task = asyncio.run_coroutine_threadsafe(
+            self.aget_scores(batch_input, **input_kwargs), self._loop
+        )
         return task.result()
 
     async def aget_scores(
@@ -109,13 +143,17 @@ def run_chat() -> None:
 
     chat_model = ChatModel()
     messages = []
-    print("Welcome to the CLI application, use `clear` to remove the history, use `exit` to exit the application.")
+    print(
+        "Welcome to the CLI application, use `clear` to remove the history, use `exit` to exit the application."
+    )
 
     while True:
         try:
             query = input("\nUser: ")
         except UnicodeDecodeError:
-            print("Detected decoding error at the inputs, please set the terminal encoding to utf-8.")
+            print(
+                "Detected decoding error at the inputs, please set the terminal encoding to utf-8."
+            )
             continue
         except Exception:
             raise

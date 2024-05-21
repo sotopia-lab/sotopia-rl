@@ -1,5 +1,13 @@
 import uuid
-from typing import TYPE_CHECKING, AsyncGenerator, AsyncIterator, Dict, List, Optional, Sequence
+from typing import (
+    TYPE_CHECKING,
+    AsyncGenerator,
+    AsyncIterator,
+    Dict,
+    List,
+    Optional,
+    Sequence,
+)
 
 from ..data import get_template_and_fix_tokenizer
 from ..extras.misc import get_device_count, infer_optim_dtype
@@ -7,9 +15,13 @@ from ..extras.packages import is_vllm_available
 from ..model import load_config, load_tokenizer
 from .base_engine import BaseEngine, Response
 
-
 if is_vllm_available():
-    from vllm import AsyncEngineArgs, AsyncLLMEngine, RequestOutput, SamplingParams
+    from vllm import (
+        AsyncEngineArgs,
+        AsyncLLMEngine,
+        RequestOutput,
+        SamplingParams,
+    )
     from vllm.lora.request import LoRARequest
     from vllm.sequence import MultiModalData
 
@@ -19,7 +31,12 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
     from transformers.image_processing_utils import BaseImageProcessor
 
-    from ..hparams import DataArguments, FinetuningArguments, GeneratingArguments, ModelArguments
+    from ..hparams import (
+        DataArguments,
+        FinetuningArguments,
+        GeneratingArguments,
+        ModelArguments,
+    )
 
 
 class VllmEngine(BaseEngine):
@@ -31,7 +48,9 @@ class VllmEngine(BaseEngine):
         generating_args: "GeneratingArguments",
     ) -> None:
         config = load_config(model_args)  # may download model from ms hub
-        infer_dtype = infer_optim_dtype(model_dtype=getattr(config, "torch_dtype", None))
+        infer_dtype = infer_optim_dtype(
+            model_dtype=getattr(config, "torch_dtype", None)
+        )
         infer_dtype = str(infer_dtype).split(".")[-1]
 
         self.can_generate = finetuning_args.stage == "sft"
@@ -39,7 +58,9 @@ class VllmEngine(BaseEngine):
         self.tokenizer = tokenizer_module["tokenizer"]
         self.processor = tokenizer_module["processor"]
         self.tokenizer.padding_side = "left"
-        self.template = get_template_and_fix_tokenizer(self.tokenizer, data_args.template)
+        self.template = get_template_and_fix_tokenizer(
+            self.tokenizer, data_args.template
+        )
         self.generating_args = generating_args.to_dict()
 
         engine_args = {
@@ -61,13 +82,19 @@ class VllmEngine(BaseEngine):
             # https://github.com/vllm-project/vllm/pull/3042#issuecomment-1984893549
             self.image_feature_size = 576
             engine_args["image_input_type"] = "pixel_values"
-            engine_args["image_token_id"] = self.tokenizer.convert_tokens_to_ids("<image>")
+            engine_args[
+                "image_token_id"
+            ] = self.tokenizer.convert_tokens_to_ids("<image>")
             engine_args["image_input_shape"] = "1,3,336,336"
             engine_args["image_feature_size"] = self.image_feature_size
 
-        self.model = AsyncLLMEngine.from_engine_args(AsyncEngineArgs(**engine_args))
+        self.model = AsyncLLMEngine.from_engine_args(
+            AsyncEngineArgs(**engine_args)
+        )
         if model_args.adapter_name_or_path is not None:
-            self.lora_request = LoRARequest("default", 1, model_args.adapter_name_or_path[0])
+            self.lora_request = LoRARequest(
+                "default", 1, model_args.adapter_name_or_path[0]
+            )
         else:
             self.lora_request = None
 
@@ -80,12 +107,21 @@ class VllmEngine(BaseEngine):
         **input_kwargs,
     ) -> AsyncIterator["RequestOutput"]:
         request_id = "chatcmpl-{}".format(uuid.uuid4().hex)
-        if self.processor is not None and image is not None and "<image>" not in messages[0]["content"]:
-            messages[0]["content"] = "<image>" * self.image_feature_size + messages[0]["content"]
+        if (
+            self.processor is not None
+            and image is not None
+            and "<image>" not in messages[0]["content"]
+        ):
+            messages[0]["content"] = (
+                "<image>" * self.image_feature_size + messages[0]["content"]
+            )
 
         paired_messages = messages + [{"role": "assistant", "content": ""}]
         prompt_ids, _ = self.template.encode_oneturn(
-            tokenizer=self.tokenizer, messages=paired_messages, system=system, tools=tools
+            tokenizer=self.tokenizer,
+            messages=paired_messages,
+            system=system,
+            tools=tools,
         )
         prompt_length = len(prompt_ids)
 
@@ -105,7 +141,8 @@ class VllmEngine(BaseEngine):
                 top_p=top_p or generating_args["top_p"],
                 top_k=top_k or generating_args["top_k"],
                 num_return_sequences=num_return_sequences or 1,
-                repetition_penalty=repetition_penalty or generating_args["repetition_penalty"],
+                repetition_penalty=repetition_penalty
+                or generating_args["repetition_penalty"],
             )
         )
 
@@ -124,15 +161,22 @@ class VllmEngine(BaseEngine):
             use_beam_search=generating_args["num_beams"] > 1,
             length_penalty=generating_args["length_penalty"],
             stop=stop,
-            stop_token_ids=[self.tokenizer.eos_token_id] + self.tokenizer.additional_special_tokens_ids,
+            stop_token_ids=[self.tokenizer.eos_token_id]
+            + self.tokenizer.additional_special_tokens_ids,
             max_tokens=generating_args["max_new_tokens"],
             skip_special_tokens=True,
         )
 
         if self.processor is not None and image is not None:
-            image_processor: "BaseImageProcessor" = getattr(self.processor, "image_processor")
-            pixel_values: "torch.Tensor" = image_processor(image, return_tensors="pt")["pixel_values"]
-            multi_modal_data = MultiModalData(type=MultiModalData.Type.IMAGE, data=pixel_values)
+            image_processor: "BaseImageProcessor" = getattr(
+                self.processor, "image_processor"
+            )
+            pixel_values: "torch.Tensor" = image_processor(
+                image, return_tensors="pt"
+            )["pixel_values"]
+            multi_modal_data = MultiModalData(
+                type=MultiModalData.Type.IMAGE, data=pixel_values
+            )
         else:
             multi_modal_data = None
 
@@ -158,7 +202,9 @@ class VllmEngine(BaseEngine):
         **input_kwargs,
     ) -> List["Response"]:
         final_output = None
-        generator = await self._generate(messages, system, tools, image, **input_kwargs)
+        generator = await self._generate(
+            messages, system, tools, image, **input_kwargs
+        )
         async for request_output in generator:
             final_output = request_output
 
@@ -184,7 +230,9 @@ class VllmEngine(BaseEngine):
         **input_kwargs,
     ) -> AsyncGenerator[str, None]:
         generated_text = ""
-        generator = await self._generate(messages, system, tools, image, **input_kwargs)
+        generator = await self._generate(
+            messages, system, tools, image, **input_kwargs
+        )
         async for result in generator:
             delta_text = result.outputs[0].text[len(generated_text) :]
             generated_text = result.outputs[0].text

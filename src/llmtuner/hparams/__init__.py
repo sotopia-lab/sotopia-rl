@@ -5,7 +5,6 @@ from .generating_args import GeneratingArguments
 from .model_args import ModelArguments
 from .parser import get_eval_args, get_infer_args, get_train_args
 
-
 __all__ = [
     "DataArguments",
     "EvaluationArguments",

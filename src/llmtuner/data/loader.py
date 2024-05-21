@@ -13,7 +13,6 @@ from .preprocess import get_preprocess_and_print_func
 from .template import get_template_and_fix_tokenizer
 from .utils import checksum, merge_dataset
 
-
 if TYPE_CHECKING:
     from datasets import Dataset, IterableDataset
     from transformers import ProcessorMixin, Seq2SeqTrainingArguments
@@ -39,19 +38,27 @@ def load_single_dataset(
         data_dir = dataset_attr.folder
 
     elif dataset_attr.load_from == "script":
-        data_path = os.path.join(data_args.dataset_dir, dataset_attr.dataset_name)
+        data_path = os.path.join(
+            data_args.dataset_dir, dataset_attr.dataset_name
+        )
         data_name = dataset_attr.subset
         data_dir = dataset_attr.folder
 
     elif dataset_attr.load_from == "file":
         data_files = []
-        local_path = os.path.join(data_args.dataset_dir, dataset_attr.dataset_name)
+        local_path = os.path.join(
+            data_args.dataset_dir, dataset_attr.dataset_name
+        )
         if os.path.isdir(local_path):  # is directory
             for file_name in os.listdir(local_path):
                 data_files.append(os.path.join(local_path, file_name))
                 if data_path is None:
-                    data_path = FILEEXT2TYPE.get(file_name.split(".")[-1], None)
-                elif data_path != FILEEXT2TYPE.get(file_name.split(".")[-1], None):
+                    data_path = FILEEXT2TYPE.get(
+                        file_name.split(".")[-1], None
+                    )
+                elif data_path != FILEEXT2TYPE.get(
+                    file_name.split(".")[-1], None
+                ):
                     raise ValueError("File types should be identical.")
         elif os.path.isfile(local_path):  # is file
             data_files.append(local_path)
@@ -80,14 +87,20 @@ def load_single_dataset(
                 split=data_args.split,
                 cache_dir=cache_dir,
                 token=model_args.ms_hub_token,
-                use_streaming=(data_args.streaming and (dataset_attr.load_from != "file")),
+                use_streaming=(
+                    data_args.streaming and (dataset_attr.load_from != "file")
+                ),
             )
             if isinstance(dataset, MsDataset):
                 dataset = dataset.to_hf_dataset()
         except ImportError:
-            raise ImportError("Please install modelscope via `pip install modelscope -U`")
+            raise ImportError(
+                "Please install modelscope via `pip install modelscope -U`"
+            )
     else:
-        if "trust_remote_code" in inspect.signature(load_dataset).parameters:  # for datasets==2.16.0
+        if (
+            "trust_remote_code" in inspect.signature(load_dataset).parameters
+        ):  # for datasets==2.16.0
             kwargs = {"trust_remote_code": True}
         else:
             kwargs = {}
@@ -100,17 +113,22 @@ def load_single_dataset(
             split=data_args.split,
             cache_dir=model_args.cache_dir,
             token=model_args.hf_hub_token,
-            streaming=(data_args.streaming and (dataset_attr.load_from != "file")),
+            streaming=(
+                data_args.streaming and (dataset_attr.load_from != "file")
+            ),
             **kwargs,
         )
 
-    if data_args.streaming and (dataset_attr.load_from == "file"):  # faster than specifying streaming=True
-        dataset = dataset.to_iterable_dataset()  # TODO: add num shards parameter
+    if data_args.streaming and (
+        dataset_attr.load_from == "file"
+    ):  # faster than specifying streaming=True
+        dataset = (
+            dataset.to_iterable_dataset()
+        )  # TODO: add num shards parameter
 
     if data_args.max_samples is not None:  # truncate dataset
         num_samples = min(data_args.max_samples, len(dataset))
         dataset = dataset.select(range(num_samples))
-
 
     return align_dataset(dataset, dataset_attr, data_args)
 
@@ -125,28 +143,44 @@ def get_dataset(
 ) -> Union["Dataset", "IterableDataset"]:
     template = get_template_and_fix_tokenizer(tokenizer, data_args.template)
     if data_args.train_on_prompt and template.efficient_eos:
-        raise ValueError("Current template does not support `train_on_prompt`.")
+        raise ValueError(
+            "Current template does not support `train_on_prompt`."
+        )
 
     # Load tokenized dataset
     if data_args.tokenized_path is not None:
         if has_tokenized_data(data_args.tokenized_path):
-            logger.warning("Loading dataset from disk will ignore other data arguments.")
+            logger.warning(
+                "Loading dataset from disk will ignore other data arguments."
+            )
             dataset = load_from_disk(data_args.tokenized_path)
-            logger.info("Loaded tokenized dataset from {}.".format(data_args.tokenized_path))
+            logger.info(
+                "Loaded tokenized dataset from {}.".format(
+                    data_args.tokenized_path
+                )
+            )
             if data_args.streaming:
                 dataset = dataset.to_iterable_dataset()
             return dataset
 
         if data_args.streaming:
-            raise ValueError("Turn off `streaming` when saving dataset to disk.")
+            raise ValueError(
+                "Turn off `streaming` when saving dataset to disk."
+            )
 
     with training_args.main_process_first(desc="load dataset"):
         all_datasets = []
         for dataset_attr in get_dataset_list(data_args):
-            if (stage == "rm" and dataset_attr.ranking is False) or (stage != "rm" and dataset_attr.ranking is True):
-                raise ValueError("The dataset is not applicable in the current training stage.")
+            if (stage == "rm" and dataset_attr.ranking is False) or (
+                stage != "rm" and dataset_attr.ranking is True
+            ):
+                raise ValueError(
+                    "The dataset is not applicable in the current training stage."
+                )
 
-            all_datasets.append(load_single_dataset(dataset_attr, model_args, data_args))
+            all_datasets.append(
+                load_single_dataset(dataset_attr, model_args, data_args)
+            )
         dataset = merge_dataset(all_datasets, data_args, training_args)
 
     with training_args.main_process_first(desc="pre-process dataset"):
@@ -162,14 +196,29 @@ def get_dataset(
                 desc="Running tokenizer on dataset",
             )
 
-        import pdb; pdb.set_trace()
-        dataset = dataset.map(preprocess_func, batched=True, remove_columns=column_names, **kwargs)
+        import pdb
+
+        pdb.set_trace()
+        dataset = dataset.map(
+            preprocess_func,
+            batched=True,
+            remove_columns=column_names,
+            **kwargs,
+        )
 
         if data_args.tokenized_path is not None:
             if training_args.should_save:
                 dataset.save_to_disk(data_args.tokenized_path)
-                logger.info("Tokenized dataset saved at {}.".format(data_args.tokenized_path))
-                logger.info("Please restart the training with `--tokenized_path {}`.".format(data_args.tokenized_path))
+                logger.info(
+                    "Tokenized dataset saved at {}.".format(
+                        data_args.tokenized_path
+                    )
+                )
+                logger.info(
+                    "Please restart the training with `--tokenized_path {}`.".format(
+                        data_args.tokenized_path
+                    )
+                )
 
             exit(0)
 
@@ -177,7 +226,11 @@ def get_dataset(
             try:
                 print_function(next(iter(dataset)))
             except StopIteration:
-                raise RuntimeError("Cannot find valid samples, check `data/README.md` for the data format.")
+                raise RuntimeError(
+                    "Cannot find valid samples, check `data/README.md` for the data format."
+                )
 
-        import pdb; pdb.set_trace()
+        import pdb
+
+        pdb.set_trace()
         return dataset

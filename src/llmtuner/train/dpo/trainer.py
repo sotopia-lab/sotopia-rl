@@ -11,7 +11,6 @@ from trl.trainer.utils import disable_dropout_in_model
 from ...extras.constants import IGNORE_INDEX
 from ..utils import create_custom_optimzer, create_custom_scheduler
 
-
 if TYPE_CHECKING:
     from transformers import PreTrainedModel
 
@@ -58,36 +57,51 @@ class CustomDPOTrainer(DPOTrainer):
         if ref_model is not None:
             if self.is_deepspeed_enabled:
                 if not (
-                    getattr(ref_model, "is_loaded_in_8bit", False) or getattr(ref_model, "is_loaded_in_4bit", False)
+                    getattr(ref_model, "is_loaded_in_8bit", False)
+                    or getattr(ref_model, "is_loaded_in_4bit", False)
                 ):  # quantized models are already set on the correct device
                     self.ref_model = self._prepare_deepspeed(self.ref_model)
             else:
-                self.ref_model = self.accelerator.prepare_model(self.ref_model, evaluation_mode=True)
+                self.ref_model = self.accelerator.prepare_model(
+                    self.ref_model, evaluation_mode=True
+                )
 
         if finetuning_args.use_badam:
             from badam import clip_grad_norm_for_sparse_tensor
 
-            self.accelerator.clip_grad_norm_ = MethodType(clip_grad_norm_for_sparse_tensor, self.accelerator)
+            self.accelerator.clip_grad_norm_ = MethodType(
+                clip_grad_norm_for_sparse_tensor, self.accelerator
+            )
 
     def create_optimizer(self) -> "torch.optim.Optimizer":
         if self.optimizer is None:
-            self.optimizer = create_custom_optimzer(self.model, self.args, self.finetuning_args)
+            self.optimizer = create_custom_optimzer(
+                self.model, self.args, self.finetuning_args
+            )
         return super().create_optimizer()
 
     def create_scheduler(
-        self, num_training_steps: int, optimizer: Optional["torch.optim.Optimizer"] = None
+        self,
+        num_training_steps: int,
+        optimizer: Optional["torch.optim.Optimizer"] = None,
     ) -> "torch.optim.lr_scheduler.LRScheduler":
         create_custom_scheduler(self.args, num_training_steps, optimizer)
         return super().create_scheduler(num_training_steps, optimizer)
 
-    def sft_loss(self, chosen_logits: "torch.FloatTensor", chosen_labels: "torch.LongTensor") -> "torch.Tensor":
+    def sft_loss(
+        self,
+        chosen_logits: "torch.FloatTensor",
+        chosen_labels: "torch.LongTensor",
+    ) -> "torch.Tensor":
         r"""
         Computes supervised cross-entropy loss of given labels under the given logits.
 
         Returns:
             A tensor of shape (batch_size,) containing the cross-entropy loss of each samples.
         """
-        all_logps = self.get_batch_logps(chosen_logits, chosen_labels, average_log_prob=True)
+        all_logps = self.get_batch_logps(
+            chosen_logits, chosen_labels, average_log_prob=True
+        )
         return -all_logps
 
     def concatenated_forward(
@@ -98,7 +112,9 @@ class CustomDPOTrainer(DPOTrainer):
 
         Otherwise the average log probabilities.
         """
-        batch_copied = BatchEncoding({k: v.detach().clone() for k, v in batch.items()})  # avoid error
+        batch_copied = BatchEncoding(
+            {k: v.detach().clone() for k, v in batch.items()}
+        )  # avoid error
 
         all_logits: "torch.Tensor" = model(
             input_ids=batch_copied["input_ids"],
@@ -138,7 +154,9 @@ class CustomDPOTrainer(DPOTrainer):
         with torch.no_grad():
             if self.ref_model is None:
                 ref_model = self.model
-                ref_context = self.accelerator.unwrap_model(self.model).disable_adapter()
+                ref_context = self.accelerator.unwrap_model(
+                    self.model
+                ).disable_adapter()
             else:
                 ref_model = self.ref_model
                 ref_context = nullcontext()
@@ -160,18 +178,36 @@ class CustomDPOTrainer(DPOTrainer):
         if self.ftx_gamma > 1e-6:
             batch_size = batch["input_ids"].size(0) // 2
             chosen_labels, _ = batch["labels"].split(batch_size, dim=0)
-            losses += self.ftx_gamma * self.sft_loss(policy_chosen_logits, chosen_labels)
+            losses += self.ftx_gamma * self.sft_loss(
+                policy_chosen_logits, chosen_labels
+            )
 
         reward_accuracies = (chosen_rewards > rejected_rewards).float()
 
         prefix = "eval_" if train_eval == "eval" else ""
-        metrics["{}rewards/chosen".format(prefix)] = chosen_rewards.mean().cpu()
-        metrics["{}rewards/rejected".format(prefix)] = rejected_rewards.mean().cpu()
-        metrics["{}rewards/accuracies".format(prefix)] = reward_accuracies.mean().cpu()
-        metrics["{}rewards/margins".format(prefix)] = (chosen_rewards - rejected_rewards).mean().cpu()
-        metrics["{}logps/rejected".format(prefix)] = policy_rejected_logps.detach().mean().cpu()
-        metrics["{}logps/chosen".format(prefix)] = policy_chosen_logps.detach().mean().cpu()
-        metrics["{}logits/rejected".format(prefix)] = policy_rejected_logits.detach().mean().cpu()
-        metrics["{}logits/chosen".format(prefix)] = policy_chosen_logits.detach().mean().cpu()
+        metrics[
+            "{}rewards/chosen".format(prefix)
+        ] = chosen_rewards.mean().cpu()
+        metrics[
+            "{}rewards/rejected".format(prefix)
+        ] = rejected_rewards.mean().cpu()
+        metrics[
+            "{}rewards/accuracies".format(prefix)
+        ] = reward_accuracies.mean().cpu()
+        metrics["{}rewards/margins".format(prefix)] = (
+            (chosen_rewards - rejected_rewards).mean().cpu()
+        )
+        metrics["{}logps/rejected".format(prefix)] = (
+            policy_rejected_logps.detach().mean().cpu()
+        )
+        metrics["{}logps/chosen".format(prefix)] = (
+            policy_chosen_logps.detach().mean().cpu()
+        )
+        metrics["{}logits/rejected".format(prefix)] = (
+            policy_rejected_logits.detach().mean().cpu()
+        )
+        metrics["{}logits/chosen".format(prefix)] = (
+            policy_chosen_logits.detach().mean().cpu()
+        )
 
         return losses.mean(), metrics

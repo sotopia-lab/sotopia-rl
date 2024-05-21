@@ -1,20 +1,38 @@
 from typing import TYPE_CHECKING, Any, Dict, Optional, TypedDict
 
-from transformers import AutoConfig, AutoModelForCausalLM, AutoModelForVision2Seq, AutoProcessor, AutoTokenizer
+from transformers import (
+    AutoConfig,
+    AutoModelForCausalLM,
+    AutoModelForVision2Seq,
+    AutoProcessor,
+    AutoTokenizer,
+)
 from trl import AutoModelForCausalLMWithValueHead
 
 from ..extras.logging import get_logger
 from ..extras.misc import count_parameters, try_download_model_from_ms
 from .adapter import init_adapter
-from .patcher import patch_config, patch_model, patch_tokenizer, patch_valuehead_model
+from .patcher import (
+    patch_config,
+    patch_model,
+    patch_tokenizer,
+    patch_valuehead_model,
+)
 from .utils.misc import register_autoclass
-from .utils.mod import convert_pretrained_model_to_mod, load_mod_pretrained_model
+from .utils.mod import (
+    convert_pretrained_model_to_mod,
+    load_mod_pretrained_model,
+)
 from .utils.unsloth import load_unsloth_pretrained_model
 from .utils.valuehead import load_valuehead_params
 
-
 if TYPE_CHECKING:
-    from transformers import PretrainedConfig, PreTrainedModel, PreTrainedTokenizer, ProcessorMixin
+    from transformers import (
+        PretrainedConfig,
+        PreTrainedModel,
+        PreTrainedTokenizer,
+        ProcessorMixin,
+    )
 
     from ..hparams import FinetuningArguments, ModelArguments
 
@@ -70,15 +88,23 @@ def load_tokenizer(model_args: "ModelArguments") -> "TokenizerModule":
             dict(additional_special_tokens=model_args.new_special_tokens),
             replace_additional_special_tokens=False,
         )
-        logger.info("Add {} to special tokens.".format(",".join(model_args.new_special_tokens)))
+        logger.info(
+            "Add {} to special tokens.".format(
+                ",".join(model_args.new_special_tokens)
+            )
+        )
         if num_added_tokens > 0 and not model_args.resize_vocab:
             model_args.resize_vocab = True
-            logger.warning("New tokens have been added, changed `resize_vocab` to True.")
+            logger.warning(
+                "New tokens have been added, changed `resize_vocab` to True."
+            )
 
     patch_tokenizer(tokenizer)
 
     if model_args.visual_inputs:
-        processor = AutoProcessor.from_pretrained(model_args.model_name_or_path, **init_kwargs)
+        processor = AutoProcessor.from_pretrained(
+            model_args.model_name_or_path, **init_kwargs
+        )
         setattr(processor, "tokenizer", tokenizer)
     else:
         processor = None
@@ -91,7 +117,9 @@ def load_config(model_args: "ModelArguments") -> "PretrainedConfig":
     Loads model config.
     """
     init_kwargs = _get_init_kwargs(model_args)
-    return AutoConfig.from_pretrained(model_args.model_name_or_path, **init_kwargs)
+    return AutoConfig.from_pretrained(
+        model_args.model_name_or_path, **init_kwargs
+    )
 
 
 def load_model(
@@ -106,7 +134,9 @@ def load_model(
     """
     init_kwargs = _get_init_kwargs(model_args)
     config = load_config(model_args)
-    patch_config(config, tokenizer, model_args, init_kwargs, is_trainable, add_valuehead)
+    patch_config(
+        config, tokenizer, model_args, init_kwargs, is_trainable, add_valuehead
+    )
 
     model = None
     lazy_load = False
@@ -118,7 +148,9 @@ def load_model(
 
     if model is None and not lazy_load:
         init_kwargs["config"] = config
-        init_kwargs["pretrained_model_name_or_path"] = model_args.model_name_or_path
+        init_kwargs[
+            "pretrained_model_name_or_path"
+        ] = model_args.model_name_or_path
 
         if model_args.mixture_of_depths == "load":
             model = load_mod_pretrained_model(**init_kwargs)
@@ -134,7 +166,9 @@ def load_model(
         patch_model(model, tokenizer, model_args, is_trainable, add_valuehead)
         register_autoclass(config, model, tokenizer)
 
-    model = init_adapter(config, model, model_args, finetuning_args, is_trainable)
+    model = init_adapter(
+        config, model, model_args, finetuning_args, is_trainable
+    )
 
     if add_valuehead:
         model = AutoModelForCausalLMWithValueHead.from_pretrained(model)
@@ -148,7 +182,9 @@ def load_model(
         vhead_params = load_valuehead_params(vhead_path, model_args)
         if vhead_params is not None:
             model.load_state_dict(vhead_params, strict=False)
-            logger.info("Loaded valuehead from checkpoint: {}".format(vhead_path))
+            logger.info(
+                "Loaded valuehead from checkpoint: {}".format(vhead_path)
+            )
 
     if not is_trainable:
         model.requires_grad_(False)

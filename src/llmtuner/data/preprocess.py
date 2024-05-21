@@ -1,12 +1,21 @@
 from functools import partial
 from itertools import chain
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Literal, Optional, Sequence, Tuple
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    Sequence,
+    Tuple,
+)
 
 from ..extras.constants import IGNORE_INDEX
 from ..extras.logging import get_logger
 from ..extras.packages import is_pillow_available
 from .utils import Role
-
 
 if is_pillow_available():
     from PIL import Image
@@ -26,32 +35,59 @@ if TYPE_CHECKING:
 logger = get_logger(__name__)
 
 
-def _preprocess_visual_inputs(images: Sequence["ImageObject"], processor: "ProcessorMixin") -> "NDArray":
+def _preprocess_visual_inputs(
+    images: Sequence["ImageObject"], processor: "ProcessorMixin"
+) -> "NDArray":
     # process visual inputs (currently only supports a single image)
-    image_processor: "BaseImageProcessor" = getattr(processor, "image_processor")
-    image = images[0] if len(images) != 0 else Image.new("RGB", (100, 100), (255, 255, 255))
+    image_processor: "BaseImageProcessor" = getattr(
+        processor, "image_processor"
+    )
+    image = (
+        images[0]
+        if len(images) != 0
+        else Image.new("RGB", (100, 100), (255, 255, 255))
+    )
     return image_processor(image, return_tensors="pt")["pixel_values"][0]
 
 
 def preprocess_pretrain_dataset(
-    examples: Dict[str, List[Any]], tokenizer: "PreTrainedTokenizer", data_args: "DataArguments"
+    examples: Dict[str, List[Any]],
+    tokenizer: "PreTrainedTokenizer",
+    data_args: "DataArguments",
 ) -> Dict[str, List[List[int]]]:
     # build grouped texts with format `X1 X2 X3 ...` if packing is enabled
-    text_examples = [messages[0]["content"] + tokenizer.eos_token for messages in examples["prompt"]]
+    text_examples = [
+        messages[0]["content"] + tokenizer.eos_token
+        for messages in examples["prompt"]
+    ]
 
     if not data_args.packing:
         if data_args.template == "gemma":
-            text_examples = [tokenizer.bos_token + example for example in text_examples]
+            text_examples = [
+                tokenizer.bos_token + example for example in text_examples
+            ]
 
-        result = tokenizer(text_examples, add_special_tokens=False, max_length=data_args.cutoff_len)
+        result = tokenizer(
+            text_examples,
+            add_special_tokens=False,
+            max_length=data_args.cutoff_len,
+        )
     else:
         tokenized_examples = tokenizer(text_examples, add_special_tokens=False)
-        concatenated_examples = {k: list(chain(*tokenized_examples[k])) for k in tokenized_examples.keys()}
-        total_length = len(concatenated_examples[list(concatenated_examples.keys())[0]])
+        concatenated_examples = {
+            k: list(chain(*tokenized_examples[k]))
+            for k in tokenized_examples.keys()
+        }
+        total_length = len(
+            concatenated_examples[list(concatenated_examples.keys())[0]]
+        )
         block_size = data_args.cutoff_len
         total_length = (total_length // block_size) * block_size
         result = {
-            k: [t[i : i + block_size] for i in range(0, total_length, block_size)]
+            k: [
+                t[i : i + block_size]
+                for i in range(0, total_length, block_size)
+            ]
             for k, t in concatenated_examples.items()
         }
         if data_args.template == "gemma":
@@ -73,14 +109,21 @@ def preprocess_supervised_dataset(
     model_inputs = {"input_ids": [], "attention_mask": [], "labels": []}
     if processor is not None:
         model_inputs["pixel_values"] = []
-        preprocess_visual_inputs = partial(_preprocess_visual_inputs, processor=processor)
+        preprocess_visual_inputs = partial(
+            _preprocess_visual_inputs, processor=processor
+        )
 
     for i in range(len(examples["prompt"])):
-        if len(examples["prompt"][i]) % 2 != 1 or len(examples["response"][i]) != 1:
+        if (
+            len(examples["prompt"][i]) % 2 != 1
+            or len(examples["response"][i]) != 1
+        ):
             continue
 
         if processor is not None:
-            examples["prompt"][i][0]["content"] = "<image>" + examples["prompt"][i][0]["content"]
+            examples["prompt"][i][0]["content"] = (
+                "<image>" + examples["prompt"][i][0]["content"]
+            )
 
         messages = examples["prompt"][i] + examples["response"][i]
         input_ids, labels = [], []
@@ -97,7 +140,9 @@ def preprocess_supervised_dataset(
             if data_args.train_on_prompt:
                 source_mask = source_ids
             elif turn_idx != 0 and template.efficient_eos:
-                source_mask = [tokenizer.eos_token_id] + [IGNORE_INDEX] * (len(source_ids) - 1)
+                source_mask = [tokenizer.eos_token_id] + [IGNORE_INDEX] * (
+                    len(source_ids) - 1
+                )
             else:
                 source_mask = [IGNORE_INDEX] * len(source_ids)
 
@@ -112,7 +157,9 @@ def preprocess_supervised_dataset(
         model_inputs["attention_mask"].append([1] * len(input_ids))
         model_inputs["labels"].append(labels)
         if processor is not None:
-            model_inputs["pixel_values"].append(preprocess_visual_inputs(examples["images"][i]))
+            model_inputs["pixel_values"].append(
+                preprocess_visual_inputs(examples["images"][i])
+            )
 
     return model_inputs
 
@@ -128,7 +175,10 @@ def preprocess_packed_supervised_dataset(
     model_inputs = {"input_ids": [], "attention_mask": [], "labels": []}
     input_ids, labels = [], []
     for i in range(len(examples["prompt"])):
-        if len(examples["prompt"][i]) % 2 != 1 or len(examples["response"][i]) != 1:
+        if (
+            len(examples["prompt"][i]) % 2 != 1
+            or len(examples["response"][i]) != 1
+        ):
             continue
 
         messages = examples["prompt"][i] + examples["response"][i]
@@ -138,7 +188,9 @@ def preprocess_packed_supervised_dataset(
             if data_args.train_on_prompt:
                 source_mask = source_ids
             elif len(input_ids) != 0 and template.efficient_eos:
-                source_mask = [tokenizer.eos_token_id] + [IGNORE_INDEX] * (len(source_ids) - 1)
+                source_mask = [tokenizer.eos_token_id] + [IGNORE_INDEX] * (
+                    len(source_ids) - 1
+                )
             else:
                 source_mask = [IGNORE_INDEX] * len(source_ids)
 
@@ -155,7 +207,9 @@ def preprocess_packed_supervised_dataset(
     total_length = (total_length // block_size) * block_size
     # split by chunks of cutoff_len
     for i in range(0, total_length, block_size):
-        if not all(label == IGNORE_INDEX for label in labels[i : i + block_size]):
+        if not all(
+            label == IGNORE_INDEX for label in labels[i : i + block_size]
+        ):
             model_inputs["input_ids"].append(input_ids[i : i + block_size])
             model_inputs["attention_mask"].append([1] * block_size)
             model_inputs["labels"].append(labels[i : i + block_size])
@@ -174,19 +228,25 @@ def preprocess_unsupervised_dataset(
     model_inputs = {"input_ids": [], "attention_mask": [], "labels": []}
     if processor is not None:
         model_inputs["pixel_values"] = []
-        preprocess_visual_inputs = partial(_preprocess_visual_inputs, processor=processor)
+        preprocess_visual_inputs = partial(
+            _preprocess_visual_inputs, processor=processor
+        )
 
     for i in range(len(examples["prompt"])):
         if len(examples["prompt"][i]) % 2 != 1:
             continue
 
         if processor is not None:
-            examples["prompt"][i][0]["content"] = "<image>" + examples["prompt"][i][0]["content"]
+            examples["prompt"][i][0]["content"] = (
+                "<image>" + examples["prompt"][i][0]["content"]
+            )
 
         if len(examples["response"][i]) == 1:
             messages = examples["prompt"][i] + examples["response"][i]
         else:
-            messages = examples["prompt"][i] + [{"role": Role.ASSISTANT.value, "content": ""}]
+            messages = examples["prompt"][i] + [
+                {"role": Role.ASSISTANT.value, "content": ""}
+            ]
 
         input_ids, labels = template.encode_oneturn(
             tokenizer,
@@ -204,7 +264,9 @@ def preprocess_unsupervised_dataset(
         model_inputs["attention_mask"].append([1] * len(input_ids))
         model_inputs["labels"].append(labels)
         if processor is not None:
-            model_inputs["pixel_values"].append(preprocess_visual_inputs(examples["images"][i]))
+            model_inputs["pixel_values"].append(
+                preprocess_visual_inputs(examples["images"][i])
+            )
 
     return model_inputs
 
@@ -220,17 +282,26 @@ def preprocess_pairwise_dataset(
     model_inputs = {"prompt_ids": [], "chosen_ids": [], "rejected_ids": []}
     if processor is not None:
         model_inputs["pixel_values"] = []
-        preprocess_visual_inputs = partial(_preprocess_visual_inputs, processor=processor)
+        preprocess_visual_inputs = partial(
+            _preprocess_visual_inputs, processor=processor
+        )
 
     for i in range(len(examples["prompt"])):
-        if len(examples["prompt"][i]) % 2 != 1 or len(examples["response"][i]) < 2:
+        if (
+            len(examples["prompt"][i]) % 2 != 1
+            or len(examples["response"][i]) < 2
+        ):
             continue
 
         if processor is not None:
-            examples["prompt"][i][0]["content"] = "<image>" + examples["prompt"][i][0]["content"]
+            examples["prompt"][i][0]["content"] = (
+                "<image>" + examples["prompt"][i][0]["content"]
+            )
 
         chosen_messages = examples["prompt"][i] + [examples["response"][i][0]]
-        rejected_messages = examples["prompt"][i] + [examples["response"][i][1]]
+        rejected_messages = examples["prompt"][i] + [
+            examples["response"][i][1]
+        ]
         prompt_ids, chosen_ids = template.encode_oneturn(
             tokenizer,
             chosen_messages,
@@ -256,34 +327,67 @@ def preprocess_pairwise_dataset(
         model_inputs["chosen_ids"].append(chosen_ids)
         model_inputs["rejected_ids"].append(rejected_ids)
         if processor is not None:
-            model_inputs["pixel_values"].append(preprocess_visual_inputs(examples["images"][i]))
+            model_inputs["pixel_values"].append(
+                preprocess_visual_inputs(examples["images"][i])
+            )
 
     return model_inputs
 
 
-def print_supervised_dataset_example(example: Dict[str, List[int]], tokenizer: "PreTrainedTokenizer") -> None:
+def print_supervised_dataset_example(
+    example: Dict[str, List[int]], tokenizer: "PreTrainedTokenizer"
+) -> None:
     print("input_ids:\n{}".format(example["input_ids"]))
-    print("inputs:\n{}".format(tokenizer.decode(example["input_ids"], skip_special_tokens=False)))
+    print(
+        "inputs:\n{}".format(
+            tokenizer.decode(example["input_ids"], skip_special_tokens=False)
+        )
+    )
     print("label_ids:\n{}".format(example["labels"]))
     print(
         "labels:\n{}".format(
-            tokenizer.decode(list(filter(lambda x: x != IGNORE_INDEX, example["labels"])), skip_special_tokens=False)
+            tokenizer.decode(
+                list(filter(lambda x: x != IGNORE_INDEX, example["labels"])),
+                skip_special_tokens=False,
+            )
         )
     )
 
 
-def print_pairwise_dataset_example(example: Dict[str, List[int]], tokenizer: "PreTrainedTokenizer") -> None:
+def print_pairwise_dataset_example(
+    example: Dict[str, List[int]], tokenizer: "PreTrainedTokenizer"
+) -> None:
     print("prompt_ids:\n{}".format(example["prompt_ids"]))
-    print("prompt:\n{}".format(tokenizer.decode(example["prompt_ids"], skip_special_tokens=False)))
+    print(
+        "prompt:\n{}".format(
+            tokenizer.decode(example["prompt_ids"], skip_special_tokens=False)
+        )
+    )
     print("chosen_ids:\n{}".format(example["chosen_ids"]))
-    print("chosen:\n{}".format(tokenizer.decode(example["chosen_ids"], skip_special_tokens=False)))
+    print(
+        "chosen:\n{}".format(
+            tokenizer.decode(example["chosen_ids"], skip_special_tokens=False)
+        )
+    )
     print("rejected_ids:\n{}".format(example["rejected_ids"]))
-    print("rejected:\n{}".format(tokenizer.decode(example["rejected_ids"], skip_special_tokens=False)))
+    print(
+        "rejected:\n{}".format(
+            tokenizer.decode(
+                example["rejected_ids"], skip_special_tokens=False
+            )
+        )
+    )
 
 
-def print_unsupervised_dataset_example(example: Dict[str, List[int]], tokenizer: "PreTrainedTokenizer") -> None:
+def print_unsupervised_dataset_example(
+    example: Dict[str, List[int]], tokenizer: "PreTrainedTokenizer"
+) -> None:
     print("input_ids:\n{}".format(example["input_ids"]))
-    print("inputs:\n{}".format(tokenizer.decode(example["input_ids"], skip_special_tokens=False)))
+    print(
+        "inputs:\n{}".format(
+            tokenizer.decode(example["input_ids"], skip_special_tokens=False)
+        )
+    )
 
 
 def get_preprocess_and_print_func(
@@ -300,7 +404,9 @@ def get_preprocess_and_print_func(
             tokenizer=tokenizer,
             data_args=data_args,
         )
-        print_function = partial(print_unsupervised_dataset_example, tokenizer=tokenizer)
+        print_function = partial(
+            print_unsupervised_dataset_example, tokenizer=tokenizer
+        )
     elif stage == "sft" and not training_args.predict_with_generate:
         if data_args.packing:
             preprocess_func = partial(
@@ -318,7 +424,9 @@ def get_preprocess_and_print_func(
                 data_args=data_args,
             )
 
-        print_function = partial(print_supervised_dataset_example, tokenizer=tokenizer)
+        print_function = partial(
+            print_supervised_dataset_example, tokenizer=tokenizer
+        )
     elif stage == "rm":
         preprocess_func = partial(
             preprocess_pairwise_dataset,
@@ -327,7 +435,9 @@ def get_preprocess_and_print_func(
             processor=processor,
             data_args=data_args,
         )
-        print_function = partial(print_pairwise_dataset_example, tokenizer=tokenizer)
+        print_function = partial(
+            print_pairwise_dataset_example, tokenizer=tokenizer
+        )
     else:
         preprocess_func = partial(
             preprocess_unsupervised_dataset,
@@ -336,6 +446,8 @@ def get_preprocess_and_print_func(
             processor=processor,
             data_args=data_args,
         )
-        print_function = partial(print_unsupervised_dataset_example, tokenizer=tokenizer)
+        print_function = partial(
+            print_unsupervised_dataset_example, tokenizer=tokenizer
+        )
 
     return preprocess_func, print_function

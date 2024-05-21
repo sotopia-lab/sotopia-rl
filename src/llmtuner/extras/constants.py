@@ -2,7 +2,6 @@ from collections import OrderedDict, defaultdict
 from enum import Enum
 from typing import Dict, Optional
 
-
 CHOICES = ["A", "B", "C", "D"]
 
 DATA_CONFIG = "dataset_info.json"
@@ -28,7 +27,16 @@ METHODS = ["full", "freeze", "lora"]
 
 MLLM_LIST = ["LLaVA1.5"]
 
-MOD_SUPPORTED_MODELS = ["bloom", "falcon", "gemma", "llama", "mistral", "mixtral", "phi", "starcoder2"]
+MOD_SUPPORTED_MODELS = [
+    "bloom",
+    "falcon",
+    "gemma",
+    "llama",
+    "mistral",
+    "mixtral",
+    "phi",
+    "starcoder2",
+]
 
 PEFT_METHODS = ["lora"]
 

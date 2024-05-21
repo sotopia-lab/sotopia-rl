@@ -10,11 +10,15 @@ class GeneratingArguments:
 
     do_sample: bool = field(
         default=True,
-        metadata={"help": "Whether or not to use sampling, use greedy decoding otherwise."},
+        metadata={
+            "help": "Whether or not to use sampling, use greedy decoding otherwise."
+        },
     )
     temperature: float = field(
         default=0.95,
-        metadata={"help": "The value used to modulate the next token probabilities."},
+        metadata={
+            "help": "The value used to modulate the next token probabilities."
+        },
     )
     top_p: float = field(
         default=0.7,
@@ -24,27 +28,39 @@ class GeneratingArguments:
     )
     top_k: int = field(
         default=50,
-        metadata={"help": "The number of highest probability vocabulary tokens to keep for top-k filtering."},
+        metadata={
+            "help": "The number of highest probability vocabulary tokens to keep for top-k filtering."
+        },
     )
     num_beams: int = field(
         default=1,
-        metadata={"help": "Number of beams for beam search. 1 means no beam search."},
+        metadata={
+            "help": "Number of beams for beam search. 1 means no beam search."
+        },
     )
     max_length: int = field(
         default=1024,
-        metadata={"help": "The maximum length the generated tokens can have. It can be overridden by max_new_tokens."},
+        metadata={
+            "help": "The maximum length the generated tokens can have. It can be overridden by max_new_tokens."
+        },
     )
     max_new_tokens: int = field(
         default=1024,
-        metadata={"help": "The maximum numbers of tokens to generate, ignoring the number of tokens in the prompt."},
+        metadata={
+            "help": "The maximum numbers of tokens to generate, ignoring the number of tokens in the prompt."
+        },
     )
     repetition_penalty: float = field(
         default=1.0,
-        metadata={"help": "The parameter for repetition penalty. 1.0 means no penalty."},
+        metadata={
+            "help": "The parameter for repetition penalty. 1.0 means no penalty."
+        },
     )
     length_penalty: float = field(
         default=1.0,
-        metadata={"help": "Exponential penalty to the length that is used with beam-based generation."},
+        metadata={
+            "help": "Exponential penalty to the length that is used with beam-based generation."
+        },
     )
 
     def to_dict(self) -> Dict[str, Any]:
