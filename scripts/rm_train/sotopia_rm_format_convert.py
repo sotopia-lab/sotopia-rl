@@ -1,12 +1,14 @@
 import json
+from typing import List, Union
 
 import jsonlines
+from beartype import beartype
 
 
-def calc_reward(utter, goal_score):
-    utter_attrib = utter[1]
+@beartype
+def calc_reward(utter_attrib: float, goal_score: float) -> float:
     if utter_attrib == -1:
-        reward = -1
+        reward = -1.0
     else:
         reward = utter_attrib / 3 * goal_score
     return reward
@@ -15,7 +17,7 @@ def calc_reward(utter, goal_score):
 if __name__ == "__main__":
 
     with jsonlines.open(
-        "sotopia_pi_openai_log_attribution.jsonl", "r"
+        "./data/sotopia_pi_openai_log_attribution.jsonl", "r"
     ) as reader:
         dataset = list(reader)
 
@@ -47,7 +49,7 @@ if __name__ == "__main__":
                     )
                     # Create a copy of the current history excluding the last utterance for pairing
                     history_pairs.append(history[:-1])
-                    reward = calc_reward(utter, goal_score)
+                    reward = calc_reward(utter[1], goal_score)
                     rewards.append(reward)
 
                 if not is_first_speaker:
@@ -60,7 +62,7 @@ if __name__ == "__main__":
                     )
                     # Create a copy of the current history excluding the last two utterances for pairing
                     history_pairs.append(history[1:-1])
-                    reward = calc_reward(utter, goal_score)
+                    reward = calc_reward(utter[1], goal_score)
                     rewards.append(reward)
 
     formulated_dataset = []
@@ -80,5 +82,5 @@ if __name__ == "__main__":
         }
         formulated_dataset.append(data)
 
-    with open("sotopia_pi_utterance_reward.json", "w") as writer:
+    with open("./data/sotopia_pi_utterance_reward.json", "w") as writer:
         json.dump(formulated_dataset, writer, indent=4)
