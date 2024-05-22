@@ -1,16 +1,23 @@
-import os
 import json
+import os
 from typing import Any, Dict, List
 
 from tqdm import tqdm
 
+from src.human_annotate.google_form_apis import (
+    get_form,
+    get_form_responses,
+)
+
 from ..utils.preprocess import extract_goal_scores
-from src.human_annotate.google_form_apis import get_form, get_form_responses
 
 GoogleResource = Any
 
+
 def retrieve_responses(data_dir: str, gcp_key: str) -> None:
-    with open(os.path.join(data_dir, "openai_log_attribution.jsonl"), "r") as f:
+    with open(
+        os.path.join(data_dir, "openai_log_attribution.jsonl"), "r"
+    ) as f:
         log = [json.loads(line) for line in f]
 
     with open(os.path.join(data_dir, "form_uris.jsonl"), "r") as f:
@@ -23,6 +30,7 @@ def retrieve_responses(data_dir: str, gcp_key: str) -> None:
             f.write(json.dumps(item))
             f.write("\n")
 
+
 def get_episodes_from_form_ids(data_dir: str, gcp_key: str) -> None:
     with open(os.path.join(data_dir, "sotopia_episodes_v1.jsonl"), "r") as f:
         episodes = [json.loads(line) for line in f]
@@ -31,7 +39,7 @@ def get_episodes_from_form_ids(data_dir: str, gcp_key: str) -> None:
         form_ids = f.readlines()
 
     form_ids = [form_id.strip() for form_id in form_ids]
-    
+
     print("retrieving episodes from form ids")
     example_episodes = []
     visited = set()
@@ -39,7 +47,10 @@ def get_episodes_from_form_ids(data_dir: str, gcp_key: str) -> None:
         form = get_form(form_id, gcp_key)
         episode_id = form["info"]["title"].split(" ")[-1]
         for episode in episodes:
-            if episode["episode_id"] == episode_id and episode_id not in visited:
+            if (
+                episode["episode_id"] == episode_id
+                and episode_id not in visited
+            ):
                 visited.add(episode_id)
                 example_episodes.append(episode)
                 break
@@ -49,7 +60,9 @@ def get_episodes_from_form_ids(data_dir: str, gcp_key: str) -> None:
             f.write(json.dumps(episode) + "\n")
 
     example_episodes_with_scores = extract_goal_scores(example_episodes)
-    with open(os.path.join(data_dir, "example_episodes_with_scores.jsonl"), "w") as f:
+    with open(
+        os.path.join(data_dir, "example_episodes_with_scores.jsonl"), "w"
+    ) as f:
         for episode in example_episodes_with_scores:
             f.write(json.dumps(episode) + "\n")
 
@@ -74,7 +87,7 @@ def add_responses_to_sheet(
                     if item_idx + 1 < len(form_schema["items"]):
                         next_item = form_schema["items"][item_idx + 1]
                     break
-            
+
             if item and "questionItem" in item:
                 question_id = item["questionItem"]["question"]["questionId"]
                 for response in responses:
@@ -84,16 +97,20 @@ def add_responses_to_sheet(
                     log[i]["attributed_utterances"][key][2].update(
                         {
                             response["lastSubmittedTime"]: int(
-                                response_answer["textAnswers"][
-                                    "answers"
-                                ][0]["value"]
+                                response_answer["textAnswers"]["answers"][0][
+                                    "value"
+                                ]
                             )
                         }
                     )
                 if next_item and "questionItem" in next_item:
-                    next_question_id = next_item["questionItem"]["question"]["questionId"]
+                    next_question_id = next_item["questionItem"]["question"][
+                        "questionId"
+                    ]
                     for response in responses:
-                        next_response_answer = response["answers"][next_question_id]
+                        next_response_answer = response["answers"][
+                            next_question_id
+                        ]
                         if len(log[i]["attributed_utterances"][key]) == 3:
                             log[i]["attributed_utterances"][key].append({})
                         log[i]["attributed_utterances"][key][3].update(

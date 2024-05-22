@@ -72,20 +72,24 @@ def assign_key_utterances_for_conversation(
         except json.JSONDecodeError:
             formatted_response = extract_json(response)
             if formatted_response is None:
-                print("Failed to extract JSON string from response; returning empty dictionary")
+                print(
+                    "Failed to extract JSON string from response; returning empty dictionary"
+                )
                 print(response)
                 return {}
             result = json.loads(formatted_response)
         return result
 
+
 def extract_json(text: str) -> str | None:
     # Use regex to find the JSON string within the text
-    match = re.search(r'\{\n.*?\n\}', text, re.DOTALL)
+    match = re.search(r"\{\n.*?\n\}", text, re.DOTALL)
     if match:
         json_str = match.group(0)
         return json_str
     else:
         return None
+
 
 def generate_key_utterance_recognition(data_dir: str, llm_name: str) -> None:
     with jsonlines.open(
