@@ -16,7 +16,6 @@ openai = "^1.20.0"
 types-tqdm = "^4.61.0"
 rich = "^13.7.0"
 pandas-stubs = "^2.2.0"
-# Add your other dependencies here
 deepspeed = {version = ">=0.10.0", optional = true}
 bitsandbytes = {version = "^0.39.0", optional = true}
 vllm = {version = ">=0.4.0", optional = true}
