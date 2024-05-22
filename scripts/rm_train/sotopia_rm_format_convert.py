@@ -1,8 +1,5 @@
 import json
-from typing import List, Union
-
 import jsonlines
-from beartype import beartype
 
 
 def calc_reward(utter_attrib: float, goal_score: float) -> float:
