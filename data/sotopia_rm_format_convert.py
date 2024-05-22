@@ -32,6 +32,7 @@ if __name__ == "__main__":
         history = []
 
         for speaker, utter in data["attributed_utterances"].items():
+            history += [f"{speaker} {utter[0]}"]
             if agent_name in speaker:
                 systems.append(
                     f"The scenario is {scenario}. The goal of {agent_name} is {goal}."
@@ -39,8 +40,7 @@ if __name__ == "__main__":
                 prompts.append(
                     f'How much does "{speaker} {utter[0]}" contribute to the goal of {agent_name}?'
                 )
-                history += [f"{speaker} {utter[0]}"]
-                historys.append(history)
+                historys.append(history[:])
                 reward = calc_reward(utter, goal_score)
                 rewards.append(reward)
 
