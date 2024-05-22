@@ -1,5 +1,4 @@
 import json
-from pprint import pprint
 
 import jsonlines
 
@@ -21,32 +20,52 @@ if __name__ == "__main__":
         dataset = list(reader)
 
     rewards = []
-    historys = []
     systems = []
     prompts = []
+    history_pairs = []
+
     for data in dataset:
         agent_name = data["agent"]
         goal_score = data["goal_score"]
         scenario = data["scenario"]
         goal = data["goal"]
+        is_first_speaker = data["is_first_speaker"]
         history = []
 
         for speaker, utter in data["attributed_utterances"].items():
-            history += [f"{speaker} {utter[0]}"]
+            # Append all utterances to history
+            history.append(f"{speaker} {utter[0]}")
+
             if agent_name in speaker:
-                systems.append(
-                    f"The scenario is {scenario}. The goal of {agent_name} is {goal}."
-                )
-                prompts.append(
-                    f'How much does "{speaker} {utter[0]}" contribute to the goal of {agent_name}?'
-                )
-                historys.append(history[:])
-                reward = calc_reward(utter, goal_score)
-                rewards.append(reward)
+                # Store the current history excluding the agent's current utterance
+                if is_first_speaker:
+                    systems.append(
+                        f"The scenario is {scenario}. The goal of {agent_name} is {goal}."
+                    )
+                    prompts.append(
+                        f"{speaker} {utter[0]}\nHow much does this utterance contribute to the goal of {agent_name}?"
+                    )
+                    # Create a copy of the current history excluding the last utterance for pairing
+                    history_pairs.append(history[:-1])
+                    reward = calc_reward(utter, goal_score)
+                    rewards.append(reward)
+
+                if not is_first_speaker:
+                    # Store the current history excluding the agent's previous utterance
+                    systems.append(
+                        f"The scenario is {scenario}. The goal of {agent_name} is {goal}."
+                    )
+                    prompts.append(
+                        f"{speaker} {utter[0]}\nHow much does this utterance contribute to the goal of {agent_name}?"
+                    )
+                    # Create a copy of the current history excluding the last two utterances for pairing
+                    history_pairs.append(history[1:-1])
+                    reward = calc_reward(utter, goal_score)
+                    rewards.append(reward)
 
     formulated_dataset = []
     for prompt, reward, system, history in zip(
-        prompts, rewards, systems, historys
+        prompts, rewards, systems, history_pairs
     ):
         data = {
             "instruction": prompt,
@@ -54,7 +73,10 @@ if __name__ == "__main__":
             "output": "",
             "value": reward,
             "system": system,
-            "history": history,
+            "history": [
+                (history[i], history[i + 1])
+                for i in range(0, len(history) - 1, 2)
+            ],
         }
         formulated_dataset.append(data)
 
