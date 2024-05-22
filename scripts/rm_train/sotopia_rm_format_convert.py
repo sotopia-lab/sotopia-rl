@@ -5,7 +5,6 @@ import jsonlines
 from beartype import beartype
 
 
-@beartype
 def calc_reward(utter_attrib: float, goal_score: float) -> float:
     if utter_attrib == -1:
         reward = -1.0
