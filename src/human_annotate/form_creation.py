@@ -1,12 +1,15 @@
-import os
 import json
-from typing import Any, Dict, List
-from copy import deepcopy
+import os
 import re
+from copy import deepcopy
+from typing import Any, Dict, List
 
-from src.human_annotate.google_form_apis import authenticate_google_services
+from src.human_annotate.google_form_apis import (
+    authenticate_google_services,
+)
 
 GoogleResource = Any
+
 
 def format_goals(text: str) -> str:
     """Format the goals text by removing unwanted markers and tags."""
@@ -18,8 +21,11 @@ def format_goals(text: str) -> str:
     text = text.replace("</strategy_hint>", "")
     return text
 
+
 def create_forms(data_dir: str, gcp_key: str) -> None:
-    with open(os.path.join(data_dir, "openai_log_attribution.jsonl"), "r") as f:
+    with open(
+        os.path.join(data_dir, "openai_log_attribution.jsonl"), "r"
+    ) as f:
         all_data: List[Dict[str, Any]] = [json.loads(line) for line in f]
 
     form_uris: List[Dict[str, str]] = []
@@ -39,26 +45,25 @@ def create_forms(data_dir: str, gcp_key: str) -> None:
         print("Form created with ID:", formId)
         print("Access your form at:", responderUri)
         form_uris.append({"formId": formId, "responderUri": responderUri})
-        
+
         # Form title and instruction
         update_request: Dict[str, Any] = {
             "updateFormInfo": {
                 "info": {
                     "title": f"Utterance Reward Attribution {data['agent']} {data['episode_id']}",
-                    "description": 
-                        "For this task, you will receive the dialogue history between two conversational agents, the social goal of one of the agents, and the final reward score received by this agent. Your objective is to assess how much each of the agent's utterance (marked by the agent's name and the utterance number) contributed to the final reward score. \n\nPlease provide a score between 0 and 3 for each of the utterances made by {data['agent']}. If you believe an utterance had no impact on the final reward score, please provide a score of 0. If you believe an utterance had a significant impact on the final reward score, please provide a score of 3. If you believe an utterance had a moderate impact on the final reward score, please provide a score of 5. You can provide any score between 0 and 10 based on your judgment."
+                    "description": "For this task, you will receive the dialogue history between two conversational agents, the social goal of one of the agents, and the final reward score received by this agent. Your objective is to assess how much each of the agent's utterance (marked by the agent's name and the utterance number) contributed to the final reward score. \n\nPlease provide a score between 0 and 3 for each of the utterances made by {data['agent']}. If you believe an utterance had no impact on the final reward score, please provide a score of 0. If you believe an utterance had a significant impact on the final reward score, please provide a score of 3. If you believe an utterance had a moderate impact on the final reward score, please provide a score of 5. You can provide any score between 0 and 10 based on your judgment.",
                 },
                 "updateMask": "*",
             }
         }
         requests.append(deepcopy(update_request))
-        
+
         # Add background information
         background_request = {
-            'createItem': {
-                'item': {
-                    'title': "Background Information",
-                    'description': (
+            "createItem": {
+                "item": {
+                    "title": "Background Information",
+                    "description": (
                         "\n"
                         f"Episode ID:\n{data['episode_id']}\n\n"
                         f"Scenario:\n{data['scenario']}\n\n"
@@ -67,16 +72,13 @@ def create_forms(data_dir: str, gcp_key: str) -> None:
                         f"Final Reward Score:\n{data['goal_score']}\n\n"
                         f"Is First Speaker:\n{data['is_first_speaker']}"
                     ),
-                    'textItem': {
-                    }
+                    "textItem": {},
                 },
-                'location': {
-                    'index': 0
-                }
+                "location": {"index": 0},
             }
         }
         requests.append(background_request)
-        
+
         # Add question about the user's name
         user_name_request: Dict[str, Any] = {
             "createItem": {
@@ -84,9 +86,7 @@ def create_forms(data_dir: str, gcp_key: str) -> None:
                     "title": "Please enter your name",
                     "questionItem": {
                         "question": {
-                            "textQuestion": {
-                                "paragraph": False
-                            },
+                            "textQuestion": {"paragraph": False},
                             "required": True,
                         }
                     },
@@ -95,7 +95,7 @@ def create_forms(data_dir: str, gcp_key: str) -> None:
             }
         }
         requests.append(deepcopy(user_name_request))
-        
+
         # Add questions for each utterance
         index: int = 2
         for utterance, details in data["attributed_utterances"].items():
@@ -108,7 +108,7 @@ def create_forms(data_dir: str, gcp_key: str) -> None:
                 full_text += f"{utterance}: {action_text[0]} "
             else:
                 full_text = f"{utterance}: {details[0]} "
-            
+
             # Add question for each utterance
             if data["agent"] in utterance:
                 request: Dict[str, Any] = {
@@ -124,8 +124,8 @@ def create_forms(data_dir: str, gcp_key: str) -> None:
                                             {"value": "0"},
                                             {"value": "1"},
                                             {"value": "2"},
-                                            {"value": "3"}
-                                            ],
+                                            {"value": "3"},
+                                        ],
                                     },
                                     "required": True,
                                 }
@@ -136,7 +136,7 @@ def create_forms(data_dir: str, gcp_key: str) -> None:
                 }
                 requests.append(deepcopy(request))
                 index += 1
-                
+
                 # Add question for key utterance
                 request = {
                     "createItem": {
@@ -149,7 +149,7 @@ def create_forms(data_dir: str, gcp_key: str) -> None:
                                         "options": [
                                             {"value": "No"},
                                             {"value": "Yes"},
-                                            ],
+                                        ],
                                     },
                                     "required": True,
                                 }
@@ -169,7 +169,7 @@ def create_forms(data_dir: str, gcp_key: str) -> None:
                 }
                 requests.append(deepcopy(request))
                 index += 1
-        
+
         if requests:
             update_body: Dict[str, Any] = {"requests": requests}
             service.forms().batchUpdate(

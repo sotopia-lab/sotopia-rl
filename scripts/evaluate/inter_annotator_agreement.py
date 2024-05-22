@@ -1,18 +1,22 @@
 import json
 from datetime import datetime
-from typing import Tuple, Dict, Any
+from typing import Any, Dict, Tuple
 
 from scipy.stats import spearmanr
 
 with open("../../data/human_log_attribution.jsonl", "r") as f:
     data = [json.loads(line) for line in f]
 
+
 def convert_to_unix_timestamp_milliseconds(date_time: str) -> int:
     timestamp_dt = datetime.fromisoformat(date_time.rstrip("Z"))
     unix_timestamp_milliseconds = int(timestamp_dt.timestamp() * 1000)
     return unix_timestamp_milliseconds
 
-def preprocessing(data: list[Dict[str, Any]]) -> Tuple[list[Any], list[Any], list[Any]]:
+
+def preprocessing(
+    data: list[Dict[str, Any]]
+) -> Tuple[list[Any], list[Any], list[Any]]:
     count_single = 0
     count_double = 0
     result = []
@@ -39,6 +43,7 @@ def preprocessing(data: list[Dict[str, Any]]) -> Tuple[list[Any], list[Any], lis
     print(f"Count of double annotated: {count_double}")
     return result, convs, key_uttrs
 
+
 def calc_correlation(result: list[Any]) -> None:
     ann0 = []
     ann1 = []
@@ -50,21 +55,24 @@ def calc_correlation(result: list[Any]) -> None:
         lis.sort(key=lambda x: x[0])
         ann0.append(lis[0][1])
         ann1.append(lis[1][1])
-        
+
     # calculate cohens kappa
     corr: Tuple[float, float] = spearmanr(ann0, ann1)
     print(f"spearmanr: {corr}")
-    
+
     # count exact match
     count_exact_match = 0
     for i in range(len(ann0)):
         if ann0[i] == ann1[i]:
             count_exact_match += 1
-            
-    average_difference = sum([abs(a - b) for a, b in zip(ann0, ann1)]) / len(ann0)
+
+    average_difference = sum([abs(a - b) for a, b in zip(ann0, ann1)]) / len(
+        ann0
+    )
     print(f"Count of exact match: {count_exact_match}")
     print(f"Percentage of exact match: {count_exact_match / len(ann0)}")
     print(f"Average difference: {average_difference}")
+
 
 def calc_3_agreement(convs: list[Any]) -> None:
     agreement_list = []
@@ -82,11 +90,16 @@ def calc_3_agreement(convs: list[Any]) -> None:
         key_utter_0 = ann0.index(3) if 3 in ann0 else -1
         key_utter_1 = ann1.index(3) if 3 in ann1 else -1
         agreement_list.append(key_utter_0 == key_utter_1)
-        agreement_linient_list.append(
-            abs(key_utter_0 - key_utter_1) <= 1)
-        
-    print("3 Rating Agreement Rate: ", sum(agreement_list) / len(agreement_list))
-    print("3 Rating Agreement Linient Rate: ", sum(agreement_linient_list) / len(agreement_linient_list))
+        agreement_linient_list.append(abs(key_utter_0 - key_utter_1) <= 1)
+
+    print(
+        "3 Rating Agreement Rate: ", sum(agreement_list) / len(agreement_list)
+    )
+    print(
+        "3 Rating Agreement Linient Rate: ",
+        sum(agreement_linient_list) / len(agreement_linient_list),
+    )
+
 
 def calc_key_uttr_agreement(convs: list[Any]) -> None:
     agreement_list = []
@@ -121,9 +134,15 @@ def calc_key_uttr_agreement(convs: list[Any]) -> None:
             agreement_linient_list.append(1)
         else:
             agreement_linient_list.append(0)
-        
-    print("Key Utterance Agreement Rate: ", sum(agreement_list) / len(agreement_list))
-    print("Key Utterance Agreement Linient Rate: ", sum(agreement_linient_list) / len(agreement_linient_list))
+
+    print(
+        "Key Utterance Agreement Rate: ",
+        sum(agreement_list) / len(agreement_list),
+    )
+    print(
+        "Key Utterance Agreement Linient Rate: ",
+        sum(agreement_linient_list) / len(agreement_linient_list),
+    )
     print("Confusion Matrix with Annotator 0 as Ground Truth:")
     # calculate confusion matrix with annotator 0 as ground truth
     tp, tn, fp, fn = 0, 0, 0, 0
@@ -142,11 +161,12 @@ def calc_key_uttr_agreement(convs: list[Any]) -> None:
     print(f"True Negative: {tn}")
     print(f"False Positive: {fp}")
     print(f"False Negative: {fn}")
-    
+
     print(f"Precision: {tp / (tp + fp)}")
     print(f"Recall: {tp / (tp + fn)}")
     print(f"Specificity: {tn / (tn + fp)}")
     print(f"F1 Score: {2 * tp / (2 * tp + fp + fn)}")
+
 
 if __name__ == "__main__":
     result, convs, key_uttrs = preprocessing(data)
