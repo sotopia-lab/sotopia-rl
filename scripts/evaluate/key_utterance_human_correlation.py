@@ -4,7 +4,7 @@ import jsonlines
 import numpy as np
 from scipy.stats import spearmanr
 
-from ..utils.correlation import fleiss_kappa
+from src.utils.correlation import fleiss_kappa
 
 
 def read_data() -> Tuple[Iterable[Any], Iterable[Any]]:
