@@ -57,9 +57,6 @@ def run_sotopia_rm(
         else tokenizer.pad_token_id,
     )
 
-    import pdb
-
-    pdb.set_trace()
     # Update arguments
     training_args.remove_unused_columns = (
         False  # important for pairwise dataset

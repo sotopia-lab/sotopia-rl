@@ -196,9 +196,6 @@ def get_dataset(
                 desc="Running tokenizer on dataset",
             )
 
-        import pdb
-
-        pdb.set_trace()
         dataset = dataset.map(
             preprocess_func,
             batched=True,
@@ -230,7 +227,4 @@ def get_dataset(
                     "Cannot find valid samples, check `data/README.md` for the data format."
                 )
 
-        import pdb
-
-        pdb.set_trace()
         return dataset

@@ -35,6 +35,7 @@ class Command(str, Enum):
 
 
 def main():
+    print("hello")
     command = sys.argv.pop(1)
     if command == Command.API:
         run_api()
@@ -56,3 +57,7 @@ def main():
         print(USAGE)
     else:
         raise NotImplementedError("Unknown command: {}".format(command))
+
+
+if __name__ == "__main__":
+    main()

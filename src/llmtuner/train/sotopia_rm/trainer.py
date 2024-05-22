@@ -58,75 +58,22 @@ class SotopiaRMTrainer(Trainer):
         inputs: Dict[str, torch.Tensor],
         return_outputs: bool = False,
     ) -> Union[torch.Tensor, Tuple[torch.Tensor, List[torch.Tensor]]]:
-        import pdb
-
-        pdb.set_trace()
-
         # Compute rewards
+        batch_size = inputs["input_ids"].size(0)
+        reg_labels = inputs.pop("reg_labels", None).view(-1)
         _, _, values = model(
             **inputs, output_hidden_states=True, return_dict=True
         )
+        last_indices = (inputs["attention_mask"].sum(dim=1) - 1).long()
 
-        unwrapped_model: "PreTrainedModel" = self.accelerator.unwrap_model(
-            self.model
-        )
-        if getattr(unwrapped_model.config, "model_type", None) == "chatglm":
-            values = torch.transpose(values, 0, 1)
+        # Use these indices to extract the corresponding values from 'values'
+        eos_values = values[torch.arange(values.size(0)), last_indices]
 
-        # Split the inputs and rewards into two parts, chosen and rejected
-        batch_size = inputs["input_ids"].size(0) // 2
-        chosen_input_ids, rejected_input_ids = (
-            inputs["input_ids"][:batch_size],
-            inputs["input_ids"][batch_size:],
-        )
-        chosen_rewards, rejected_rewards = (
-            values[:batch_size],
-            values[batch_size:],
-        )
-        chosen_scores, rejected_scores = [], []
-
-        # Compute pairwise loss. Only backprop on the different tokens before padding
-        # Inspired by: https://github.com/CarperAI/trlx/blob/main/examples/summarize_rlhf/reward_model/reward_model.py
-        loss = 0
-        for i in range(batch_size):
-            chosen_length = (
-                chosen_input_ids[i] != self.tokenizer.pad_token_id
-            ).nonzero()[-1] + 1
-            rejected_length = (
-                rejected_input_ids[i] != self.tokenizer.pad_token_id
-            ).nonzero()[-1] + 1
-            check_divergence = (
-                chosen_input_ids[i] != rejected_input_ids[i]
-            ).nonzero()
-
-            if len(check_divergence) == 0:
-                end_index = chosen_length
-                div_index = end_index - 1
-            else:
-                end_index = max(chosen_length, rejected_length)
-                div_index = check_divergence[0]
-
-            assert div_index > 0
-            chosen_trunc_rewards = chosen_rewards[i, div_index:end_index]
-            rejected_trunc_rewards = rejected_rewards[i, div_index:end_index]
-            if (
-                return_outputs
-            ):  # use the score on the last token except pad token for inference
-                chosen_scores.append(chosen_rewards[i, chosen_length - 1])
-                rejected_scores.append(
-                    rejected_rewards[i, rejected_length - 1]
-                )
-            loss += -torch.nn.functional.logsigmoid(
-                chosen_trunc_rewards - rejected_trunc_rewards
-            ).mean()
-
+        # Compute the MSE loss
+        loss = torch.nn.functional.mse_loss(eos_values, reg_labels)
         loss = loss / batch_size
         if return_outputs:
-            chosen_scores, rejected_scores = torch.stack(
-                chosen_scores
-            ), torch.stack(rejected_scores)
-            return loss, [loss, chosen_scores, rejected_scores]
-
+            return loss, [loss, values, values]
         return loss
 
     def save_predictions(self, predict_results: "PredictionOutput") -> None:

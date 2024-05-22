@@ -24,7 +24,7 @@ plot_loss: true
 overwrite_output_dir: true
 
 # train
-per_device_train_batch_size: 1
+per_device_train_batch_size: 2
 gradient_accumulation_steps: 8
 learning_rate: 0.0001
 num_train_epochs: 3.0
@@ -33,6 +33,6 @@ warmup_steps: 0.1
 fp16: true
 
 # eval
-per_device_eval_batch_size: 1
+per_device_eval_batch_size: 2
 evaluation_strategy: steps
 eval_steps: 500

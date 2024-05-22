@@ -271,6 +271,63 @@ def preprocess_unsupervised_dataset(
     return model_inputs
 
 
+def preprocess_regression_dataset(
+    examples: Dict[str, List[Any]],
+    template: "Template",
+    tokenizer: "PreTrainedTokenizer",
+    processor: Optional["ProcessorMixin"],
+    data_args: "DataArguments",
+) -> Dict[str, List[List[int]]]:
+    # build inputs with format `<bos> X Y <eos>` and labels with format `<ignore> ... <ignore> Y <eos>`
+    # for multiturn examples, we only mask the prompt part in each prompt-response pair.
+    print(examples)
+    model_inputs = {"input_ids": [], "attention_mask": [], "reg_labels": []}
+    if processor is not None:
+        model_inputs["pixel_values"] = []
+        preprocess_visual_inputs = partial(
+            _preprocess_visual_inputs, processor=processor
+        )
+
+    for i in range(len(examples["prompt"])):
+        if (
+            len(examples["prompt"][i]) % 2 != 1
+            or len(examples["response"][i]) != 1
+        ):
+            continue
+
+        if processor is not None:
+            examples["prompt"][i][0]["content"] = (
+                "<image>" + examples["prompt"][i][0]["content"]
+            )
+
+        messages = examples["prompt"][i] + examples["response"][i]
+        input_ids = []
+        for turn_idx, (source_ids, target_ids) in enumerate(
+            template.encode_multiturn(
+                tokenizer,
+                messages,
+                examples["system"][i],
+                examples["tools"][i],
+                data_args.cutoff_len,
+                data_args.reserved_label_len,
+            )
+        ):
+            input_ids += source_ids + target_ids
+
+        if template.efficient_eos:
+            input_ids += [tokenizer.eos_token_id]
+
+        model_inputs["input_ids"].append(input_ids)
+        model_inputs["attention_mask"].append([1] * len(input_ids))
+        model_inputs["reg_labels"].append(examples["values"])
+        if processor is not None:
+            model_inputs["pixel_values"].append(
+                preprocess_visual_inputs(examples["images"][i])
+            )
+
+    return model_inputs
+
+
 def preprocess_pairwise_dataset(
     examples: Dict[str, List[Any]],
     template: "Template",
@@ -390,6 +447,18 @@ def print_unsupervised_dataset_example(
     )
 
 
+def print_regression_dataset_example(
+    example: Dict[str, List[int]], tokenizer: "PreTrainedTokenizer"
+) -> None:
+    print("input_ids:\n{}".format(example["input_ids"]))
+    print(
+        "inputs:\n{}".format(
+            tokenizer.decode(example["input_ids"], skip_special_tokens=False)
+        )
+    )
+    print("regression target:\n{}".format(example["reg_labels"]))
+
+
 def get_preprocess_and_print_func(
     data_args: "DataArguments",
     training_args: "Seq2SeqTrainingArguments",
@@ -437,6 +506,17 @@ def get_preprocess_and_print_func(
         )
         print_function = partial(
             print_pairwise_dataset_example, tokenizer=tokenizer
+        )
+    elif stage == "sotopia_rm":
+        preprocess_func = partial(
+            preprocess_regression_dataset,
+            template=template,
+            tokenizer=tokenizer,
+            processor=processor,
+            data_args=data_args,
+        )
+        print_function = partial(
+            print_regression_dataset_example, tokenizer=tokenizer
         )
     else:
         preprocess_func = partial(
