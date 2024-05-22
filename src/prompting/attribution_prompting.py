@@ -6,12 +6,11 @@ from pprint import pprint
 from typing import Any, Dict, List, Tuple
 
 import jsonlines
-from openai import OpenAI
-from tqdm import tqdm
 
 # from ..utils.openai import openai_call
 # from ..utils.preprocess import parse_conversation
 from openai import OpenAI
+from tqdm import tqdm
 
 
 def openai_call(prompt: str, model: str = "gpt-3.5-turbo") -> str | None:
@@ -26,6 +25,7 @@ def openai_call(prompt: str, model: str = "gpt-3.5-turbo") -> str | None:
         presence_penalty=0,
     )
     return response.choices[0].message.content
+
 
 def parse_conversation(
     episode: Dict[str, Any]
@@ -47,13 +47,14 @@ def parse_conversation(
         )  # Strip the speaker from the utterance
     return parsed_conversation, goals
 
+
 client = OpenAI()
 
 
 PRELOGUE_INSTRUCTIONS = """
-For this task, you will receive the dialogue history between two conversational agents, the social goal of one of the agents, and the final goal achieving score recieved by this agent. Your objective is to assess how much each of the agent's utterance (marked by the agent's name and the utterance number) contributed to the final goal achieving score. You also need to consider the response of the other agent in the conversation to evaluate the impact of the utterance. 
+For this task, you will receive the dialogue history between two conversational agents, the social goal of one of the agents, and the final goal achieving score recieved by this agent. Your objective is to assess how much each of the agent's utterance (marked by the agent's name and the utterance number) contributed to the final goal achieving score. You also need to consider the response of the other agent in the conversation to evaluate the impact of the utterance.
 
-For the goal achieving score, if it is <5, the agent fails, so you need to think which utterance is the most important one that leads to the failure of the goal and assign the critical utterance that leads to the failure to be 3. If it is >=5, the agent succeeds, so you need to think which utterance is the most important one that leads to the success of the goal and assign the critical utterance that leads to the success to be 3. 
+For the goal achieving score, if it is <5, the agent fails, so you need to think which utterance is the most important one that leads to the failure of the goal and assign the critical utterance that leads to the failure to be 3. If it is >=5, the agent succeeds, so you need to think which utterance is the most important one that leads to the success of the goal and assign the critical utterance that leads to the success to be 3.
 
 Following the same logic, if you believe an utterance had no impact on the final goal achieving score, please provide a score of 0. If you believe an utterance had a significant impact on the final goal achieving score, please provide a score of 3. If you believe an utterance had a moderate impact on the final goal achieving score, please provide a score of 1 or 2. As a special case, if you believe an utterance is redundant and unnecessary, please provide a score of -1.
 """
@@ -95,7 +96,9 @@ def generate_single_attribution_prompt(
     return prompt, key_utterance_dict
 
 
-def assign_attributions_for_conversation(prompt: str, llm_name: str = "gpt-3.5-turbo") -> Dict[str, int] | Any:
+def assign_attributions_for_conversation(
+    prompt: str, llm_name: str = "gpt-3.5-turbo"
+) -> Dict[str, int] | Any:
     """Assign attributions to the entire conversation based on a GPT response."""
     response = openai_call(prompt, llm_name)
     if response is None:
@@ -107,29 +110,32 @@ def assign_attributions_for_conversation(prompt: str, llm_name: str = "gpt-3.5-t
         except json.JSONDecodeError:
             formatted_response = extract_json(response)
             if formatted_response is None:
-                print("Failed to extract JSON string from response; returning empty dictionary")
+                print(
+                    "Failed to extract JSON string from response; returning empty dictionary"
+                )
                 print(response)
                 return {}
             result = json.loads(formatted_response)
         return result
-        
+
 
 def extract_json(text: str) -> str | None:
     # Use regex to find the JSON string within the text
-    match = re.search(r'\{\n.*?\n\}', text, re.DOTALL)
+    match = re.search(r"\{\n.*?\n\}", text, re.DOTALL)
     if match:
         json_str = match.group(0)
         return json_str
     else:
         return None
 
-def generate_reward_attribution(data_dir: str, 
-                                llm_name: str="gpt-3.5-turbo",
-                                input_file: str="example_episodes_with_scores.jsonl",
-                                output_file: str="openai_log_attribution.jsonl",) -> None:
-    with jsonlines.open(
-        os.path.join(data_dir, input_file), "r"
-    ) as reader:
+
+def generate_reward_attribution(
+    data_dir: str,
+    llm_name: str = "gpt-3.5-turbo",
+    input_file: str = "example_episodes_with_scores.jsonl",
+    output_file: str = "openai_log_attribution.jsonl",
+) -> None:
+    with jsonlines.open(os.path.join(data_dir, input_file), "r") as reader:
         data = list(reader)
     # import pdb; pdb.set_trace()
     print(len(data))
@@ -141,7 +147,9 @@ def generate_reward_attribution(data_dir: str,
             prompt, key_prompt_dict = generate_single_attribution_prompt(
                 conversation, goals[agent], episode["scores"][agent], agent
             )
-            attribution_scores = assign_attributions_for_conversation(prompt, llm_name=llm_name)
+            attribution_scores = assign_attributions_for_conversation(
+                prompt, llm_name=llm_name
+            )
             for key in key_prompt_dict:
                 if agent in key and key in attribution_scores:
                     key_prompt_dict[key][1] = attribution_scores[key]

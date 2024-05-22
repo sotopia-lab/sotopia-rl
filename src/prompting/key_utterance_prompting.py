@@ -1,5 +1,6 @@
 import json
 import os
+import re
 from collections import OrderedDict
 from typing import Any, Dict, List, Tuple
 
@@ -13,11 +14,11 @@ from ..utils.preprocess import parse_conversation
 client = OpenAI()
 
 PRELOGUE_INSTRUCTIONS = """
-For this task, you will receive the dialogue history between two conversational agents, the social goal of one of the agents, and the final goal achieving score recieved by this agent. Your objective is to find the critical utterances (might be one utterance or more than one utterance) that directly decide the success or failure of the agent's goal.
+For this task, you will receive the dialogue history between two conversational agents, the social goal of one of the agents, and the final goal achieving score recieved by this agent. Your objective is to find the critical utterances (might be one utterance or more than one utterance) that contribute significantly to the success or failure of the agent's goal.
 
 The critical utterance should be labeled as 'YES' and other to be labeled as 'NO'. Whether one utterance is critical or not depends on the response of that utterance. If the response from the other agent directly indicates the success of the agent's goal or failure of the agent's goal, then that utterance is critical. If the response from the other agent does not directly indicate the success or failure of the agent's goal, then that utterance is not critical.
 
-For the goal achieving score, if it is <5, the agent fails, so you need to think which utterance is the most important one that leads to the failure of the goal and assign the critical utterance that leads to the failure to be "YES". If it is >=5, the agent succeeds, so you need to think which utterances is the most important one that leads to the success and assign that utterance to be "3".
+For the goal achieving score, if it is <5, the agent fails, so you need to think which utterance is the most important one that leads to the failure of the goal and assign the critical utterance that leads to the failure to be "YES". If it is >=5, the agent succeeds, so you need to think which utterances is the most important one that leads to the success and assign that utterance to be "NO".
 """
 
 
@@ -59,16 +60,38 @@ def generate_single_key_utterance_prompt(
 
 def assign_key_utterances_for_conversation(
     prompt: str,
+    llm_name: str = "gpt-3.5-turbo",
 ) -> Dict[str, int] | Any:
     """Assign key_utterances to the entire conversation based on a GPT response."""
-    response = openai_call(prompt)
+    response = openai_call(prompt, llm_name)
     if response is None:
         return None
     else:
-        return json.loads(response)
+        try:
+            result = json.loads(response)
+        except json.JSONDecodeError:
+            formatted_response = extract_json(response)
+            if formatted_response is None:
+                print(
+                    "Failed to extract JSON string from response; returning empty dictionary"
+                )
+                print(response)
+                return {}
+            result = json.loads(formatted_response)
+        return result
 
 
-def generate_key_utterance_recognition(data_dir: str) -> None:
+def extract_json(text: str) -> str | None:
+    # Use regex to find the JSON string within the text
+    match = re.search(r"\{\n.*?\n\}", text, re.DOTALL)
+    if match:
+        json_str = match.group(0)
+        return json_str
+    else:
+        return None
+
+
+def generate_key_utterance_recognition(data_dir: str, llm_name: str) -> None:
     with jsonlines.open(
         os.path.join(data_dir, "example_episodes_with_scores.jsonl"), "r"
     ) as reader:
@@ -76,7 +99,7 @@ def generate_key_utterance_recognition(data_dir: str) -> None:
 
     print(len(data))
     results = []
-    for episode in tqdm(data[1:]):
+    for episode in tqdm(data):
         conversation, goals = parse_conversation(episode)
         agents = list(goals.keys())
         for agent in agents:
@@ -84,7 +107,7 @@ def generate_key_utterance_recognition(data_dir: str) -> None:
                 conversation, goals[agent], episode["scores"][agent], agent
             )
             key_utterance_judgements = assign_key_utterances_for_conversation(
-                prompt
+                prompt, llm_name
             )
             for key in key_prompt_dict:
                 if agent in key and key in key_utterance_judgements:
@@ -102,6 +125,6 @@ def generate_key_utterance_recognition(data_dir: str) -> None:
             )
 
             with jsonlines.open(
-                os.path.join(data_dir, "../data/openai_log_key_utterance.jsonl"), "w"
+                os.path.join(data_dir, "openai_log_key_utterance.jsonl"), "w"
             ) as writer:
                 writer.write_all(results)

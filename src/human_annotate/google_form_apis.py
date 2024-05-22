@@ -28,7 +28,9 @@ def get_form(form_id: str, gcp_key: str) -> Dict[str, Any] | Any:
     return form
 
 
-def get_form_responses(form_id: str, gcp_key: str) -> List[Dict[str, Any]] | Any:
+def get_form_responses(
+    form_id: str, gcp_key: str
+) -> List[Dict[str, Any]] | Any:
     """Fetch and return all responses from a specified Google Form."""
     service = authenticate_google_services(gcp_key)
     results = service.forms().responses().list(formId=form_id).execute()
