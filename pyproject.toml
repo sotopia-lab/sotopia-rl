@@ -8,14 +8,35 @@ readme = "README.md"
 
 
 [tool.poetry.dependencies]
-python = ">=3.9, <3.12"
-mypy = "^1.8.0"
-pydantic = "^1.9.0"
-datasets = "^1.12.0"
-openai = "^1.20.0"
-types-tqdm = "^4.61.0"
-rich = "^13.7.0"
-pandas-stubs = "^2.2.0"
+python = ">=3.8.1,<3.12.0"
+# Add your other dependencies here
+deepspeed = {version = ">=0.10.0", optional = true}
+bitsandbytes = {version = "^0.39.0", optional = true}
+vllm = {version = ">=0.4.0", optional = true}
+galore-torch = {version = "*", optional = true}
+badam = {version = "*", optional = true}
+optimum = {version = ">=1.16.0", optional = true}
+auto-gptq = {version = ">=0.5.0", optional = true}
+autoawq = {version = "*", optional = true}
+aqlm = {version = "^1.1.0", optional = true}
+tiktoken = {version = "^0.6.0", optional = true}
+transformers_stream_generator = {version = "*", optional = true}
+modelscope = {version = "*", optional = true}
+ruff = {version = "*", optional = true}
+
+[tool.poetry.extras]
+metrics = ["nltk", "jieba", "rouge-chinese"]
+deepspeed = ["deepspeed"]
+bitsandbytes = ["bitsandbytes"]
+vllm = ["vllm"]
+galore = ["galore"]
+badam = ["badam"]
+gptq = ["gptq"]
+awq = ["awq"]
+aqlm = ["aqlm"]
+qwen = ["tiktoken", "transformers_stream_generator"]
+modelscope = ["modelscope"]
+quality = ["ruff"]
 
 
 [tool.poetry.group.dev.dependencies]
@@ -26,19 +47,6 @@ types-setuptools = "*"
 [tool.poetry.group.test.dependencies]
 pytest = "*"
 pytest-asyncio = "*"
-
-[tool.poetry.extras]
-deepspeed = ["deepspeed>=0.10.0"]
-bitsandbytes = ["bitsandbytes>=0.39.0"]
-vllm = ["vllm>=0.4.0"]
-galore = ["galore-torch"]
-badam = ["badam"]
-gptq = ["optimum>=1.16.0", "auto-gptq>=0.5.0"]
-awq = ["autoawq"]
-aqlm = ["aqlm[gpu]>=1.1.0"]
-qwen = ["tiktoken", "transformers_stream_generator"]
-modelscope = ["modelscope"]
-quality = ["ruff"]
 
 [build-system]
 requires = ["poetry-core"]
