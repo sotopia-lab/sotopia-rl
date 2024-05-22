@@ -48,7 +48,8 @@ def add_score(data_dir: str,
         scores = {}
         for i in range(2):
             agent = list(episode["agents_background"].keys())[i]
-            scores[agent] = episode["rewards"][i]["goal"]
+            # import pdb; pdb.set_trace()
+            scores[agent] = episode["rewards"][i][1]["goal"]
         new_episode = {**episode, "scores": scores}
         new_data.append(new_episode)
 
