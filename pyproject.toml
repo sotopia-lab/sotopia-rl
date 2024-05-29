@@ -45,7 +45,6 @@ aqlm = ["aqlm"]
 qwen = ["tiktoken", "transformers_stream_generator"]
 modelscope = ["modelscope"]
 quality = ["ruff"]
->>>>>>> ce44b17f92f2a0f24e897ee6c8f4d94372995d61
 
 
 [tool.poetry.group.dev.dependencies]

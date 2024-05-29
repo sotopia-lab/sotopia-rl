@@ -147,10 +147,10 @@ def generate_reward_attribution(
     print(len(data))
     results = finished_episodes
     for episode in tqdm(data):
-        if episode["episode_id"] in finished_episode_ids and finished_episode_ids.get(episode["episode_id"]) > 1:
-            print(f"finsihed episode {episode['episode_id']}")
+        if episode["episode_id"] in finished_episode_ids and finished_episode_ids[episode["episode_id"]] > 1:
+            print(f"finished episode {episode['episode_id']}")
             continue
-        elif episode["episode_id"] in finished_episode_ids and finished_episode_ids.get(episode["episode_id"]) == 1:
+        elif episode["episode_id"] in finished_episode_ids and finished_episode_ids[episode["episode_id"]] == 1:
             results.pop() # rerun the unfinished episode pair
             finished_episode_ids[episode["episode_id"]] -= 1
             print(f"rerun episode {episode['episode_id']}")
