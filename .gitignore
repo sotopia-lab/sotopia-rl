@@ -8,3 +8,5 @@ credentials.json
 *.DS_Store
 *.pkl
 __pycache__/
+*.json
+!*_toy.json
