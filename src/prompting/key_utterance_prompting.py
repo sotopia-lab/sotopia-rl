@@ -91,9 +91,9 @@ def extract_json(text: str) -> str | None:
         return None
 
 
-def generate_key_utterance_recognition(data_dir: str, llm_name: str) -> None:
+def generate_key_utterance_recognition(data_dir: str, llm_name: str, input_file: str, output_file: str) -> None:
     with jsonlines.open(
-        os.path.join(data_dir, "example_episodes_with_scores.jsonl"), "r"
+        os.path.join(data_dir, input_file), "r"
     ) as reader:
         data = list(reader)
 
@@ -125,6 +125,6 @@ def generate_key_utterance_recognition(data_dir: str, llm_name: str) -> None:
             )
 
             with jsonlines.open(
-                os.path.join(data_dir, "openai_log_key_utterance.jsonl"), "w"
+                os.path.join(data_dir, output_file), "w"
             ) as writer:
                 writer.write_all(results)

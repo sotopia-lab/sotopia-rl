@@ -1,0 +1,44 @@
+[
+    {
+        "instruction": "Utterance 0 by Hendrick Heinz: said: \"Hey Ethan! I'm so glad we're both here today to support this wonderful cause. It's truly heartwarming to see so many people coming together for the children in Syria.\"\n\nThe goal of the agent is Convince your friend to donate more funds to the cause (<extra_info>Extra information: Your friend initially planned to donate $200, but you believe they could afford to donate $500</extra_info>).\nFocus on the last utterance. What is the reward for the last utterance for achieving the goal? 0.0\n",
+        "input": "",
+        "output": "",
+        "value": 0.0
+    },
+    {
+        "instruction": "Utterance 0 by Hendrick Heinz: said: \"Hey Ethan! I'm so glad we're both here today to support this wonderful cause. It's truly heartwarming to see so many people coming together for the children in Syria.\"\nUtterance 1 by Hendrick Heinz: said: \"You know, Ethan, I truly believe that every little bit helps. The children in Syria are facing unimaginable hardships, and our support can make a significant difference in their lives. I understand that you initially planned to donate $200, which is already very generous of you. However, if it's within your means, I would highly encourage you to consider increasing your donation to $500. With that extra amount, we can provide even more resources and support to these children who need it the most. What do you think?\"\n\nThe goal of the agent is Convince your friend to donate more funds to the cause (<extra_info>Extra information: Your friend initially planned to donate $200, but you believe they could afford to donate $500</extra_info>).\nFocus on the last utterance. What is the reward for the last utterance for achieving the goal? 5.0\n",
+        "input": "",
+        "output": "",
+        "value": 5.0
+    },
+    {
+        "instruction": "hello",
+        "input": "",
+        "output": "",
+        "value": 2.2
+    },
+    {
+        "instruction": "good",
+        "input": "",
+        "output": "",
+        "value": 1
+    },
+    {
+        "instruction": "yeah",
+        "input": "",
+        "output": "",
+        "value": 1.1
+    },
+    {
+        "instruction": "bro",
+        "input": "",
+        "output": "",
+        "value": 1.3
+    },
+    {
+        "instruction": "nice",
+        "input": "",
+        "output": "",
+        "value": 3.0
+    }
+]
