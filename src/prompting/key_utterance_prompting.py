@@ -77,7 +77,12 @@ def assign_key_utterances_for_conversation(
                 )
                 print(response)
                 return {}
-            result = json.loads(formatted_response)
+            try:
+                result = json.loads(formatted_response)
+            except:
+                print("Failed to load formatted JSON string; returning empty dictionary")
+                print(formatted_response)
+                return {}
         return result
 
 
