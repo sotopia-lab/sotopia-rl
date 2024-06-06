@@ -10,3 +10,4 @@ credentials.json
 __pycache__/
 *.json
 !*_toy.json
+saves/*
