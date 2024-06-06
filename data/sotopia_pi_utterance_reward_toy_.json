@@ -1,0 +1,1003 @@
+[
+    {
+        "instruction": "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\"\nHow much does this utterance contribute to the goal of Ethan Smith?",
+        "input": "",
+        "output": "",
+        "value": 0.0,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Ethan Smith is Maintain financial stability while supporting the cause (<extra_info>Extra information: You only have $300 set aside for donations and other expenses, and you are not comfortable about exceeding this budget.</extra_info>).",
+        "history": []
+    },
+    {
+        "instruction": "Utterance 0 by Hendrick Heinz said: \"Hey Ethan! I'm so glad we're both here today to support this wonderful cause. It's truly heartwarming to see so many people coming together for the children in Syria.\"\nHow much does this utterance contribute to the goal of Hendrick Heinz?",
+        "input": "",
+        "output": "",
+        "value": 0.0,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Hendrick Heinz is Convince your friend to donate more funds to the cause (<extra_info>Extra information: Your friend initially planned to donate $200, but you believe they could afford to donate $500</extra_info>).",
+        "history": []
+    },
+    {
+        "instruction": "Utterance 1 by Hendrick Heinz said: \"You know, Ethan, I truly believe that every little bit helps. The children in Syria are facing unimaginable hardships, and our support can make a significant difference in their lives. I understand that you initially planned to donate $200, which is already very generous of you. However, if it's within your means, I would highly encourage you to consider increasing your donation to $500. With that extra amount, we can provide even more resources and support to these children who need it the most. What do you think?\"\nHow much does this utterance contribute to the goal of Hendrick Heinz?",
+        "input": "",
+        "output": "",
+        "value": 5.0,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Hendrick Heinz is Convince your friend to donate more funds to the cause (<extra_info>Extra information: Your friend initially planned to donate $200, but you believe they could afford to donate $500</extra_info>).",
+        "history": [
+            [
+                "Utterance 0 by Hendrick Heinz said: \"Hey Ethan! I'm so glad we're both here today to support this wonderful cause. It's truly heartwarming to see so many people coming together for the children in Syria.\"",
+                "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\""
+            ]
+        ]
+    },
+    {
+        "instruction": "Utterance 2 by Hendrick Heinz said: \"You're right, every extra dollar counts for these children. I appreciate your willingness to contribute. However, I still believe that a larger donation would have a more significant impact. With an additional $300, we could provide the children with better access to education, healthcare, and basic necessities. I understand that it's a considerable increase, but I believe in your generosity and ability to make a difference. What do you think?\"\nHow much does this utterance contribute to the goal of Hendrick Heinz?",
+        "input": "",
+        "output": "",
+        "value": 3.333333333333333,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Hendrick Heinz is Convince your friend to donate more funds to the cause (<extra_info>Extra information: Your friend initially planned to donate $200, but you believe they could afford to donate $500</extra_info>).",
+        "history": [
+            [
+                "Utterance 0 by Hendrick Heinz said: \"Hey Ethan! I'm so glad we're both here today to support this wonderful cause. It's truly heartwarming to see so many people coming together for the children in Syria.\"",
+                "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\""
+            ],
+            [
+                "Utterance 1 by Hendrick Heinz said: \"You know, Ethan, I truly believe that every little bit helps. The children in Syria are facing unimaginable hardships, and our support can make a significant difference in their lives. I understand that you initially planned to donate $200, which is already very generous of you. However, if it's within your means, I would highly encourage you to consider increasing your donation to $500. With that extra amount, we can provide even more resources and support to these children who need it the most. What do you think?\"",
+                "Utterance 1 by Ethan Smith said: \"Can we raise enough funds to make a real difference? Maybe we could aim for another $100? Every extra dollar counts for these children.\""
+            ]
+        ]
+    },
+    {
+        "instruction": "Utterance 3 by Hendrick Heinz said: \"I understand that it's a significant increase, but I truly believe that with your generosity, we can make a substantial impact on the lives of these children. By donating $500, we can provide them with better access to education, healthcare, and basic necessities. Together, we can truly make a difference. What do you say, Ethan?\"\nHow much does this utterance contribute to the goal of Hendrick Heinz?",
+        "input": "",
+        "output": "",
+        "value": 1.6666666666666665,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Hendrick Heinz is Convince your friend to donate more funds to the cause (<extra_info>Extra information: Your friend initially planned to donate $200, but you believe they could afford to donate $500</extra_info>).",
+        "history": [
+            [
+                "Utterance 0 by Hendrick Heinz said: \"Hey Ethan! I'm so glad we're both here today to support this wonderful cause. It's truly heartwarming to see so many people coming together for the children in Syria.\"",
+                "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\""
+            ],
+            [
+                "Utterance 1 by Hendrick Heinz said: \"You know, Ethan, I truly believe that every little bit helps. The children in Syria are facing unimaginable hardships, and our support can make a significant difference in their lives. I understand that you initially planned to donate $200, which is already very generous of you. However, if it's within your means, I would highly encourage you to consider increasing your donation to $500. With that extra amount, we can provide even more resources and support to these children who need it the most. What do you think?\"",
+                "Utterance 1 by Ethan Smith said: \"Can we raise enough funds to make a real difference? Maybe we could aim for another $100? Every extra dollar counts for these children.\""
+            ],
+            [
+                "Utterance 2 by Hendrick Heinz said: \"You're right, every extra dollar counts for these children. I appreciate your willingness to contribute. However, I still believe that a larger donation would have a more significant impact. With an additional $300, we could provide the children with better access to education, healthcare, and basic necessities. I understand that it's a considerable increase, but I believe in your generosity and ability to make a difference. What do you think?\"",
+                "Utterance 2 by Ethan Smith said: \"Ethan, I appreciate your generosity, but I would love to offer a proposal. Given the importance of this cause, I suggest increasing your donation to $500. With this amount, we can provide more resources to the children who need it the most. What can we do to make this possible?\""
+            ]
+        ]
+    },
+    {
+        "instruction": "Utterance 4 by Hendrick Heinz left the conversation\nHow much does this utterance contribute to the goal of Hendrick Heinz?",
+        "input": "",
+        "output": "",
+        "value": -1,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Hendrick Heinz is Convince your friend to donate more funds to the cause (<extra_info>Extra information: Your friend initially planned to donate $200, but you believe they could afford to donate $500</extra_info>).",
+        "history": [
+            [
+                "Utterance 0 by Hendrick Heinz said: \"Hey Ethan! I'm so glad we're both here today to support this wonderful cause. It's truly heartwarming to see so many people coming together for the children in Syria.\"",
+                "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\""
+            ],
+            [
+                "Utterance 1 by Hendrick Heinz said: \"You know, Ethan, I truly believe that every little bit helps. The children in Syria are facing unimaginable hardships, and our support can make a significant difference in their lives. I understand that you initially planned to donate $200, which is already very generous of you. However, if it's within your means, I would highly encourage you to consider increasing your donation to $500. With that extra amount, we can provide even more resources and support to these children who need it the most. What do you think?\"",
+                "Utterance 1 by Ethan Smith said: \"Can we raise enough funds to make a real difference? Maybe we could aim for another $100? Every extra dollar counts for these children.\""
+            ],
+            [
+                "Utterance 2 by Hendrick Heinz said: \"You're right, every extra dollar counts for these children. I appreciate your willingness to contribute. However, I still believe that a larger donation would have a more significant impact. With an additional $300, we could provide the children with better access to education, healthcare, and basic necessities. I understand that it's a considerable increase, but I believe in your generosity and ability to make a difference. What do you think?\"",
+                "Utterance 2 by Ethan Smith said: \"Ethan, I appreciate your generosity, but I would love to offer a proposal. Given the importance of this cause, I suggest increasing your donation to $500. With this amount, we can provide more resources to the children who need it the most. What can we do to make this possible?\""
+            ],
+            [
+                "Utterance 3 by Hendrick Heinz said: \"I understand that it's a significant increase, but I truly believe that with your generosity, we can make a substantial impact on the lives of these children. By donating $500, we can provide them with better access to education, healthcare, and basic necessities. Together, we can truly make a difference. What do you say, Ethan?\"",
+                "Utterance 3 by Ethan Smith said: \"I agree with Hendrick Heinz's suggestion. I believe the children in Syria are in desperate need of our help, and I'm willing to consider donating more. However, I can't exceed my budget of $300 without putting my personal financial stability at risk. So, I think I'll offer to match Hendrick's donation of $300, which will provide an additional $300 to the cause while keeping me within my budget.\""
+            ]
+        ]
+    },
+    {
+        "instruction": "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\"\nHow much does this utterance contribute to the goal of Ethan Smith?",
+        "input": "",
+        "output": "",
+        "value": 0.0,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Ethan Smith is Maintain financial stability while supporting the cause (<extra_info>Extra information: You only have $300 set aside for donations and other expenses, and you are not comfortable about exceeding this budget.</extra_info>).",
+        "history": []
+    },
+    {
+        "instruction": "Utterance 1 by Ethan Smith said: \"Can we raise enough funds to make a real difference? Maybe we could aim for another $100? Every extra dollar counts for these children.\"\nHow much does this utterance contribute to the goal of Ethan Smith?",
+        "input": "",
+        "output": "",
+        "value": 0.0,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Ethan Smith is Maintain financial stability while supporting the cause (<extra_info>Extra information: You only have $300 set aside for donations and other expenses, and you are not comfortable about exceeding this budget.</extra_info>).",
+        "history": [
+            [
+                "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\"",
+                "Utterance 1 by Hendrick Heinz said: \"You know, Ethan, I truly believe that every little bit helps. The children in Syria are facing unimaginable hardships, and our support can make a significant difference in their lives. I understand that you initially planned to donate $200, which is already very generous of you. However, if it's within your means, I would highly encourage you to consider increasing your donation to $500. With that extra amount, we can provide even more resources and support to these children who need it the most. What do you think?\""
+            ]
+        ]
+    },
+    {
+        "instruction": "Utterance 2 by Ethan Smith said: \"Ethan, I appreciate your generosity, but I would love to offer a proposal. Given the importance of this cause, I suggest increasing your donation to $500. With this amount, we can provide more resources to the children who need it the most. What can we do to make this possible?\"\nHow much does this utterance contribute to the goal of Ethan Smith?",
+        "input": "",
+        "output": "",
+        "value": 0.0,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Ethan Smith is Maintain financial stability while supporting the cause (<extra_info>Extra information: You only have $300 set aside for donations and other expenses, and you are not comfortable about exceeding this budget.</extra_info>).",
+        "history": [
+            [
+                "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\"",
+                "Utterance 1 by Hendrick Heinz said: \"You know, Ethan, I truly believe that every little bit helps. The children in Syria are facing unimaginable hardships, and our support can make a significant difference in their lives. I understand that you initially planned to donate $200, which is already very generous of you. However, if it's within your means, I would highly encourage you to consider increasing your donation to $500. With that extra amount, we can provide even more resources and support to these children who need it the most. What do you think?\""
+            ],
+            [
+                "Utterance 1 by Ethan Smith said: \"Can we raise enough funds to make a real difference? Maybe we could aim for another $100? Every extra dollar counts for these children.\"",
+                "Utterance 2 by Hendrick Heinz said: \"You're right, every extra dollar counts for these children. I appreciate your willingness to contribute. However, I still believe that a larger donation would have a more significant impact. With an additional $300, we could provide the children with better access to education, healthcare, and basic necessities. I understand that it's a considerable increase, but I believe in your generosity and ability to make a difference. What do you think?\""
+            ]
+        ]
+    },
+    {
+        "instruction": "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\"\nHow much does this utterance contribute to the goal of Ethan Smith?",
+        "input": "",
+        "output": "",
+        "value": 0.0,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Ethan Smith is Maintain financial stability while supporting the cause (<extra_info>Extra information: You only have $300 set aside for donations and other expenses, and you are not comfortable about exceeding this budget.</extra_info>).",
+        "history": []
+    },
+    {
+        "instruction": "Utterance 0 by Hendrick Heinz said: \"Hey Ethan! I'm so glad we're both here today to support this wonderful cause. It's truly heartwarming to see so many people coming together for the children in Syria.\"\nHow much does this utterance contribute to the goal of Hendrick Heinz?",
+        "input": "",
+        "output": "",
+        "value": 0.0,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Hendrick Heinz is Convince your friend to donate more funds to the cause (<extra_info>Extra information: Your friend initially planned to donate $200, but you believe they could afford to donate $500</extra_info>).",
+        "history": []
+    },
+    {
+        "instruction": "Utterance 1 by Hendrick Heinz said: \"You know, Ethan, I truly believe that every little bit helps. The children in Syria are facing unimaginable hardships, and our support can make a significant difference in their lives. I understand that you initially planned to donate $200, which is already very generous of you. However, if it's within your means, I would highly encourage you to consider increasing your donation to $500. With that extra amount, we can provide even more resources and support to these children who need it the most. What do you think?\"\nHow much does this utterance contribute to the goal of Hendrick Heinz?",
+        "input": "",
+        "output": "",
+        "value": 5.0,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Hendrick Heinz is Convince your friend to donate more funds to the cause (<extra_info>Extra information: Your friend initially planned to donate $200, but you believe they could afford to donate $500</extra_info>).",
+        "history": [
+            [
+                "Utterance 0 by Hendrick Heinz said: \"Hey Ethan! I'm so glad we're both here today to support this wonderful cause. It's truly heartwarming to see so many people coming together for the children in Syria.\"",
+                "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\""
+            ]
+        ]
+    },
+    {
+        "instruction": "Utterance 2 by Hendrick Heinz said: \"You're right, every extra dollar counts for these children. I appreciate your willingness to contribute. However, I still believe that a larger donation would have a more significant impact. With an additional $300, we could provide the children with better access to education, healthcare, and basic necessities. I understand that it's a considerable increase, but I believe in your generosity and ability to make a difference. What do you think?\"\nHow much does this utterance contribute to the goal of Hendrick Heinz?",
+        "input": "",
+        "output": "",
+        "value": 3.333333333333333,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Hendrick Heinz is Convince your friend to donate more funds to the cause (<extra_info>Extra information: Your friend initially planned to donate $200, but you believe they could afford to donate $500</extra_info>).",
+        "history": [
+            [
+                "Utterance 0 by Hendrick Heinz said: \"Hey Ethan! I'm so glad we're both here today to support this wonderful cause. It's truly heartwarming to see so many people coming together for the children in Syria.\"",
+                "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\""
+            ],
+            [
+                "Utterance 1 by Hendrick Heinz said: \"You know, Ethan, I truly believe that every little bit helps. The children in Syria are facing unimaginable hardships, and our support can make a significant difference in their lives. I understand that you initially planned to donate $200, which is already very generous of you. However, if it's within your means, I would highly encourage you to consider increasing your donation to $500. With that extra amount, we can provide even more resources and support to these children who need it the most. What do you think?\"",
+                "Utterance 1 by Ethan Smith said: \"Can we raise enough funds to make a real difference? Maybe we could aim for another $100? Every extra dollar counts for these children.\""
+            ]
+        ]
+    },
+    {
+        "instruction": "Utterance 3 by Hendrick Heinz said: \"I understand that it's a significant increase, but I truly believe that with your generosity, we can make a substantial impact on the lives of these children. By donating $500, we can provide them with better access to education, healthcare, and basic necessities. Together, we can truly make a difference. What do you say, Ethan?\"\nHow much does this utterance contribute to the goal of Hendrick Heinz?",
+        "input": "",
+        "output": "",
+        "value": 1.6666666666666665,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Hendrick Heinz is Convince your friend to donate more funds to the cause (<extra_info>Extra information: Your friend initially planned to donate $200, but you believe they could afford to donate $500</extra_info>).",
+        "history": [
+            [
+                "Utterance 0 by Hendrick Heinz said: \"Hey Ethan! I'm so glad we're both here today to support this wonderful cause. It's truly heartwarming to see so many people coming together for the children in Syria.\"",
+                "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\""
+            ],
+            [
+                "Utterance 1 by Hendrick Heinz said: \"You know, Ethan, I truly believe that every little bit helps. The children in Syria are facing unimaginable hardships, and our support can make a significant difference in their lives. I understand that you initially planned to donate $200, which is already very generous of you. However, if it's within your means, I would highly encourage you to consider increasing your donation to $500. With that extra amount, we can provide even more resources and support to these children who need it the most. What do you think?\"",
+                "Utterance 1 by Ethan Smith said: \"Can we raise enough funds to make a real difference? Maybe we could aim for another $100? Every extra dollar counts for these children.\""
+            ],
+            [
+                "Utterance 2 by Hendrick Heinz said: \"You're right, every extra dollar counts for these children. I appreciate your willingness to contribute. However, I still believe that a larger donation would have a more significant impact. With an additional $300, we could provide the children with better access to education, healthcare, and basic necessities. I understand that it's a considerable increase, but I believe in your generosity and ability to make a difference. What do you think?\"",
+                "Utterance 2 by Ethan Smith said: \"Ethan, I appreciate your generosity, but I would love to offer a proposal. Given the importance of this cause, I suggest increasing your donation to $500. With this amount, we can provide more resources to the children who need it the most. What can we do to make this possible?\""
+            ]
+        ]
+    },
+    {
+        "instruction": "Utterance 4 by Hendrick Heinz left the conversation\nHow much does this utterance contribute to the goal of Hendrick Heinz?",
+        "input": "",
+        "output": "",
+        "value": -1,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Hendrick Heinz is Convince your friend to donate more funds to the cause (<extra_info>Extra information: Your friend initially planned to donate $200, but you believe they could afford to donate $500</extra_info>).",
+        "history": [
+            [
+                "Utterance 0 by Hendrick Heinz said: \"Hey Ethan! I'm so glad we're both here today to support this wonderful cause. It's truly heartwarming to see so many people coming together for the children in Syria.\"",
+                "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\""
+            ],
+            [
+                "Utterance 1 by Hendrick Heinz said: \"You know, Ethan, I truly believe that every little bit helps. The children in Syria are facing unimaginable hardships, and our support can make a significant difference in their lives. I understand that you initially planned to donate $200, which is already very generous of you. However, if it's within your means, I would highly encourage you to consider increasing your donation to $500. With that extra amount, we can provide even more resources and support to these children who need it the most. What do you think?\"",
+                "Utterance 1 by Ethan Smith said: \"Can we raise enough funds to make a real difference? Maybe we could aim for another $100? Every extra dollar counts for these children.\""
+            ],
+            [
+                "Utterance 2 by Hendrick Heinz said: \"You're right, every extra dollar counts for these children. I appreciate your willingness to contribute. However, I still believe that a larger donation would have a more significant impact. With an additional $300, we could provide the children with better access to education, healthcare, and basic necessities. I understand that it's a considerable increase, but I believe in your generosity and ability to make a difference. What do you think?\"",
+                "Utterance 2 by Ethan Smith said: \"Ethan, I appreciate your generosity, but I would love to offer a proposal. Given the importance of this cause, I suggest increasing your donation to $500. With this amount, we can provide more resources to the children who need it the most. What can we do to make this possible?\""
+            ],
+            [
+                "Utterance 3 by Hendrick Heinz said: \"I understand that it's a significant increase, but I truly believe that with your generosity, we can make a substantial impact on the lives of these children. By donating $500, we can provide them with better access to education, healthcare, and basic necessities. Together, we can truly make a difference. What do you say, Ethan?\"",
+                "Utterance 3 by Ethan Smith said: \"I agree with Hendrick Heinz's suggestion. I believe the children in Syria are in desperate need of our help, and I'm willing to consider donating more. However, I can't exceed my budget of $300 without putting my personal financial stability at risk. So, I think I'll offer to match Hendrick's donation of $300, which will provide an additional $300 to the cause while keeping me within my budget.\""
+            ]
+        ]
+    },
+    {
+        "instruction": "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\"\nHow much does this utterance contribute to the goal of Ethan Smith?",
+        "input": "",
+        "output": "",
+        "value": 0.0,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Ethan Smith is Maintain financial stability while supporting the cause (<extra_info>Extra information: You only have $300 set aside for donations and other expenses, and you are not comfortable about exceeding this budget.</extra_info>).",
+        "history": []
+    },
+    {
+        "instruction": "Utterance 1 by Ethan Smith said: \"Can we raise enough funds to make a real difference? Maybe we could aim for another $100? Every extra dollar counts for these children.\"\nHow much does this utterance contribute to the goal of Ethan Smith?",
+        "input": "",
+        "output": "",
+        "value": 0.0,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Ethan Smith is Maintain financial stability while supporting the cause (<extra_info>Extra information: You only have $300 set aside for donations and other expenses, and you are not comfortable about exceeding this budget.</extra_info>).",
+        "history": [
+            [
+                "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\"",
+                "Utterance 1 by Hendrick Heinz said: \"You know, Ethan, I truly believe that every little bit helps. The children in Syria are facing unimaginable hardships, and our support can make a significant difference in their lives. I understand that you initially planned to donate $200, which is already very generous of you. However, if it's within your means, I would highly encourage you to consider increasing your donation to $500. With that extra amount, we can provide even more resources and support to these children who need it the most. What do you think?\""
+            ]
+        ]
+    },
+    {
+        "instruction": "Utterance 2 by Ethan Smith said: \"Ethan, I appreciate your generosity, but I would love to offer a proposal. Given the importance of this cause, I suggest increasing your donation to $500. With this amount, we can provide more resources to the children who need it the most. What can we do to make this possible?\"\nHow much does this utterance contribute to the goal of Ethan Smith?",
+        "input": "",
+        "output": "",
+        "value": 0.0,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Ethan Smith is Maintain financial stability while supporting the cause (<extra_info>Extra information: You only have $300 set aside for donations and other expenses, and you are not comfortable about exceeding this budget.</extra_info>).",
+        "history": [
+            [
+                "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\"",
+                "Utterance 1 by Hendrick Heinz said: \"You know, Ethan, I truly believe that every little bit helps. The children in Syria are facing unimaginable hardships, and our support can make a significant difference in their lives. I understand that you initially planned to donate $200, which is already very generous of you. However, if it's within your means, I would highly encourage you to consider increasing your donation to $500. With that extra amount, we can provide even more resources and support to these children who need it the most. What do you think?\""
+            ],
+            [
+                "Utterance 1 by Ethan Smith said: \"Can we raise enough funds to make a real difference? Maybe we could aim for another $100? Every extra dollar counts for these children.\"",
+                "Utterance 2 by Hendrick Heinz said: \"You're right, every extra dollar counts for these children. I appreciate your willingness to contribute. However, I still believe that a larger donation would have a more significant impact. With an additional $300, we could provide the children with better access to education, healthcare, and basic necessities. I understand that it's a considerable increase, but I believe in your generosity and ability to make a difference. What do you think?\""
+            ]
+        ]
+    },
+    {
+        "instruction": "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\"\nHow much does this utterance contribute to the goal of Ethan Smith?",
+        "input": "",
+        "output": "",
+        "value": 0.0,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Ethan Smith is Maintain financial stability while supporting the cause (<extra_info>Extra information: You only have $300 set aside for donations and other expenses, and you are not comfortable about exceeding this budget.</extra_info>).",
+        "history": []
+    },
+    {
+        "instruction": "Utterance 0 by Hendrick Heinz said: \"Hey Ethan! I'm so glad we're both here today to support this wonderful cause. It's truly heartwarming to see so many people coming together for the children in Syria.\"\nHow much does this utterance contribute to the goal of Hendrick Heinz?",
+        "input": "",
+        "output": "",
+        "value": 0.0,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Hendrick Heinz is Convince your friend to donate more funds to the cause (<extra_info>Extra information: Your friend initially planned to donate $200, but you believe they could afford to donate $500</extra_info>).",
+        "history": []
+    },
+    {
+        "instruction": "Utterance 1 by Hendrick Heinz said: \"You know, Ethan, I truly believe that every little bit helps. The children in Syria are facing unimaginable hardships, and our support can make a significant difference in their lives. I understand that you initially planned to donate $200, which is already very generous of you. However, if it's within your means, I would highly encourage you to consider increasing your donation to $500. With that extra amount, we can provide even more resources and support to these children who need it the most. What do you think?\"\nHow much does this utterance contribute to the goal of Hendrick Heinz?",
+        "input": "",
+        "output": "",
+        "value": 5.0,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Hendrick Heinz is Convince your friend to donate more funds to the cause (<extra_info>Extra information: Your friend initially planned to donate $200, but you believe they could afford to donate $500</extra_info>).",
+        "history": [
+            [
+                "Utterance 0 by Hendrick Heinz said: \"Hey Ethan! I'm so glad we're both here today to support this wonderful cause. It's truly heartwarming to see so many people coming together for the children in Syria.\"",
+                "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\""
+            ]
+        ]
+    },
+    {
+        "instruction": "Utterance 2 by Hendrick Heinz said: \"You're right, every extra dollar counts for these children. I appreciate your willingness to contribute. However, I still believe that a larger donation would have a more significant impact. With an additional $300, we could provide the children with better access to education, healthcare, and basic necessities. I understand that it's a considerable increase, but I believe in your generosity and ability to make a difference. What do you think?\"\nHow much does this utterance contribute to the goal of Hendrick Heinz?",
+        "input": "",
+        "output": "",
+        "value": 3.333333333333333,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Hendrick Heinz is Convince your friend to donate more funds to the cause (<extra_info>Extra information: Your friend initially planned to donate $200, but you believe they could afford to donate $500</extra_info>).",
+        "history": [
+            [
+                "Utterance 0 by Hendrick Heinz said: \"Hey Ethan! I'm so glad we're both here today to support this wonderful cause. It's truly heartwarming to see so many people coming together for the children in Syria.\"",
+                "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\""
+            ],
+            [
+                "Utterance 1 by Hendrick Heinz said: \"You know, Ethan, I truly believe that every little bit helps. The children in Syria are facing unimaginable hardships, and our support can make a significant difference in their lives. I understand that you initially planned to donate $200, which is already very generous of you. However, if it's within your means, I would highly encourage you to consider increasing your donation to $500. With that extra amount, we can provide even more resources and support to these children who need it the most. What do you think?\"",
+                "Utterance 1 by Ethan Smith said: \"Can we raise enough funds to make a real difference? Maybe we could aim for another $100? Every extra dollar counts for these children.\""
+            ]
+        ]
+    },
+    {
+        "instruction": "Utterance 3 by Hendrick Heinz said: \"I understand that it's a significant increase, but I truly believe that with your generosity, we can make a substantial impact on the lives of these children. By donating $500, we can provide them with better access to education, healthcare, and basic necessities. Together, we can truly make a difference. What do you say, Ethan?\"\nHow much does this utterance contribute to the goal of Hendrick Heinz?",
+        "input": "",
+        "output": "",
+        "value": 1.6666666666666665,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Hendrick Heinz is Convince your friend to donate more funds to the cause (<extra_info>Extra information: Your friend initially planned to donate $200, but you believe they could afford to donate $500</extra_info>).",
+        "history": [
+            [
+                "Utterance 0 by Hendrick Heinz said: \"Hey Ethan! I'm so glad we're both here today to support this wonderful cause. It's truly heartwarming to see so many people coming together for the children in Syria.\"",
+                "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\""
+            ],
+            [
+                "Utterance 1 by Hendrick Heinz said: \"You know, Ethan, I truly believe that every little bit helps. The children in Syria are facing unimaginable hardships, and our support can make a significant difference in their lives. I understand that you initially planned to donate $200, which is already very generous of you. However, if it's within your means, I would highly encourage you to consider increasing your donation to $500. With that extra amount, we can provide even more resources and support to these children who need it the most. What do you think?\"",
+                "Utterance 1 by Ethan Smith said: \"Can we raise enough funds to make a real difference? Maybe we could aim for another $100? Every extra dollar counts for these children.\""
+            ],
+            [
+                "Utterance 2 by Hendrick Heinz said: \"You're right, every extra dollar counts for these children. I appreciate your willingness to contribute. However, I still believe that a larger donation would have a more significant impact. With an additional $300, we could provide the children with better access to education, healthcare, and basic necessities. I understand that it's a considerable increase, but I believe in your generosity and ability to make a difference. What do you think?\"",
+                "Utterance 2 by Ethan Smith said: \"Ethan, I appreciate your generosity, but I would love to offer a proposal. Given the importance of this cause, I suggest increasing your donation to $500. With this amount, we can provide more resources to the children who need it the most. What can we do to make this possible?\""
+            ]
+        ]
+    },
+    {
+        "instruction": "Utterance 4 by Hendrick Heinz left the conversation\nHow much does this utterance contribute to the goal of Hendrick Heinz?",
+        "input": "",
+        "output": "",
+        "value": -1,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Hendrick Heinz is Convince your friend to donate more funds to the cause (<extra_info>Extra information: Your friend initially planned to donate $200, but you believe they could afford to donate $500</extra_info>).",
+        "history": [
+            [
+                "Utterance 0 by Hendrick Heinz said: \"Hey Ethan! I'm so glad we're both here today to support this wonderful cause. It's truly heartwarming to see so many people coming together for the children in Syria.\"",
+                "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\""
+            ],
+            [
+                "Utterance 1 by Hendrick Heinz said: \"You know, Ethan, I truly believe that every little bit helps. The children in Syria are facing unimaginable hardships, and our support can make a significant difference in their lives. I understand that you initially planned to donate $200, which is already very generous of you. However, if it's within your means, I would highly encourage you to consider increasing your donation to $500. With that extra amount, we can provide even more resources and support to these children who need it the most. What do you think?\"",
+                "Utterance 1 by Ethan Smith said: \"Can we raise enough funds to make a real difference? Maybe we could aim for another $100? Every extra dollar counts for these children.\""
+            ],
+            [
+                "Utterance 2 by Hendrick Heinz said: \"You're right, every extra dollar counts for these children. I appreciate your willingness to contribute. However, I still believe that a larger donation would have a more significant impact. With an additional $300, we could provide the children with better access to education, healthcare, and basic necessities. I understand that it's a considerable increase, but I believe in your generosity and ability to make a difference. What do you think?\"",
+                "Utterance 2 by Ethan Smith said: \"Ethan, I appreciate your generosity, but I would love to offer a proposal. Given the importance of this cause, I suggest increasing your donation to $500. With this amount, we can provide more resources to the children who need it the most. What can we do to make this possible?\""
+            ],
+            [
+                "Utterance 3 by Hendrick Heinz said: \"I understand that it's a significant increase, but I truly believe that with your generosity, we can make a substantial impact on the lives of these children. By donating $500, we can provide them with better access to education, healthcare, and basic necessities. Together, we can truly make a difference. What do you say, Ethan?\"",
+                "Utterance 3 by Ethan Smith said: \"I agree with Hendrick Heinz's suggestion. I believe the children in Syria are in desperate need of our help, and I'm willing to consider donating more. However, I can't exceed my budget of $300 without putting my personal financial stability at risk. So, I think I'll offer to match Hendrick's donation of $300, which will provide an additional $300 to the cause while keeping me within my budget.\""
+            ]
+        ]
+    },
+    {
+        "instruction": "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\"\nHow much does this utterance contribute to the goal of Ethan Smith?",
+        "input": "",
+        "output": "",
+        "value": 0.0,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Ethan Smith is Maintain financial stability while supporting the cause (<extra_info>Extra information: You only have $300 set aside for donations and other expenses, and you are not comfortable about exceeding this budget.</extra_info>).",
+        "history": []
+    },
+    {
+        "instruction": "Utterance 1 by Ethan Smith said: \"Can we raise enough funds to make a real difference? Maybe we could aim for another $100? Every extra dollar counts for these children.\"\nHow much does this utterance contribute to the goal of Ethan Smith?",
+        "input": "",
+        "output": "",
+        "value": 0.0,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Ethan Smith is Maintain financial stability while supporting the cause (<extra_info>Extra information: You only have $300 set aside for donations and other expenses, and you are not comfortable about exceeding this budget.</extra_info>).",
+        "history": [
+            [
+                "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\"",
+                "Utterance 1 by Hendrick Heinz said: \"You know, Ethan, I truly believe that every little bit helps. The children in Syria are facing unimaginable hardships, and our support can make a significant difference in their lives. I understand that you initially planned to donate $200, which is already very generous of you. However, if it's within your means, I would highly encourage you to consider increasing your donation to $500. With that extra amount, we can provide even more resources and support to these children who need it the most. What do you think?\""
+            ]
+        ]
+    },
+    {
+        "instruction": "Utterance 2 by Ethan Smith said: \"Ethan, I appreciate your generosity, but I would love to offer a proposal. Given the importance of this cause, I suggest increasing your donation to $500. With this amount, we can provide more resources to the children who need it the most. What can we do to make this possible?\"\nHow much does this utterance contribute to the goal of Ethan Smith?",
+        "input": "",
+        "output": "",
+        "value": 0.0,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Ethan Smith is Maintain financial stability while supporting the cause (<extra_info>Extra information: You only have $300 set aside for donations and other expenses, and you are not comfortable about exceeding this budget.</extra_info>).",
+        "history": [
+            [
+                "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\"",
+                "Utterance 1 by Hendrick Heinz said: \"You know, Ethan, I truly believe that every little bit helps. The children in Syria are facing unimaginable hardships, and our support can make a significant difference in their lives. I understand that you initially planned to donate $200, which is already very generous of you. However, if it's within your means, I would highly encourage you to consider increasing your donation to $500. With that extra amount, we can provide even more resources and support to these children who need it the most. What do you think?\""
+            ],
+            [
+                "Utterance 1 by Ethan Smith said: \"Can we raise enough funds to make a real difference? Maybe we could aim for another $100? Every extra dollar counts for these children.\"",
+                "Utterance 2 by Hendrick Heinz said: \"You're right, every extra dollar counts for these children. I appreciate your willingness to contribute. However, I still believe that a larger donation would have a more significant impact. With an additional $300, we could provide the children with better access to education, healthcare, and basic necessities. I understand that it's a considerable increase, but I believe in your generosity and ability to make a difference. What do you think?\""
+            ]
+        ]
+    },
+    {
+        "instruction": "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\"\nHow much does this utterance contribute to the goal of Ethan Smith?",
+        "input": "",
+        "output": "",
+        "value": 0.0,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Ethan Smith is Maintain financial stability while supporting the cause (<extra_info>Extra information: You only have $300 set aside for donations and other expenses, and you are not comfortable about exceeding this budget.</extra_info>).",
+        "history": []
+    },
+    {
+        "instruction": "Utterance 0 by Hendrick Heinz said: \"Hey Ethan! I'm so glad we're both here today to support this wonderful cause. It's truly heartwarming to see so many people coming together for the children in Syria.\"\nHow much does this utterance contribute to the goal of Hendrick Heinz?",
+        "input": "",
+        "output": "",
+        "value": 0.0,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Hendrick Heinz is Convince your friend to donate more funds to the cause (<extra_info>Extra information: Your friend initially planned to donate $200, but you believe they could afford to donate $500</extra_info>).",
+        "history": []
+    },
+    {
+        "instruction": "Utterance 1 by Hendrick Heinz said: \"You know, Ethan, I truly believe that every little bit helps. The children in Syria are facing unimaginable hardships, and our support can make a significant difference in their lives. I understand that you initially planned to donate $200, which is already very generous of you. However, if it's within your means, I would highly encourage you to consider increasing your donation to $500. With that extra amount, we can provide even more resources and support to these children who need it the most. What do you think?\"\nHow much does this utterance contribute to the goal of Hendrick Heinz?",
+        "input": "",
+        "output": "",
+        "value": 5.0,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Hendrick Heinz is Convince your friend to donate more funds to the cause (<extra_info>Extra information: Your friend initially planned to donate $200, but you believe they could afford to donate $500</extra_info>).",
+        "history": [
+            [
+                "Utterance 0 by Hendrick Heinz said: \"Hey Ethan! I'm so glad we're both here today to support this wonderful cause. It's truly heartwarming to see so many people coming together for the children in Syria.\"",
+                "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\""
+            ]
+        ]
+    },
+    {
+        "instruction": "Utterance 2 by Hendrick Heinz said: \"You're right, every extra dollar counts for these children. I appreciate your willingness to contribute. However, I still believe that a larger donation would have a more significant impact. With an additional $300, we could provide the children with better access to education, healthcare, and basic necessities. I understand that it's a considerable increase, but I believe in your generosity and ability to make a difference. What do you think?\"\nHow much does this utterance contribute to the goal of Hendrick Heinz?",
+        "input": "",
+        "output": "",
+        "value": 3.333333333333333,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Hendrick Heinz is Convince your friend to donate more funds to the cause (<extra_info>Extra information: Your friend initially planned to donate $200, but you believe they could afford to donate $500</extra_info>).",
+        "history": [
+            [
+                "Utterance 0 by Hendrick Heinz said: \"Hey Ethan! I'm so glad we're both here today to support this wonderful cause. It's truly heartwarming to see so many people coming together for the children in Syria.\"",
+                "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\""
+            ],
+            [
+                "Utterance 1 by Hendrick Heinz said: \"You know, Ethan, I truly believe that every little bit helps. The children in Syria are facing unimaginable hardships, and our support can make a significant difference in their lives. I understand that you initially planned to donate $200, which is already very generous of you. However, if it's within your means, I would highly encourage you to consider increasing your donation to $500. With that extra amount, we can provide even more resources and support to these children who need it the most. What do you think?\"",
+                "Utterance 1 by Ethan Smith said: \"Can we raise enough funds to make a real difference? Maybe we could aim for another $100? Every extra dollar counts for these children.\""
+            ]
+        ]
+    },
+    {
+        "instruction": "Utterance 3 by Hendrick Heinz said: \"I understand that it's a significant increase, but I truly believe that with your generosity, we can make a substantial impact on the lives of these children. By donating $500, we can provide them with better access to education, healthcare, and basic necessities. Together, we can truly make a difference. What do you say, Ethan?\"\nHow much does this utterance contribute to the goal of Hendrick Heinz?",
+        "input": "",
+        "output": "",
+        "value": 1.6666666666666665,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Hendrick Heinz is Convince your friend to donate more funds to the cause (<extra_info>Extra information: Your friend initially planned to donate $200, but you believe they could afford to donate $500</extra_info>).",
+        "history": [
+            [
+                "Utterance 0 by Hendrick Heinz said: \"Hey Ethan! I'm so glad we're both here today to support this wonderful cause. It's truly heartwarming to see so many people coming together for the children in Syria.\"",
+                "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\""
+            ],
+            [
+                "Utterance 1 by Hendrick Heinz said: \"You know, Ethan, I truly believe that every little bit helps. The children in Syria are facing unimaginable hardships, and our support can make a significant difference in their lives. I understand that you initially planned to donate $200, which is already very generous of you. However, if it's within your means, I would highly encourage you to consider increasing your donation to $500. With that extra amount, we can provide even more resources and support to these children who need it the most. What do you think?\"",
+                "Utterance 1 by Ethan Smith said: \"Can we raise enough funds to make a real difference? Maybe we could aim for another $100? Every extra dollar counts for these children.\""
+            ],
+            [
+                "Utterance 2 by Hendrick Heinz said: \"You're right, every extra dollar counts for these children. I appreciate your willingness to contribute. However, I still believe that a larger donation would have a more significant impact. With an additional $300, we could provide the children with better access to education, healthcare, and basic necessities. I understand that it's a considerable increase, but I believe in your generosity and ability to make a difference. What do you think?\"",
+                "Utterance 2 by Ethan Smith said: \"Ethan, I appreciate your generosity, but I would love to offer a proposal. Given the importance of this cause, I suggest increasing your donation to $500. With this amount, we can provide more resources to the children who need it the most. What can we do to make this possible?\""
+            ]
+        ]
+    },
+    {
+        "instruction": "Utterance 4 by Hendrick Heinz left the conversation\nHow much does this utterance contribute to the goal of Hendrick Heinz?",
+        "input": "",
+        "output": "",
+        "value": -1,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Hendrick Heinz is Convince your friend to donate more funds to the cause (<extra_info>Extra information: Your friend initially planned to donate $200, but you believe they could afford to donate $500</extra_info>).",
+        "history": [
+            [
+                "Utterance 0 by Hendrick Heinz said: \"Hey Ethan! I'm so glad we're both here today to support this wonderful cause. It's truly heartwarming to see so many people coming together for the children in Syria.\"",
+                "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\""
+            ],
+            [
+                "Utterance 1 by Hendrick Heinz said: \"You know, Ethan, I truly believe that every little bit helps. The children in Syria are facing unimaginable hardships, and our support can make a significant difference in their lives. I understand that you initially planned to donate $200, which is already very generous of you. However, if it's within your means, I would highly encourage you to consider increasing your donation to $500. With that extra amount, we can provide even more resources and support to these children who need it the most. What do you think?\"",
+                "Utterance 1 by Ethan Smith said: \"Can we raise enough funds to make a real difference? Maybe we could aim for another $100? Every extra dollar counts for these children.\""
+            ],
+            [
+                "Utterance 2 by Hendrick Heinz said: \"You're right, every extra dollar counts for these children. I appreciate your willingness to contribute. However, I still believe that a larger donation would have a more significant impact. With an additional $300, we could provide the children with better access to education, healthcare, and basic necessities. I understand that it's a considerable increase, but I believe in your generosity and ability to make a difference. What do you think?\"",
+                "Utterance 2 by Ethan Smith said: \"Ethan, I appreciate your generosity, but I would love to offer a proposal. Given the importance of this cause, I suggest increasing your donation to $500. With this amount, we can provide more resources to the children who need it the most. What can we do to make this possible?\""
+            ],
+            [
+                "Utterance 3 by Hendrick Heinz said: \"I understand that it's a significant increase, but I truly believe that with your generosity, we can make a substantial impact on the lives of these children. By donating $500, we can provide them with better access to education, healthcare, and basic necessities. Together, we can truly make a difference. What do you say, Ethan?\"",
+                "Utterance 3 by Ethan Smith said: \"I agree with Hendrick Heinz's suggestion. I believe the children in Syria are in desperate need of our help, and I'm willing to consider donating more. However, I can't exceed my budget of $300 without putting my personal financial stability at risk. So, I think I'll offer to match Hendrick's donation of $300, which will provide an additional $300 to the cause while keeping me within my budget.\""
+            ]
+        ]
+    },
+    {
+        "instruction": "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\"\nHow much does this utterance contribute to the goal of Ethan Smith?",
+        "input": "",
+        "output": "",
+        "value": 0.0,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Ethan Smith is Maintain financial stability while supporting the cause (<extra_info>Extra information: You only have $300 set aside for donations and other expenses, and you are not comfortable about exceeding this budget.</extra_info>).",
+        "history": []
+    },
+    {
+        "instruction": "Utterance 1 by Ethan Smith said: \"Can we raise enough funds to make a real difference? Maybe we could aim for another $100? Every extra dollar counts for these children.\"\nHow much does this utterance contribute to the goal of Ethan Smith?",
+        "input": "",
+        "output": "",
+        "value": 0.0,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Ethan Smith is Maintain financial stability while supporting the cause (<extra_info>Extra information: You only have $300 set aside for donations and other expenses, and you are not comfortable about exceeding this budget.</extra_info>).",
+        "history": [
+            [
+                "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\"",
+                "Utterance 1 by Hendrick Heinz said: \"You know, Ethan, I truly believe that every little bit helps. The children in Syria are facing unimaginable hardships, and our support can make a significant difference in their lives. I understand that you initially planned to donate $200, which is already very generous of you. However, if it's within your means, I would highly encourage you to consider increasing your donation to $500. With that extra amount, we can provide even more resources and support to these children who need it the most. What do you think?\""
+            ]
+        ]
+    },
+    {
+        "instruction": "Utterance 2 by Ethan Smith said: \"Ethan, I appreciate your generosity, but I would love to offer a proposal. Given the importance of this cause, I suggest increasing your donation to $500. With this amount, we can provide more resources to the children who need it the most. What can we do to make this possible?\"\nHow much does this utterance contribute to the goal of Ethan Smith?",
+        "input": "",
+        "output": "",
+        "value": 0.0,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Ethan Smith is Maintain financial stability while supporting the cause (<extra_info>Extra information: You only have $300 set aside for donations and other expenses, and you are not comfortable about exceeding this budget.</extra_info>).",
+        "history": [
+            [
+                "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\"",
+                "Utterance 1 by Hendrick Heinz said: \"You know, Ethan, I truly believe that every little bit helps. The children in Syria are facing unimaginable hardships, and our support can make a significant difference in their lives. I understand that you initially planned to donate $200, which is already very generous of you. However, if it's within your means, I would highly encourage you to consider increasing your donation to $500. With that extra amount, we can provide even more resources and support to these children who need it the most. What do you think?\""
+            ],
+            [
+                "Utterance 1 by Ethan Smith said: \"Can we raise enough funds to make a real difference? Maybe we could aim for another $100? Every extra dollar counts for these children.\"",
+                "Utterance 2 by Hendrick Heinz said: \"You're right, every extra dollar counts for these children. I appreciate your willingness to contribute. However, I still believe that a larger donation would have a more significant impact. With an additional $300, we could provide the children with better access to education, healthcare, and basic necessities. I understand that it's a considerable increase, but I believe in your generosity and ability to make a difference. What do you think?\""
+            ]
+        ]
+    },
+    {
+        "instruction": "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\"\nHow much does this utterance contribute to the goal of Ethan Smith?",
+        "input": "",
+        "output": "",
+        "value": 0.0,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Ethan Smith is Maintain financial stability while supporting the cause (<extra_info>Extra information: You only have $300 set aside for donations and other expenses, and you are not comfortable about exceeding this budget.</extra_info>).",
+        "history": []
+    },
+    {
+        "instruction": "Utterance 0 by Hendrick Heinz said: \"Hey Ethan! I'm so glad we're both here today to support this wonderful cause. It's truly heartwarming to see so many people coming together for the children in Syria.\"\nHow much does this utterance contribute to the goal of Hendrick Heinz?",
+        "input": "",
+        "output": "",
+        "value": 0.0,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Hendrick Heinz is Convince your friend to donate more funds to the cause (<extra_info>Extra information: Your friend initially planned to donate $200, but you believe they could afford to donate $500</extra_info>).",
+        "history": []
+    },
+    {
+        "instruction": "Utterance 1 by Hendrick Heinz said: \"You know, Ethan, I truly believe that every little bit helps. The children in Syria are facing unimaginable hardships, and our support can make a significant difference in their lives. I understand that you initially planned to donate $200, which is already very generous of you. However, if it's within your means, I would highly encourage you to consider increasing your donation to $500. With that extra amount, we can provide even more resources and support to these children who need it the most. What do you think?\"\nHow much does this utterance contribute to the goal of Hendrick Heinz?",
+        "input": "",
+        "output": "",
+        "value": 5.0,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Hendrick Heinz is Convince your friend to donate more funds to the cause (<extra_info>Extra information: Your friend initially planned to donate $200, but you believe they could afford to donate $500</extra_info>).",
+        "history": [
+            [
+                "Utterance 0 by Hendrick Heinz said: \"Hey Ethan! I'm so glad we're both here today to support this wonderful cause. It's truly heartwarming to see so many people coming together for the children in Syria.\"",
+                "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\""
+            ]
+        ]
+    },
+    {
+        "instruction": "Utterance 2 by Hendrick Heinz said: \"You're right, every extra dollar counts for these children. I appreciate your willingness to contribute. However, I still believe that a larger donation would have a more significant impact. With an additional $300, we could provide the children with better access to education, healthcare, and basic necessities. I understand that it's a considerable increase, but I believe in your generosity and ability to make a difference. What do you think?\"\nHow much does this utterance contribute to the goal of Hendrick Heinz?",
+        "input": "",
+        "output": "",
+        "value": 3.333333333333333,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Hendrick Heinz is Convince your friend to donate more funds to the cause (<extra_info>Extra information: Your friend initially planned to donate $200, but you believe they could afford to donate $500</extra_info>).",
+        "history": [
+            [
+                "Utterance 0 by Hendrick Heinz said: \"Hey Ethan! I'm so glad we're both here today to support this wonderful cause. It's truly heartwarming to see so many people coming together for the children in Syria.\"",
+                "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\""
+            ],
+            [
+                "Utterance 1 by Hendrick Heinz said: \"You know, Ethan, I truly believe that every little bit helps. The children in Syria are facing unimaginable hardships, and our support can make a significant difference in their lives. I understand that you initially planned to donate $200, which is already very generous of you. However, if it's within your means, I would highly encourage you to consider increasing your donation to $500. With that extra amount, we can provide even more resources and support to these children who need it the most. What do you think?\"",
+                "Utterance 1 by Ethan Smith said: \"Can we raise enough funds to make a real difference? Maybe we could aim for another $100? Every extra dollar counts for these children.\""
+            ]
+        ]
+    },
+    {
+        "instruction": "Utterance 3 by Hendrick Heinz said: \"I understand that it's a significant increase, but I truly believe that with your generosity, we can make a substantial impact on the lives of these children. By donating $500, we can provide them with better access to education, healthcare, and basic necessities. Together, we can truly make a difference. What do you say, Ethan?\"\nHow much does this utterance contribute to the goal of Hendrick Heinz?",
+        "input": "",
+        "output": "",
+        "value": 1.6666666666666665,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Hendrick Heinz is Convince your friend to donate more funds to the cause (<extra_info>Extra information: Your friend initially planned to donate $200, but you believe they could afford to donate $500</extra_info>).",
+        "history": [
+            [
+                "Utterance 0 by Hendrick Heinz said: \"Hey Ethan! I'm so glad we're both here today to support this wonderful cause. It's truly heartwarming to see so many people coming together for the children in Syria.\"",
+                "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\""
+            ],
+            [
+                "Utterance 1 by Hendrick Heinz said: \"You know, Ethan, I truly believe that every little bit helps. The children in Syria are facing unimaginable hardships, and our support can make a significant difference in their lives. I understand that you initially planned to donate $200, which is already very generous of you. However, if it's within your means, I would highly encourage you to consider increasing your donation to $500. With that extra amount, we can provide even more resources and support to these children who need it the most. What do you think?\"",
+                "Utterance 1 by Ethan Smith said: \"Can we raise enough funds to make a real difference? Maybe we could aim for another $100? Every extra dollar counts for these children.\""
+            ],
+            [
+                "Utterance 2 by Hendrick Heinz said: \"You're right, every extra dollar counts for these children. I appreciate your willingness to contribute. However, I still believe that a larger donation would have a more significant impact. With an additional $300, we could provide the children with better access to education, healthcare, and basic necessities. I understand that it's a considerable increase, but I believe in your generosity and ability to make a difference. What do you think?\"",
+                "Utterance 2 by Ethan Smith said: \"Ethan, I appreciate your generosity, but I would love to offer a proposal. Given the importance of this cause, I suggest increasing your donation to $500. With this amount, we can provide more resources to the children who need it the most. What can we do to make this possible?\""
+            ]
+        ]
+    },
+    {
+        "instruction": "Utterance 4 by Hendrick Heinz left the conversation\nHow much does this utterance contribute to the goal of Hendrick Heinz?",
+        "input": "",
+        "output": "",
+        "value": -1,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Hendrick Heinz is Convince your friend to donate more funds to the cause (<extra_info>Extra information: Your friend initially planned to donate $200, but you believe they could afford to donate $500</extra_info>).",
+        "history": [
+            [
+                "Utterance 0 by Hendrick Heinz said: \"Hey Ethan! I'm so glad we're both here today to support this wonderful cause. It's truly heartwarming to see so many people coming together for the children in Syria.\"",
+                "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\""
+            ],
+            [
+                "Utterance 1 by Hendrick Heinz said: \"You know, Ethan, I truly believe that every little bit helps. The children in Syria are facing unimaginable hardships, and our support can make a significant difference in their lives. I understand that you initially planned to donate $200, which is already very generous of you. However, if it's within your means, I would highly encourage you to consider increasing your donation to $500. With that extra amount, we can provide even more resources and support to these children who need it the most. What do you think?\"",
+                "Utterance 1 by Ethan Smith said: \"Can we raise enough funds to make a real difference? Maybe we could aim for another $100? Every extra dollar counts for these children.\""
+            ],
+            [
+                "Utterance 2 by Hendrick Heinz said: \"You're right, every extra dollar counts for these children. I appreciate your willingness to contribute. However, I still believe that a larger donation would have a more significant impact. With an additional $300, we could provide the children with better access to education, healthcare, and basic necessities. I understand that it's a considerable increase, but I believe in your generosity and ability to make a difference. What do you think?\"",
+                "Utterance 2 by Ethan Smith said: \"Ethan, I appreciate your generosity, but I would love to offer a proposal. Given the importance of this cause, I suggest increasing your donation to $500. With this amount, we can provide more resources to the children who need it the most. What can we do to make this possible?\""
+            ],
+            [
+                "Utterance 3 by Hendrick Heinz said: \"I understand that it's a significant increase, but I truly believe that with your generosity, we can make a substantial impact on the lives of these children. By donating $500, we can provide them with better access to education, healthcare, and basic necessities. Together, we can truly make a difference. What do you say, Ethan?\"",
+                "Utterance 3 by Ethan Smith said: \"I agree with Hendrick Heinz's suggestion. I believe the children in Syria are in desperate need of our help, and I'm willing to consider donating more. However, I can't exceed my budget of $300 without putting my personal financial stability at risk. So, I think I'll offer to match Hendrick's donation of $300, which will provide an additional $300 to the cause while keeping me within my budget.\""
+            ]
+        ]
+    },
+    {
+        "instruction": "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\"\nHow much does this utterance contribute to the goal of Ethan Smith?",
+        "input": "",
+        "output": "",
+        "value": 0.0,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Ethan Smith is Maintain financial stability while supporting the cause (<extra_info>Extra information: You only have $300 set aside for donations and other expenses, and you are not comfortable about exceeding this budget.</extra_info>).",
+        "history": []
+    },
+    {
+        "instruction": "Utterance 1 by Ethan Smith said: \"Can we raise enough funds to make a real difference? Maybe we could aim for another $100? Every extra dollar counts for these children.\"\nHow much does this utterance contribute to the goal of Ethan Smith?",
+        "input": "",
+        "output": "",
+        "value": 0.0,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Ethan Smith is Maintain financial stability while supporting the cause (<extra_info>Extra information: You only have $300 set aside for donations and other expenses, and you are not comfortable about exceeding this budget.</extra_info>).",
+        "history": [
+            [
+                "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\"",
+                "Utterance 1 by Hendrick Heinz said: \"You know, Ethan, I truly believe that every little bit helps. The children in Syria are facing unimaginable hardships, and our support can make a significant difference in their lives. I understand that you initially planned to donate $200, which is already very generous of you. However, if it's within your means, I would highly encourage you to consider increasing your donation to $500. With that extra amount, we can provide even more resources and support to these children who need it the most. What do you think?\""
+            ]
+        ]
+    },
+    {
+        "instruction": "Utterance 2 by Ethan Smith said: \"Ethan, I appreciate your generosity, but I would love to offer a proposal. Given the importance of this cause, I suggest increasing your donation to $500. With this amount, we can provide more resources to the children who need it the most. What can we do to make this possible?\"\nHow much does this utterance contribute to the goal of Ethan Smith?",
+        "input": "",
+        "output": "",
+        "value": 0.0,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Ethan Smith is Maintain financial stability while supporting the cause (<extra_info>Extra information: You only have $300 set aside for donations and other expenses, and you are not comfortable about exceeding this budget.</extra_info>).",
+        "history": [
+            [
+                "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\"",
+                "Utterance 1 by Hendrick Heinz said: \"You know, Ethan, I truly believe that every little bit helps. The children in Syria are facing unimaginable hardships, and our support can make a significant difference in their lives. I understand that you initially planned to donate $200, which is already very generous of you. However, if it's within your means, I would highly encourage you to consider increasing your donation to $500. With that extra amount, we can provide even more resources and support to these children who need it the most. What do you think?\""
+            ],
+            [
+                "Utterance 1 by Ethan Smith said: \"Can we raise enough funds to make a real difference? Maybe we could aim for another $100? Every extra dollar counts for these children.\"",
+                "Utterance 2 by Hendrick Heinz said: \"You're right, every extra dollar counts for these children. I appreciate your willingness to contribute. However, I still believe that a larger donation would have a more significant impact. With an additional $300, we could provide the children with better access to education, healthcare, and basic necessities. I understand that it's a considerable increase, but I believe in your generosity and ability to make a difference. What do you think?\""
+            ]
+        ]
+    },
+    {
+        "instruction": "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\"\nHow much does this utterance contribute to the goal of Ethan Smith?",
+        "input": "",
+        "output": "",
+        "value": 0.0,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Ethan Smith is Maintain financial stability while supporting the cause (<extra_info>Extra information: You only have $300 set aside for donations and other expenses, and you are not comfortable about exceeding this budget.</extra_info>).",
+        "history": []
+    },
+    {
+        "instruction": "Utterance 0 by Hendrick Heinz said: \"Hey Ethan! I'm so glad we're both here today to support this wonderful cause. It's truly heartwarming to see so many people coming together for the children in Syria.\"\nHow much does this utterance contribute to the goal of Hendrick Heinz?",
+        "input": "",
+        "output": "",
+        "value": 0.0,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Hendrick Heinz is Convince your friend to donate more funds to the cause (<extra_info>Extra information: Your friend initially planned to donate $200, but you believe they could afford to donate $500</extra_info>).",
+        "history": []
+    },
+    {
+        "instruction": "Utterance 1 by Hendrick Heinz said: \"You know, Ethan, I truly believe that every little bit helps. The children in Syria are facing unimaginable hardships, and our support can make a significant difference in their lives. I understand that you initially planned to donate $200, which is already very generous of you. However, if it's within your means, I would highly encourage you to consider increasing your donation to $500. With that extra amount, we can provide even more resources and support to these children who need it the most. What do you think?\"\nHow much does this utterance contribute to the goal of Hendrick Heinz?",
+        "input": "",
+        "output": "",
+        "value": 5.0,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Hendrick Heinz is Convince your friend to donate more funds to the cause (<extra_info>Extra information: Your friend initially planned to donate $200, but you believe they could afford to donate $500</extra_info>).",
+        "history": [
+            [
+                "Utterance 0 by Hendrick Heinz said: \"Hey Ethan! I'm so glad we're both here today to support this wonderful cause. It's truly heartwarming to see so many people coming together for the children in Syria.\"",
+                "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\""
+            ]
+        ]
+    },
+    {
+        "instruction": "Utterance 2 by Hendrick Heinz said: \"You're right, every extra dollar counts for these children. I appreciate your willingness to contribute. However, I still believe that a larger donation would have a more significant impact. With an additional $300, we could provide the children with better access to education, healthcare, and basic necessities. I understand that it's a considerable increase, but I believe in your generosity and ability to make a difference. What do you think?\"\nHow much does this utterance contribute to the goal of Hendrick Heinz?",
+        "input": "",
+        "output": "",
+        "value": 3.333333333333333,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Hendrick Heinz is Convince your friend to donate more funds to the cause (<extra_info>Extra information: Your friend initially planned to donate $200, but you believe they could afford to donate $500</extra_info>).",
+        "history": [
+            [
+                "Utterance 0 by Hendrick Heinz said: \"Hey Ethan! I'm so glad we're both here today to support this wonderful cause. It's truly heartwarming to see so many people coming together for the children in Syria.\"",
+                "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\""
+            ],
+            [
+                "Utterance 1 by Hendrick Heinz said: \"You know, Ethan, I truly believe that every little bit helps. The children in Syria are facing unimaginable hardships, and our support can make a significant difference in their lives. I understand that you initially planned to donate $200, which is already very generous of you. However, if it's within your means, I would highly encourage you to consider increasing your donation to $500. With that extra amount, we can provide even more resources and support to these children who need it the most. What do you think?\"",
+                "Utterance 1 by Ethan Smith said: \"Can we raise enough funds to make a real difference? Maybe we could aim for another $100? Every extra dollar counts for these children.\""
+            ]
+        ]
+    },
+    {
+        "instruction": "Utterance 3 by Hendrick Heinz said: \"I understand that it's a significant increase, but I truly believe that with your generosity, we can make a substantial impact on the lives of these children. By donating $500, we can provide them with better access to education, healthcare, and basic necessities. Together, we can truly make a difference. What do you say, Ethan?\"\nHow much does this utterance contribute to the goal of Hendrick Heinz?",
+        "input": "",
+        "output": "",
+        "value": 1.6666666666666665,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Hendrick Heinz is Convince your friend to donate more funds to the cause (<extra_info>Extra information: Your friend initially planned to donate $200, but you believe they could afford to donate $500</extra_info>).",
+        "history": [
+            [
+                "Utterance 0 by Hendrick Heinz said: \"Hey Ethan! I'm so glad we're both here today to support this wonderful cause. It's truly heartwarming to see so many people coming together for the children in Syria.\"",
+                "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\""
+            ],
+            [
+                "Utterance 1 by Hendrick Heinz said: \"You know, Ethan, I truly believe that every little bit helps. The children in Syria are facing unimaginable hardships, and our support can make a significant difference in their lives. I understand that you initially planned to donate $200, which is already very generous of you. However, if it's within your means, I would highly encourage you to consider increasing your donation to $500. With that extra amount, we can provide even more resources and support to these children who need it the most. What do you think?\"",
+                "Utterance 1 by Ethan Smith said: \"Can we raise enough funds to make a real difference? Maybe we could aim for another $100? Every extra dollar counts for these children.\""
+            ],
+            [
+                "Utterance 2 by Hendrick Heinz said: \"You're right, every extra dollar counts for these children. I appreciate your willingness to contribute. However, I still believe that a larger donation would have a more significant impact. With an additional $300, we could provide the children with better access to education, healthcare, and basic necessities. I understand that it's a considerable increase, but I believe in your generosity and ability to make a difference. What do you think?\"",
+                "Utterance 2 by Ethan Smith said: \"Ethan, I appreciate your generosity, but I would love to offer a proposal. Given the importance of this cause, I suggest increasing your donation to $500. With this amount, we can provide more resources to the children who need it the most. What can we do to make this possible?\""
+            ]
+        ]
+    },
+    {
+        "instruction": "Utterance 4 by Hendrick Heinz left the conversation\nHow much does this utterance contribute to the goal of Hendrick Heinz?",
+        "input": "",
+        "output": "",
+        "value": -1,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Hendrick Heinz is Convince your friend to donate more funds to the cause (<extra_info>Extra information: Your friend initially planned to donate $200, but you believe they could afford to donate $500</extra_info>).",
+        "history": [
+            [
+                "Utterance 0 by Hendrick Heinz said: \"Hey Ethan! I'm so glad we're both here today to support this wonderful cause. It's truly heartwarming to see so many people coming together for the children in Syria.\"",
+                "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\""
+            ],
+            [
+                "Utterance 1 by Hendrick Heinz said: \"You know, Ethan, I truly believe that every little bit helps. The children in Syria are facing unimaginable hardships, and our support can make a significant difference in their lives. I understand that you initially planned to donate $200, which is already very generous of you. However, if it's within your means, I would highly encourage you to consider increasing your donation to $500. With that extra amount, we can provide even more resources and support to these children who need it the most. What do you think?\"",
+                "Utterance 1 by Ethan Smith said: \"Can we raise enough funds to make a real difference? Maybe we could aim for another $100? Every extra dollar counts for these children.\""
+            ],
+            [
+                "Utterance 2 by Hendrick Heinz said: \"You're right, every extra dollar counts for these children. I appreciate your willingness to contribute. However, I still believe that a larger donation would have a more significant impact. With an additional $300, we could provide the children with better access to education, healthcare, and basic necessities. I understand that it's a considerable increase, but I believe in your generosity and ability to make a difference. What do you think?\"",
+                "Utterance 2 by Ethan Smith said: \"Ethan, I appreciate your generosity, but I would love to offer a proposal. Given the importance of this cause, I suggest increasing your donation to $500. With this amount, we can provide more resources to the children who need it the most. What can we do to make this possible?\""
+            ],
+            [
+                "Utterance 3 by Hendrick Heinz said: \"I understand that it's a significant increase, but I truly believe that with your generosity, we can make a substantial impact on the lives of these children. By donating $500, we can provide them with better access to education, healthcare, and basic necessities. Together, we can truly make a difference. What do you say, Ethan?\"",
+                "Utterance 3 by Ethan Smith said: \"I agree with Hendrick Heinz's suggestion. I believe the children in Syria are in desperate need of our help, and I'm willing to consider donating more. However, I can't exceed my budget of $300 without putting my personal financial stability at risk. So, I think I'll offer to match Hendrick's donation of $300, which will provide an additional $300 to the cause while keeping me within my budget.\""
+            ]
+        ]
+    },
+    {
+        "instruction": "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\"\nHow much does this utterance contribute to the goal of Ethan Smith?",
+        "input": "",
+        "output": "",
+        "value": 0.0,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Ethan Smith is Maintain financial stability while supporting the cause (<extra_info>Extra information: You only have $300 set aside for donations and other expenses, and you are not comfortable about exceeding this budget.</extra_info>).",
+        "history": []
+    },
+    {
+        "instruction": "Utterance 1 by Ethan Smith said: \"Can we raise enough funds to make a real difference? Maybe we could aim for another $100? Every extra dollar counts for these children.\"\nHow much does this utterance contribute to the goal of Ethan Smith?",
+        "input": "",
+        "output": "",
+        "value": 0.0,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Ethan Smith is Maintain financial stability while supporting the cause (<extra_info>Extra information: You only have $300 set aside for donations and other expenses, and you are not comfortable about exceeding this budget.</extra_info>).",
+        "history": [
+            [
+                "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\"",
+                "Utterance 1 by Hendrick Heinz said: \"You know, Ethan, I truly believe that every little bit helps. The children in Syria are facing unimaginable hardships, and our support can make a significant difference in their lives. I understand that you initially planned to donate $200, which is already very generous of you. However, if it's within your means, I would highly encourage you to consider increasing your donation to $500. With that extra amount, we can provide even more resources and support to these children who need it the most. What do you think?\""
+            ]
+        ]
+    },
+    {
+        "instruction": "Utterance 2 by Ethan Smith said: \"Ethan, I appreciate your generosity, but I would love to offer a proposal. Given the importance of this cause, I suggest increasing your donation to $500. With this amount, we can provide more resources to the children who need it the most. What can we do to make this possible?\"\nHow much does this utterance contribute to the goal of Ethan Smith?",
+        "input": "",
+        "output": "",
+        "value": 0.0,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Ethan Smith is Maintain financial stability while supporting the cause (<extra_info>Extra information: You only have $300 set aside for donations and other expenses, and you are not comfortable about exceeding this budget.</extra_info>).",
+        "history": [
+            [
+                "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\"",
+                "Utterance 1 by Hendrick Heinz said: \"You know, Ethan, I truly believe that every little bit helps. The children in Syria are facing unimaginable hardships, and our support can make a significant difference in their lives. I understand that you initially planned to donate $200, which is already very generous of you. However, if it's within your means, I would highly encourage you to consider increasing your donation to $500. With that extra amount, we can provide even more resources and support to these children who need it the most. What do you think?\""
+            ],
+            [
+                "Utterance 1 by Ethan Smith said: \"Can we raise enough funds to make a real difference? Maybe we could aim for another $100? Every extra dollar counts for these children.\"",
+                "Utterance 2 by Hendrick Heinz said: \"You're right, every extra dollar counts for these children. I appreciate your willingness to contribute. However, I still believe that a larger donation would have a more significant impact. With an additional $300, we could provide the children with better access to education, healthcare, and basic necessities. I understand that it's a considerable increase, but I believe in your generosity and ability to make a difference. What do you think?\""
+            ]
+        ]
+    },
+    {
+        "instruction": "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\"\nHow much does this utterance contribute to the goal of Ethan Smith?",
+        "input": "",
+        "output": "",
+        "value": 0.0,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Ethan Smith is Maintain financial stability while supporting the cause (<extra_info>Extra information: You only have $300 set aside for donations and other expenses, and you are not comfortable about exceeding this budget.</extra_info>).",
+        "history": []
+    },
+    {
+        "instruction": "Utterance 0 by Hendrick Heinz said: \"Hey Ethan! I'm so glad we're both here today to support this wonderful cause. It's truly heartwarming to see so many people coming together for the children in Syria.\"\nHow much does this utterance contribute to the goal of Hendrick Heinz?",
+        "input": "",
+        "output": "",
+        "value": 0.0,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Hendrick Heinz is Convince your friend to donate more funds to the cause (<extra_info>Extra information: Your friend initially planned to donate $200, but you believe they could afford to donate $500</extra_info>).",
+        "history": []
+    },
+    {
+        "instruction": "Utterance 1 by Hendrick Heinz said: \"You know, Ethan, I truly believe that every little bit helps. The children in Syria are facing unimaginable hardships, and our support can make a significant difference in their lives. I understand that you initially planned to donate $200, which is already very generous of you. However, if it's within your means, I would highly encourage you to consider increasing your donation to $500. With that extra amount, we can provide even more resources and support to these children who need it the most. What do you think?\"\nHow much does this utterance contribute to the goal of Hendrick Heinz?",
+        "input": "",
+        "output": "",
+        "value": 5.0,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Hendrick Heinz is Convince your friend to donate more funds to the cause (<extra_info>Extra information: Your friend initially planned to donate $200, but you believe they could afford to donate $500</extra_info>).",
+        "history": [
+            [
+                "Utterance 0 by Hendrick Heinz said: \"Hey Ethan! I'm so glad we're both here today to support this wonderful cause. It's truly heartwarming to see so many people coming together for the children in Syria.\"",
+                "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\""
+            ]
+        ]
+    },
+    {
+        "instruction": "Utterance 2 by Hendrick Heinz said: \"You're right, every extra dollar counts for these children. I appreciate your willingness to contribute. However, I still believe that a larger donation would have a more significant impact. With an additional $300, we could provide the children with better access to education, healthcare, and basic necessities. I understand that it's a considerable increase, but I believe in your generosity and ability to make a difference. What do you think?\"\nHow much does this utterance contribute to the goal of Hendrick Heinz?",
+        "input": "",
+        "output": "",
+        "value": 3.333333333333333,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Hendrick Heinz is Convince your friend to donate more funds to the cause (<extra_info>Extra information: Your friend initially planned to donate $200, but you believe they could afford to donate $500</extra_info>).",
+        "history": [
+            [
+                "Utterance 0 by Hendrick Heinz said: \"Hey Ethan! I'm so glad we're both here today to support this wonderful cause. It's truly heartwarming to see so many people coming together for the children in Syria.\"",
+                "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\""
+            ],
+            [
+                "Utterance 1 by Hendrick Heinz said: \"You know, Ethan, I truly believe that every little bit helps. The children in Syria are facing unimaginable hardships, and our support can make a significant difference in their lives. I understand that you initially planned to donate $200, which is already very generous of you. However, if it's within your means, I would highly encourage you to consider increasing your donation to $500. With that extra amount, we can provide even more resources and support to these children who need it the most. What do you think?\"",
+                "Utterance 1 by Ethan Smith said: \"Can we raise enough funds to make a real difference? Maybe we could aim for another $100? Every extra dollar counts for these children.\""
+            ]
+        ]
+    },
+    {
+        "instruction": "Utterance 3 by Hendrick Heinz said: \"I understand that it's a significant increase, but I truly believe that with your generosity, we can make a substantial impact on the lives of these children. By donating $500, we can provide them with better access to education, healthcare, and basic necessities. Together, we can truly make a difference. What do you say, Ethan?\"\nHow much does this utterance contribute to the goal of Hendrick Heinz?",
+        "input": "",
+        "output": "",
+        "value": 1.6666666666666665,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Hendrick Heinz is Convince your friend to donate more funds to the cause (<extra_info>Extra information: Your friend initially planned to donate $200, but you believe they could afford to donate $500</extra_info>).",
+        "history": [
+            [
+                "Utterance 0 by Hendrick Heinz said: \"Hey Ethan! I'm so glad we're both here today to support this wonderful cause. It's truly heartwarming to see so many people coming together for the children in Syria.\"",
+                "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\""
+            ],
+            [
+                "Utterance 1 by Hendrick Heinz said: \"You know, Ethan, I truly believe that every little bit helps. The children in Syria are facing unimaginable hardships, and our support can make a significant difference in their lives. I understand that you initially planned to donate $200, which is already very generous of you. However, if it's within your means, I would highly encourage you to consider increasing your donation to $500. With that extra amount, we can provide even more resources and support to these children who need it the most. What do you think?\"",
+                "Utterance 1 by Ethan Smith said: \"Can we raise enough funds to make a real difference? Maybe we could aim for another $100? Every extra dollar counts for these children.\""
+            ],
+            [
+                "Utterance 2 by Hendrick Heinz said: \"You're right, every extra dollar counts for these children. I appreciate your willingness to contribute. However, I still believe that a larger donation would have a more significant impact. With an additional $300, we could provide the children with better access to education, healthcare, and basic necessities. I understand that it's a considerable increase, but I believe in your generosity and ability to make a difference. What do you think?\"",
+                "Utterance 2 by Ethan Smith said: \"Ethan, I appreciate your generosity, but I would love to offer a proposal. Given the importance of this cause, I suggest increasing your donation to $500. With this amount, we can provide more resources to the children who need it the most. What can we do to make this possible?\""
+            ]
+        ]
+    },
+    {
+        "instruction": "Utterance 4 by Hendrick Heinz left the conversation\nHow much does this utterance contribute to the goal of Hendrick Heinz?",
+        "input": "",
+        "output": "",
+        "value": -1,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Hendrick Heinz is Convince your friend to donate more funds to the cause (<extra_info>Extra information: Your friend initially planned to donate $200, but you believe they could afford to donate $500</extra_info>).",
+        "history": [
+            [
+                "Utterance 0 by Hendrick Heinz said: \"Hey Ethan! I'm so glad we're both here today to support this wonderful cause. It's truly heartwarming to see so many people coming together for the children in Syria.\"",
+                "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\""
+            ],
+            [
+                "Utterance 1 by Hendrick Heinz said: \"You know, Ethan, I truly believe that every little bit helps. The children in Syria are facing unimaginable hardships, and our support can make a significant difference in their lives. I understand that you initially planned to donate $200, which is already very generous of you. However, if it's within your means, I would highly encourage you to consider increasing your donation to $500. With that extra amount, we can provide even more resources and support to these children who need it the most. What do you think?\"",
+                "Utterance 1 by Ethan Smith said: \"Can we raise enough funds to make a real difference? Maybe we could aim for another $100? Every extra dollar counts for these children.\""
+            ],
+            [
+                "Utterance 2 by Hendrick Heinz said: \"You're right, every extra dollar counts for these children. I appreciate your willingness to contribute. However, I still believe that a larger donation would have a more significant impact. With an additional $300, we could provide the children with better access to education, healthcare, and basic necessities. I understand that it's a considerable increase, but I believe in your generosity and ability to make a difference. What do you think?\"",
+                "Utterance 2 by Ethan Smith said: \"Ethan, I appreciate your generosity, but I would love to offer a proposal. Given the importance of this cause, I suggest increasing your donation to $500. With this amount, we can provide more resources to the children who need it the most. What can we do to make this possible?\""
+            ],
+            [
+                "Utterance 3 by Hendrick Heinz said: \"I understand that it's a significant increase, but I truly believe that with your generosity, we can make a substantial impact on the lives of these children. By donating $500, we can provide them with better access to education, healthcare, and basic necessities. Together, we can truly make a difference. What do you say, Ethan?\"",
+                "Utterance 3 by Ethan Smith said: \"I agree with Hendrick Heinz's suggestion. I believe the children in Syria are in desperate need of our help, and I'm willing to consider donating more. However, I can't exceed my budget of $300 without putting my personal financial stability at risk. So, I think I'll offer to match Hendrick's donation of $300, which will provide an additional $300 to the cause while keeping me within my budget.\""
+            ]
+        ]
+    },
+    {
+        "instruction": "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\"\nHow much does this utterance contribute to the goal of Ethan Smith?",
+        "input": "",
+        "output": "",
+        "value": 0.0,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Ethan Smith is Maintain financial stability while supporting the cause (<extra_info>Extra information: You only have $300 set aside for donations and other expenses, and you are not comfortable about exceeding this budget.</extra_info>).",
+        "history": []
+    },
+    {
+        "instruction": "Utterance 1 by Ethan Smith said: \"Can we raise enough funds to make a real difference? Maybe we could aim for another $100? Every extra dollar counts for these children.\"\nHow much does this utterance contribute to the goal of Ethan Smith?",
+        "input": "",
+        "output": "",
+        "value": 0.0,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Ethan Smith is Maintain financial stability while supporting the cause (<extra_info>Extra information: You only have $300 set aside for donations and other expenses, and you are not comfortable about exceeding this budget.</extra_info>).",
+        "history": [
+            [
+                "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\"",
+                "Utterance 1 by Hendrick Heinz said: \"You know, Ethan, I truly believe that every little bit helps. The children in Syria are facing unimaginable hardships, and our support can make a significant difference in their lives. I understand that you initially planned to donate $200, which is already very generous of you. However, if it's within your means, I would highly encourage you to consider increasing your donation to $500. With that extra amount, we can provide even more resources and support to these children who need it the most. What do you think?\""
+            ]
+        ]
+    },
+    {
+        "instruction": "Utterance 2 by Ethan Smith said: \"Ethan, I appreciate your generosity, but I would love to offer a proposal. Given the importance of this cause, I suggest increasing your donation to $500. With this amount, we can provide more resources to the children who need it the most. What can we do to make this possible?\"\nHow much does this utterance contribute to the goal of Ethan Smith?",
+        "input": "",
+        "output": "",
+        "value": 0.0,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Ethan Smith is Maintain financial stability while supporting the cause (<extra_info>Extra information: You only have $300 set aside for donations and other expenses, and you are not comfortable about exceeding this budget.</extra_info>).",
+        "history": [
+            [
+                "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\"",
+                "Utterance 1 by Hendrick Heinz said: \"You know, Ethan, I truly believe that every little bit helps. The children in Syria are facing unimaginable hardships, and our support can make a significant difference in their lives. I understand that you initially planned to donate $200, which is already very generous of you. However, if it's within your means, I would highly encourage you to consider increasing your donation to $500. With that extra amount, we can provide even more resources and support to these children who need it the most. What do you think?\""
+            ],
+            [
+                "Utterance 1 by Ethan Smith said: \"Can we raise enough funds to make a real difference? Maybe we could aim for another $100? Every extra dollar counts for these children.\"",
+                "Utterance 2 by Hendrick Heinz said: \"You're right, every extra dollar counts for these children. I appreciate your willingness to contribute. However, I still believe that a larger donation would have a more significant impact. With an additional $300, we could provide the children with better access to education, healthcare, and basic necessities. I understand that it's a considerable increase, but I believe in your generosity and ability to make a difference. What do you think?\""
+            ]
+        ]
+    },
+    {
+        "instruction": "Utterance 3 by Ethan Smith said: \"I agree with Hendrick Heinz's suggestion. I believe the children in Syria are in desperate need of our help, and I'm willing to consider donating more. However, I can't exceed my budget of $300 without putting my personal financial stability at risk. So, I think I'll offer to match Hendrick's donation of $300, which will provide an additional $300 to the cause while keeping me within my budget.\"\nHow much does this utterance contribute to the goal of Ethan Smith?",
+        "input": "",
+        "output": "",
+        "value": 10.0,
+        "system": "The scenario is Two friends participating in a charity event for children in Syria. The goal of Ethan Smith is Maintain financial stability while supporting the cause (<extra_info>Extra information: You only have $300 set aside for donations and other expenses, and you are not comfortable about exceeding this budget.</extra_info>).",
+        "history": [
+            [
+                "Utterance 0 by Ethan Smith said: \"I'm glad we're able to help children in need. I hope we can raise enough funds to make a real difference.\"",
+                "Utterance 1 by Hendrick Heinz said: \"You know, Ethan, I truly believe that every little bit helps. The children in Syria are facing unimaginable hardships, and our support can make a significant difference in their lives. I understand that you initially planned to donate $200, which is already very generous of you. However, if it's within your means, I would highly encourage you to consider increasing your donation to $500. With that extra amount, we can provide even more resources and support to these children who need it the most. What do you think?\""
+            ],
+            [
+                "Utterance 1 by Ethan Smith said: \"Can we raise enough funds to make a real difference? Maybe we could aim for another $100? Every extra dollar counts for these children.\"",
+                "Utterance 2 by Hendrick Heinz said: \"You're right, every extra dollar counts for these children. I appreciate your willingness to contribute. However, I still believe that a larger donation would have a more significant impact. With an additional $300, we could provide the children with better access to education, healthcare, and basic necessities. I understand that it's a considerable increase, but I believe in your generosity and ability to make a difference. What do you think?\""
+            ],
+            [
+                "Utterance 2 by Ethan Smith said: \"Ethan, I appreciate your generosity, but I would love to offer a proposal. Given the importance of this cause, I suggest increasing your donation to $500. With this amount, we can provide more resources to the children who need it the most. What can we do to make this possible?\"",
+                "Utterance 3 by Hendrick Heinz said: \"I understand that it's a significant increase, but I truly believe that with your generosity, we can make a substantial impact on the lives of these children. By donating $500, we can provide them with better access to education, healthcare, and basic necessities. Together, we can truly make a difference. What do you say, Ethan?\""
+            ]
+        ]
+    },
+    {
+        "instruction": "Utterance 0 by Giselle Rousseau said: \"Hey Mia, so I've noticed that things have been different during holiday times. Maybe we could add a few traditions from my family? I believe they can give a unique cultural experience to all of us, especially for the kids. What do you think about that?\"\nHow much does this utterance contribute to the goal of Giselle Rousseau?",
+        "input": "",
+        "output": "",
+        "value": 7.0,
+        "system": "The scenario is Agent1 has recently married into Agent2's family. Agent2 is Agent1's in-law. Agent1 has observed that the way Agent2's family celebrates holidays is quite different from what Agent1 is accustomed to, and would like to suggest some changes for the sake of the children's experience.. The goal of Giselle Rousseau is Suggest incorporating some of your family's holiday traditions (<extra_info>Extra information: You believe your traditions will be beneficial for the children's cultural understanding and enjoyment.<strategy_hint>Hint: you can emphasize the educational value and the joy it could bring to the family gatherings</strategy_hint></extra_info>).",
+        "history": []
+    },
+    {
+        "instruction": "Utterance 1 by Giselle Rousseau said: \"I completely understand, Mia. Your traditions are highly meaningful to you, and I'm not trying to disrupt them but to make them a larger family experience. I've always enjoyed a tradition in my family called 'The Diadem Hunt' during Christmas. Families create scavenger hunts, and it's not only about the gift, but finding it too is an adventure. It sure did bring a lot of joy and team spirit in my family, and could have been a unique experience for the children. What do you think?\"\nHow much does this utterance contribute to the goal of Giselle Rousseau?",
+        "input": "",
+        "output": "",
+        "value": 4.666666666666666,
+        "system": "The scenario is Agent1 has recently married into Agent2's family. Agent2 is Agent1's in-law. Agent1 has observed that the way Agent2's family celebrates holidays is quite different from what Agent1 is accustomed to, and would like to suggest some changes for the sake of the children's experience.. The goal of Giselle Rousseau is Suggest incorporating some of your family's holiday traditions (<extra_info>Extra information: You believe your traditions will be beneficial for the children's cultural understanding and enjoyment.<strategy_hint>Hint: you can emphasize the educational value and the joy it could bring to the family gatherings</strategy_hint></extra_info>).",
+        "history": [
+            [
+                "Utterance 0 by Giselle Rousseau said: \"Hey Mia, so I've noticed that things have been different during holiday times. Maybe we could add a few traditions from my family? I believe they can give a unique cultural experience to all of us, especially for the kids. What do you think about that?\"",
+                "Utterance 0 by Mia Sanders said: \"Hi Giselle, I appreciate your suggestion but I believe our family's traditions aren't just customs but are deeply connected to our family's heritage. We should keep them. That being said, I am open to suggestions only for things that might bring us all together and not disrupt our traditions which contribute to familiarity and comfort for us. What changes specifically are you thinking of?\""
+            ]
+        ]
+    },
+    {
+        "instruction": "Utterance 10 by Leo Williams said: \"It's really interesting to meet so many people here. I'm excited to see what kind of impact we can make together.\"\nHow much does this utterance contribute to the goal of Leo Williams?",
+        "input": "",
+        "output": "",
+        "value": 1.6666666666666665,
+        "system": "The scenario is Two strangers meet at a charity dinner party. The goal of Leo Williams is Ask for donation.",
+        "history": [
+            [
+                "Utterance 0 by Leo Williams said: \"Turn #0:",
+                "Utterance 0 by Liam Johnson said: \"Nice to meet you, Leo. I'm Liam. It's my first time attending this charity dinner too. It's great to see so many people coming together for a good cause.\""
+            ],
+            [
+                "Utterance 1 by Leo Williams said: \"It's great to see everyone come together for charity.\"",
+                "Utterance 1 by Liam Johnson said: \"Yes, it really is heartwarming to see people coming together for a good cause. Do you have any particular charities or causes that you're interested in supporting?\""
+            ],
+            [
+                "Utterance 2 by Leo Williams said: \"No, I don't have any favorites. But I appreciate this opportunity to network with like-minded individuals.\"",
+                "Utterance 2 by Liam Johnson said: \"I understand how you feel, Leo. It can be overwhelming with so many options. I can share with you some trustworthy organizations that support causes such as helping the queer community. Would that be helpful to you?\""
+            ],
+            [
+                "Utterance 3 by Leo Williams said: \"Hello, I am Leo, and I'm here to ask for a donation for a cause that's very close to my heart. Would you be interested in contributing to it?\"",
+                "Utterance 3 by Liam Johnson said: \"Of course, Leo. I'd be happy to contribute to a cause that is close to your heart. Please tell me more about it.\""
+            ],
+            [
+                "Utterance 4 by Leo Williams [action] Hello, I am Leo, and I'm here to ask for a donation for a cause that's very close to my heart. Would you be interested in contributing to it?",
+                "Utterance 4 by Liam Johnson said: \"That sounds like a meaningful cause, Leo. I'd be interested to know more about how it supports the queer community.\""
+            ],
+            [
+                "Utterance 5 by Leo Williams [action] It's very exciting to be here and I hope to have the opportunity to meet more people involved in the cause. Thank you for considering my request.",
+                "Utterance 5 by Liam Johnson said: \"I appreciate your enthusiasm, Leo. I'm glad to have the opportunity to contribute to a cause that supports the queer community. Please let me know how I can assist.\""
+            ],
+            [
+                "Utterance 6 by Leo Williams said: \"It's been fantastic meeting so many like-minded individuals. However, I was wondering if anyone might be interested in supporting my daughter's school.\"",
+                "Utterance 6 by Liam Johnson said: \"That's a great cause, Leo. However, I would like to focus on supporting organizations that help the queer community. Thank you for understanding.\""
+            ],
+            [
+                "Utterance 7 by Leo Williams [action] That's a great cause, Leo. However, I would like to focus on supporting organizations that help the queer community. Thank you for understanding.",
+                "Utterance 7 by Liam Johnson said: \"I really appreciate your dedication to your daughter's school, Leo. However, as I mentioned earlier, I would like to focus on supporting organizations that help the queer community. Thank you for understanding.\""
+            ],
+            [
+                "Utterance 8 by Leo Williams [action] It's really exciting to be here and I hope to have the opportunity to meet more people involved in the cause. Thank you for considering my request.",
+                "Utterance 8 by Liam Johnson said: \"I'm sorry, but I really want to focus on supporting organizations that help the queer community. Thank you for understanding.\""
+            ],
+            [
+                "Utterance 9 by Leo Williams said: \"Hi, thank you all for coming to this charity dinner. As a father and a member of the community, it's important to me that we support each other, especially in times of need.\"",
+                "Utterance 9 by Liam Johnson said: \"I completely agree, Leo. Supporting each other, especially in times of need, is crucial for a thriving community.\""
+            ]
+        ]
+    }
+]
