@@ -8,7 +8,7 @@ finetuning_type: lora
 lora_target: q_proj,v_proj
 
 # dataset
-dataset: sotopia_pi_utterance_reward_toy
+dataset: sotopia_pi_utterance_reward
 template: llama3
 cutoff_len: 1024
 max_samples: 1000
@@ -25,7 +25,7 @@ overwrite_output_dir: true
 
 # train
 per_device_train_batch_size: 1
-gradient_accumulation_steps: 4
+gradient_accumulation_steps: 5
 learning_rate: 0.0001
 num_train_epochs: 3.0
 lr_scheduler_type: cosine
@@ -33,6 +33,6 @@ warmup_steps: 0.1
 fp16: true
 
 # eval
-per_device_eval_batch_size: 2
+per_device_eval_batch_size: 1
 evaluation_strategy: steps
-eval_steps: 500
+eval_steps: 20
