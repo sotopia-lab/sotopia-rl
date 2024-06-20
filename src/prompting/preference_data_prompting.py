@@ -8,9 +8,9 @@ from tqdm import tqdm
 
 from sotopia_generate import generate_action
 
-ENVIRONMENT_PROFILES = "../../data/profiles/environment_profiles.jsonl"
-AGENT_PROFILES = "../../data/profiles/agent_profiles.jsonl"
-RELATIONSHIP_PROFILES = "../../data/profiles/relationship_profiles.jsonl"
+ENVIRONMENT_PROFILES = "../../data/profiles/environmentprofiles_v1.jsonl"
+AGENT_PROFILES = "../../data/profiles/agentprofiles_v1.jsonl"
+RELATIONSHIP_PROFILES = "../../data/profiles/relationshipprofiles_v1.jsonl"
 
 Action = Literal['none', 'action', 'non-verbal communication', 'speak', 'leave']
 ACTION_TYPES: list[Action] = ['none', 'action', 'non-verbal communication', 'speak', 'leave']
@@ -91,32 +91,34 @@ def load_sotopia_pi_data(
         social_interactions.append(data['social_interactions'])
     return envs, start_agents, end_agents, social_interactions
 
-def generate_prompt_response_pairs(output_dir, model_selections, envs, start_agents, end_agents, social_interactions, num_episodes=1):
+def generate_prompt_response_pairs(output_dir, model_selections, envs, start_agents, end_agents, social_interactions, num_episodes=10000000):
     result_pairs = []
     count = 0
+    num_utterances = []
     for env, start_agent, end_agent, social_interaction in zip(envs, start_agents, end_agents, social_interactions):
         full_history = social_interaction.split("\n\n")
         curr_history = []
+        num_utterances.append(len(full_history))
         for i in range(0, len(full_history), 2):
             message = full_history[i]
             if i > 0:
                 curr_history.append((full_history[i-1], full_history[i]))
-            prompt, response0 = run_chat(message, curr_history, end_agent, start_agent, env, model_selections[0])
-            prompt, response1 = run_chat(message, curr_history, start_agent, end_agent, env, model_selections[1])
-            result_pairs.append({"prompt": prompt, model_selections[0]: response0, model_selections[1]: response1})
-            with open(output_dir, "w") as f:
-                f.write(json.dumps(result_pairs))
+            # prompt, response0 = run_chat(message, curr_history, end_agent, start_agent, env, model_selections[0])
+            # prompt, response1 = run_chat(message, curr_history, start_agent, end_agent, env, model_selections[1])
+            # result_pairs.append({"prompt": prompt, model_selections[0]: response0, model_selections[1]: response1})
+            # with open(output_dir, "w") as f:
+            #     f.write(json.dumps(result_pairs))
         if count >= num_episodes:
             break
         count += 1
+    print("Average number of utterances: {}".format(sum(num_utterances) / len(num_utterances)))
 
 if __name__ == "__main__":
     environments, environment_dict, agent_dict, relationship_dict = get_sotopia_profiles()
     envs, start_agents, end_agents, social_interactions = load_sotopia_pi_data(
-        "../../data/sotopia_episodes_v1.jsonl",
+        "../../data/sotopia_pi_episodes.jsonl",
         environment_dict,
         agent_dict
     )
     print("Loaded data with {} episodes".format(len(envs)))
-    import pdb; pdb.set_trace()
     generate_prompt_response_pairs("../../data/gpt35_gpt4_prompt_response_pairs.json", ["gpt-3.5-turbo", "gpt-4-turbo"], envs, start_agents, end_agents, social_interactions)

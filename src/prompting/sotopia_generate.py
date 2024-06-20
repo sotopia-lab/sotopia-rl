@@ -232,7 +232,7 @@ def obtain_chain(
     chat = ChatLiteLLM(
         model=model_name,
         temperature=temperature,
-        max_tokens=2700,  # tweak as needed
+        max_tokens=100,
         max_retries=max_retries,
     )
     human_message_prompt = HumanMessagePromptTemplate(
