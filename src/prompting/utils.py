@@ -43,11 +43,9 @@ def dialogue_history_prompt(message, history, user_agent, bot_agent):
         # TODOTODO (haofeiyu): we first assume that human talks first
         user_turn_idx = idx * 2
         bot_turn_idx = idx * 2 + 1
-        if not bot_message.startswith("["): # if action type == speak, need to add 'said: ' to be consistent with the dialog prompt
-            bot_message = 'said:"' + bot_message + '"'
-        dialogue_history = f"""{dialogue_history}\n\nTurn #{user_turn_idx} {user_agent.name} said: "{user_message}"\n\nTurn #{bot_turn_idx}: {bot_agent.name}: {bot_message}"""
+        dialogue_history = f"""{dialogue_history}\n\nTurn #{user_turn_idx} {user_message}"\n\nTurn #{bot_turn_idx} {bot_message}"""
     curr_turn_idx = len(history) * 2
-    dialogue_history = f"""{dialogue_history}\n\nTurn #{curr_turn_idx} {user_agent.name} said: "{message}"\n"""
+    dialogue_history = f"""{dialogue_history}\n\nTurn #{curr_turn_idx} {message}\n"""
     return dialogue_history, curr_turn_idx + 1
 
 def format_docstring(docstring: str) -> str:
