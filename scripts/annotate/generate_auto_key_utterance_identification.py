@@ -13,8 +13,8 @@ from src.prompting.key_utterance_prompting import (
 from src.utils.preprocess import add_score
 
 
-def main(data_dir: str, llm_name: str) -> None:
-    generate_key_utterance_recognition(data_dir, llm_name)
+def main(data_dir: str, llm_name: str, input_file: str, output_file: str) -> None:
+    generate_key_utterance_recognition(data_dir, llm_name, input_file, output_file)
 
 
 if __name__ == "__main__":
@@ -42,11 +42,11 @@ if __name__ == "__main__":
         "--output_file",
         type=str,
         required=False,
-        default="openai_log_attribution.jsonl",
+        default="openai_log_key_utterance.jsonl",
         help="Output file",
     )
 
     args = parser.parse_args()
     print(args.data_dir, args.llm_name)
 
-    main(args.data_dir, args.llm_name)
+    main(args.data_dir, args.llm_name, args.input_file, args.output_file)
