@@ -440,6 +440,35 @@
   },
   "sotopia_pi_utterance_reward": {
     "file_name": "sotopia_pi_utterance_reward.json",
-    "value": "value"
+    "value": "value",
+    "columns": {
+        "prompt": "instruction",
+        "query": "input",
+        "response": "output",
+        "history": "history",
+        "system": "system"
+    }
+  },
+  "sotopia_pi_utterance_reward_toy": {
+    "file_name": "sotopia_pi_utterance_reward_toy.json",
+    "value": "value",
+    "columns": {
+        "prompt": "instruction",
+        "query": "input",
+        "response": "output",
+        "history": "history",
+        "system": "system"
+    }
+  },
+  "sotopia_pi_key_utterance_discounted_reward": {
+    "file_name": "sotopia_pi_key_utterance_discounted_reward.json",
+    "value": "value",
+    "columns": {
+        "prompt": "instruction",
+        "query": "input",
+        "response": "output",
+        "history": "history",
+        "system": "system"
+    }
   }
 }

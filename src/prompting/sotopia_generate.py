@@ -1,6 +1,6 @@
 import re
 import os
-from typing import TypeVar
+from typing import TypeVar, Tuple
 from functools import cache
 import logging
 
@@ -11,7 +11,7 @@ from transformers import (
     AutoTokenizer,
     BitsAndBytesConfig,
 )
-from peft import PeftModel
+from peft import PeftModel # type: ignore[attr-defined]
 from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
 from langchain_community.chat_models import ChatLiteLLM
 from langchain.chains import LLMChain
@@ -23,9 +23,9 @@ from langchain.prompts import (
 )
 from langchain.schema import BaseOutputParser, OutputParserException
 
-from message_classes import ActionType, AgentAction
-from utils import format_docstring
-from langchain_callback_handler import LoggingCallbackHandler
+from .message_classes import ActionType, AgentAction
+from .sotopia_utils import format_docstring
+from .langchain_callback_handler import LoggingCallbackHandler
 
 HF_TOKEN_KEY_FILE="./hf_token.key"
 if os.path.exists(HF_TOKEN_KEY_FILE):
@@ -43,7 +43,7 @@ def generate_action(
     action_types: list[ActionType],
     agent: str,
     temperature: float = 0.7,
-) -> AgentAction:
+) -> Tuple[str, AgentAction]:
     """
     Using langchain to generate an example episode
     """
@@ -76,12 +76,9 @@ def generate_action(
         output_parser=PydanticOutputParser(pydantic_object=AgentAction),
         temperature=temperature,
     )
-    # except Exception as e:
-    #     print(e)
-    #     return AgentAction(action_type="none", argument="")
 
 @cache
-def prepare_model(model_name):
+def prepare_model(model_name: str) -> Tuple[AutoModelForCausalLM, AutoTokenizer]:
     compute_type = torch.float16
     
     if model_name == 'cmu-lti/sotopia-pi-mistral-7b-BC_SR':
@@ -118,8 +115,8 @@ def prepare_model(model_name):
         )
         
     else:
-         raise RuntimeError(f"Model {model_name} not supported")
-     
+        raise RuntimeError(f"Model {model_name} not supported")
+    
     return model, tokenizer
 
 def obtain_chain_hf(
@@ -154,7 +151,7 @@ def generate(
     input_values: dict[str, str],
     output_parser: BaseOutputParser[OutputType],
     temperature: float = 0.7,
-) -> OutputType:
+) -> Tuple[str, OutputType]:
     input_variables = re.findall(r"{(.*?)}", template)
     assert (
         set(input_variables) == set(list(input_values.keys()) + ["format_instructions"])
@@ -184,7 +181,7 @@ def generate(
         print(f"Reformatted result:\n {reformat_parsed_result}")
         parsed_result = output_parser.parse(reformat_parsed_result)
     log.info(f"Generated result: {parsed_result}")
-    return parsed_result
+    return prompt, parsed_result
 
 def format_bad_output(
     ill_formed_output: str,
@@ -208,7 +205,7 @@ def format_bad_output(
         "ill_formed_output": ill_formed_output,
         "format_instructions": format_instructions,
     }
-    reformat = chain.predict([logging_handler], **input_values)
+    reformat = str(chain.predict([logging_handler], **input_values))
     log.info(f"Reformated output: {reformat}")
     return reformat
 
@@ -235,8 +232,9 @@ def obtain_chain(
     chat = ChatLiteLLM(
         model=model_name,
         temperature=temperature,
-        max_tokens=2700,  # tweak as needed
+        max_tokens=100,
         max_retries=max_retries,
+        client=None,
     )
     human_message_prompt = HumanMessagePromptTemplate(
         prompt=PromptTemplate(template=template, input_variables=input_variables)

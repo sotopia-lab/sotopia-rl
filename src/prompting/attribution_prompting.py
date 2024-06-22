@@ -1,7 +1,7 @@
 import json
 import os
 import re
-from collections import OrderedDict
+from collections import OrderedDict, Counter
 from pprint import pprint
 from typing import Any, Dict, List, Tuple
 
@@ -60,7 +60,7 @@ Following the same logic, if you believe an utterance had no impact on the final
 """
 
 
-def get_epilogue_instructions(agent: str, goal: str, score: float) -> str:
+def get_epilogue_instructions(agent: str) -> str:
     return f"""
 Please format your response as JSON with the following structure:
 {{
@@ -92,7 +92,7 @@ def generate_single_attribution_prompt(
             utterance,
             0,
         ]
-    prompt += "\n" + get_epilogue_instructions(agent, goal, score)
+    prompt += "\n" + get_epilogue_instructions(agent)
     return prompt, key_utterance_dict
 
 
@@ -137,10 +137,25 @@ def generate_reward_attribution(
 ) -> None:
     with jsonlines.open(os.path.join(data_dir, input_file), "r") as reader:
         data = list(reader)
-    # import pdb; pdb.set_trace()
+    
+    with jsonlines.open(
+        os.path.join(data_dir, output_file), "r"
+    ) as reader:
+        finished_episodes = list(reader)
+    
+    finished_episode_ids = Counter([episode["episode_id"] for episode in finished_episodes])
     print(len(data))
-    results = []
+    results = finished_episodes
     for episode in tqdm(data):
+        if episode["episode_id"] in finished_episode_ids and finished_episode_ids[episode["episode_id"]] > 1:
+            print(f"finished episode {episode['episode_id']}")
+            continue
+        elif episode["episode_id"] in finished_episode_ids and finished_episode_ids[episode["episode_id"]] == 1:
+            results.pop() # rerun the unfinished episode pair
+            finished_episode_ids[episode["episode_id"]] -= 1
+            print(f"rerun episode {episode['episode_id']}")
+        
+        # starting from here
         conversation, goals = parse_conversation(episode)
         agents = list(goals.keys())
         for agent in agents:
@@ -164,8 +179,5 @@ def generate_reward_attribution(
                     "goal_score": episode["scores"][agent],
                 }
             )
-
-            with jsonlines.open(
-                os.path.join(data_dir, output_file), "w"
-            ) as writer:
-                writer.write_all(results)
+            with open(os.path.join(data_dir, output_file), "a") as f:
+                f.write(json.dumps(results[-1]) + "\n")
