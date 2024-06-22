@@ -1,12 +1,12 @@
 import json, jsonlines
-from utils import Environment, Agent, get_context_prompt, dialogue_history_prompt
 from collections import defaultdict
 from functools import cache
-from typing import Literal, Tuple
+from typing import Literal, Tuple, List, Dict
 
 from tqdm import tqdm
 
-from sotopia_generate import generate_action
+from src.prompting.sotopia_utils import Environment, Agent, get_context_prompt, dialogue_history_prompt
+from src.prompting.sotopia_generate import generate_action
 
 ENVIRONMENT_PROFILES = "../../data/profiles/environmentprofiles_v1.jsonl"
 AGENT_PROFILES = "../../data/profiles/agentprofiles_v1.jsonl"
@@ -17,11 +17,11 @@ ACTION_TYPES: list[Action] = ['none', 'action', 'non-verbal communication', 'spe
 TEMPERATURE = 0.7
 
 @cache
-def get_sotopia_profiles(env_file=ENVIRONMENT_PROFILES, agent_file=AGENT_PROFILES, relationship_file=RELATIONSHIP_PROFILES):
+def get_sotopia_profiles(env_file: str=ENVIRONMENT_PROFILES, agent_file: str=AGENT_PROFILES, relationship_file: str=RELATIONSHIP_PROFILES) -> Tuple[List[Tuple[str, str]], Dict[str, Environment], Dict[str, Agent], Dict[str, Dict[str, List[str]]]]:
     with open(env_file, 'r') as f:
         data = [json.loads(line) for line in f.readlines()]
     
-    code_names_count = defaultdict(int)
+    code_names_count: Dict[str, int] = defaultdict(int)
     environments = []
     environment_dict = {}
     for profile in sorted(data, key=lambda x: x['codename']):
@@ -49,7 +49,7 @@ def get_sotopia_profiles(env_file=ENVIRONMENT_PROFILES, agent_file=AGENT_PROFILE
     with open(relationship_file, 'r') as f:
         data = [json.loads(line) for line in f.readlines()]
     
-    relationship_dict = defaultdict(lambda : defaultdict(list))
+    relationship_dict: Dict[str, Dict[str, List[str]]] = defaultdict(lambda : defaultdict(list))
     for profile in data:
         relationship_dict[profile['relationship']][profile['agent1_id']].append(profile['agent2_id'])
         relationship_dict[profile['relationship']][profile['agent2_id']].append(profile['agent1_id'])
@@ -57,8 +57,8 @@ def get_sotopia_profiles(env_file=ENVIRONMENT_PROFILES, agent_file=AGENT_PROFILE
     return environments, environment_dict, agent_dict, relationship_dict
 
 def run_chat(
-    message,
-    history,
+    message: str,
+    history: List[List[str]],
     bot_agent:Agent,
     user_agent:Agent,
     environment:Environment,
@@ -72,9 +72,9 @@ def run_chat(
 
 def load_sotopia_pi_data(
     data_path:str,
-    environment_dict,
-    agent_dict,
-):
+    environment_dict: Dict[str, Environment],
+    agent_dict: Dict[str, Agent]
+) -> Tuple[List[Environment], List[Agent], List[Agent], List[str]]:
     with jsonlines.open(data_path, "r") as f:
         dataset = [line for line in f]
     
@@ -91,27 +91,25 @@ def load_sotopia_pi_data(
         social_interactions.append(data['social_interactions'])
     return envs, start_agents, end_agents, social_interactions
 
-def generate_prompt_response_pairs(output_dir, model_selections, envs, start_agents, end_agents, social_interactions, num_episodes=10000000):
+def generate_prompt_response_pairs(output_dir: str, model_selections: List[str], envs: List[Environment], 
+                                   start_agents: List[Agent], end_agents: List[Agent], 
+                                   social_interactions: List[str], num_episodes: int=10000000) -> None:
     result_pairs = []
     count = 0
-    num_utterances = []
     for env, start_agent, end_agent, social_interaction in zip(envs, start_agents, end_agents, social_interactions):
         full_history = social_interaction.split("\n\n")
         curr_history = []
-        num_utterances.append(len(full_history))
         for i in range(0, len(full_history), 2):
             message = full_history[i]
             if i > 0:
-                curr_history.append((full_history[i-1], full_history[i]))
-            # prompt, response0 = run_chat(message, curr_history, end_agent, start_agent, env, model_selections[0])
-            # prompt, response1 = run_chat(message, curr_history, start_agent, end_agent, env, model_selections[1])
-            # result_pairs.append({"prompt": prompt, model_selections[0]: response0, model_selections[1]: response1})
-            # with open(output_dir, "w") as f:
-            #     f.write(json.dumps(result_pairs))
+                curr_history.append([full_history[i-1], full_history[i]])
+            prompt, response0 = run_chat(message, curr_history, end_agent, start_agent, env, model_selections[0])
+            prompt, response1 = run_chat(message, curr_history, start_agent, end_agent, env, model_selections[1])
+            result_pairs.append({"prompt": prompt, model_selections[0]: response0, model_selections[1]: response1})
+            with open(output_dir, "w") as f:
+                f.write(json.dumps(result_pairs))
         if count >= num_episodes:
             break
-        count += 1
-    print("Average number of utterances: {}".format(sum(num_utterances) / len(num_utterances)))
 
 if __name__ == "__main__":
     environments, environment_dict, agent_dict, relationship_dict = get_sotopia_profiles()

@@ -11,7 +11,7 @@ from transformers import (
     AutoTokenizer,
     BitsAndBytesConfig,
 )
-from peft import PeftModel
+from peft import PeftModel # type: ignore[attr-defined]
 from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
 from langchain_community.chat_models import ChatLiteLLM
 from langchain.chains import LLMChain
@@ -23,9 +23,9 @@ from langchain.prompts import (
 )
 from langchain.schema import BaseOutputParser, OutputParserException
 
-from message_classes import ActionType, AgentAction
-from utils import format_docstring
-from langchain_callback_handler import LoggingCallbackHandler
+from .message_classes import ActionType, AgentAction
+from .sotopia_utils import format_docstring
+from .langchain_callback_handler import LoggingCallbackHandler
 
 HF_TOKEN_KEY_FILE="./hf_token.key"
 if os.path.exists(HF_TOKEN_KEY_FILE):
@@ -78,7 +78,7 @@ def generate_action(
     )
 
 @cache
-def prepare_model(model_name):
+def prepare_model(model_name: str) -> Tuple[AutoModelForCausalLM, AutoTokenizer]:
     compute_type = torch.float16
     
     if model_name == 'cmu-lti/sotopia-pi-mistral-7b-BC_SR':
@@ -205,7 +205,7 @@ def format_bad_output(
         "ill_formed_output": ill_formed_output,
         "format_instructions": format_instructions,
     }
-    reformat = chain.predict([logging_handler], **input_values)
+    reformat = str(chain.predict([logging_handler], **input_values))
     log.info(f"Reformated output: {reformat}")
     return reformat
 
@@ -234,6 +234,7 @@ def obtain_chain(
         temperature=temperature,
         max_tokens=100,
         max_retries=max_retries,
+        client=None,
     )
     human_message_prompt = HumanMessagePromptTemplate(
         prompt=PromptTemplate(template=template, input_variables=input_variables)

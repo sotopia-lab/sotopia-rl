@@ -1,9 +1,9 @@
-from typing import List, Tuple
+from typing import List, Tuple, Dict, Any
 import ast
 import re
 
 class Agent:
-    def __init__(self, agent_profile):
+    def __init__(self, agent_profile: Dict[str, str]):
         self._id = agent_profile["agent_id"]
         
         self.agent_profile = agent_profile
@@ -14,16 +14,16 @@ class Agent:
         self.personality = agent_profile["personality_and_values"]
         self.goal = ""
         
-    def get_name(self, agent_profile):
+    def get_name(self, agent_profile: Dict[str, str]) -> str:
         return agent_profile["first_name"] + " " + agent_profile["last_name"]
     
-    def get_background(self, agent_profile):
+    def get_background(self, agent_profile: Dict[str, str]) -> str:
         name = self.name
         return f"{name} is a {agent_profile['age']}-year-old {agent_profile['gender'].lower()} {agent_profile['occupation']}. {agent_profile['public_info']}"
     
 class Environment:
     
-    def __init__(self, env_profile):
+    def __init__(self, env_profile: Dict[str, str]):
         self._id = env_profile["env_id"]
         
         self.environment_profile = env_profile
@@ -33,10 +33,10 @@ class Environment:
         self.relationship = env_profile["relationship"]
         
         
-def get_context_prompt(machine_agent, human_agent, environment):
+def get_context_prompt(machine_agent: Agent, human_agent: Agent, environment: Environment) -> str:
     return f"Here is the context of this interaction:\n Scenario: {environment.scenario}\nParticipants: {human_agent.name} and {machine_agent.name}\n{human_agent.name}'s background: {human_agent.background} Personality and values description: {human_agent.personality} \n{machine_agent.name}'s background: {machine_agent.background} Personality and values description: {machine_agent.personality} {machine_agent.name}'s secrets: {machine_agent.secret}\n{human_agent.name}'s goal: Unknown\n{machine_agent.name}'s goal: {environment.agent_goals[1]}\nConversation Starts:"
         
-def dialogue_history_prompt(message, history, user_agent, bot_agent):
+def dialogue_history_prompt(message: str, history: List[List[str]], user_agent: Agent, bot_agent: Agent) -> Tuple[str, int]:
     dialogue_history = ""
     for idx, turn in enumerate(history):
         user_message, bot_message = turn
