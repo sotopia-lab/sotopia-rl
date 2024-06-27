@@ -1,3 +1,4 @@
+import os
 import json, jsonlines
 from collections import defaultdict
 from functools import cache
@@ -93,21 +94,43 @@ def load_sotopia_pi_data(
 
 def generate_prompt_response_pairs(output_dir: str, model_selections: List[str], envs: List[Environment], 
                                    start_agents: List[Agent], end_agents: List[Agent], 
-                                   social_interactions: List[str], num_episodes: int=10000000) -> None:
-    result_pairs = []
+                                   social_interactions: List[str], num_episodes: int=2) -> None:
+    if not os.path.exists(output_dir):
+        with open(output_dir, "w") as f:
+            f.write("[]")
+    
+    with open(output_dir, "r") as f:
+        result_pairs = json.load(f)
+    
+    all_ids = set()
+    for result in result_pairs:
+        all_ids.add(f"{result['environment']}_{result['start_agent']}_{result['end_agent']}")
+    
     count = 0
     for env, start_agent, end_agent, social_interaction in zip(envs, start_agents, end_agents, social_interactions):
+        if f"{env._id}_{start_agent._id}_{end_agent._id}" in all_ids:
+            count += 1
+            continue
+        
         full_history = social_interaction.split("\n\n")
         curr_history = []
         for i in range(0, len(full_history), 2):
             message = full_history[i]
             if i > 0:
                 curr_history.append([full_history[i-1], full_history[i]])
-            prompt, response0 = run_chat(message, curr_history, end_agent, start_agent, env, model_selections[0])
-            prompt, response1 = run_chat(message, curr_history, start_agent, end_agent, env, model_selections[1])
-            result_pairs.append({"prompt": prompt, model_selections[0]: response0, model_selections[1]: response1})
-            with open(output_dir, "w") as f:
-                f.write(json.dumps(result_pairs))
+            try:
+                prompt, response0 = run_chat(message, curr_history, end_agent, start_agent, env, model_selections[0])
+                prompt, response1 = run_chat(message, curr_history, start_agent, end_agent, env, model_selections[1])
+            except:
+                continue
+                
+            result_pairs.append({"prompt": prompt, model_selections[0]: response0, model_selections[1]: response1, "environment": env._id, "start_agent": start_agent._id, "end_agent": end_agent._id})
+        
+        count += 1
+        all_ids.add(f"{env._id}_{start_agent._id}_{end_agent._id}")
+        
+        with open(output_dir, "w") as f:
+            f.write(json.dumps(result_pairs))
         if count >= num_episodes:
             break
 
@@ -119,4 +142,4 @@ if __name__ == "__main__":
         agent_dict
     )
     print("Loaded data with {} episodes".format(len(envs)))
-    generate_prompt_response_pairs("../../data/gpt35_gpt4_prompt_response_pairs.json", ["gpt-3.5-turbo", "gpt-4-turbo"], envs, start_agents, end_agents, social_interactions)
+    generate_prompt_response_pairs("../../data/gpt35_gpt4_prompt_response_pairs.json", ["gpt-3.5-turbo", "gpt-4o"], envs, start_agents, end_agents, social_interactions, 10000000)

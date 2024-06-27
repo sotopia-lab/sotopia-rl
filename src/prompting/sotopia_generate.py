@@ -245,8 +245,9 @@ def obtain_chain(
 
 def _return_fixed_model_version(model_name: str) -> str:
     model_version_map = {
-        "gpt-3.5-turbo": "gpt-3.5-turbo-0613",
-        "gpt-4": "gpt-4-0613",
-        "gpt-4-turbo": "gpt-4-1106-preview",
+        "gpt-3.5-turbo": "gpt-3.5-turbo",
+        "gpt-4": "gpt-4",
+        "gpt-4-turbo": "gpt-4-turbo",
+        "gpt-4o": "gpt-4o",
     }
     return model_version_map[model_name] if model_name in model_version_map else model_name
