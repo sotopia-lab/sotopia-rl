@@ -31,6 +31,9 @@ class Environment:
         self.scenario = env_profile["scenario"]
         self.agent_goals = env_profile["agent_goals"]
         self.relationship = env_profile["relationship"]
+    
+    def to_dict(self) -> Dict[str, str]:
+        return self.environment_profile
         
         
 def get_context_prompt(machine_agent: Agent, human_agent: Agent, environment: Environment) -> str:

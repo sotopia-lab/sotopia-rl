@@ -164,8 +164,8 @@ def generate(
         input_values["format_instructions"] = output_parser.get_format_instructions()
     result = chain.predict([logging_handler], **input_values)
     prompt = logging_handler.retrive_prompt()
-    print(f"Prompt:\n {prompt}")
-    print(f"Result:\n {result}")
+    # print(f"Prompt:\n {prompt}")
+    # print(f"Result:\n {result}")
     try:
         parsed_result = output_parser.parse(result)
     except KeyboardInterrupt:
