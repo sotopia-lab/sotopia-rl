@@ -104,10 +104,10 @@ def generate_prompt_response_pairs(output_dir: str, model_selections: List[str],
     
     all_ids = set()
     for result in result_pairs:
-        all_ids.add(f"{result['environment']}_{result['start_agent']}_{result['end_agent']}")
+        all_ids.add(f"{result['environment_id']}_{result['start_agent_id']}_{result['end_agent_id']}")
     
     count = 0
-    for env, start_agent, end_agent, social_interaction in zip(envs, start_agents, end_agents, social_interactions):
+    for env, start_agent, end_agent, social_interaction in tqdm(zip(envs, start_agents, end_agents, social_interactions), total=len(envs)):
         if f"{env._id}_{start_agent._id}_{end_agent._id}" in all_ids:
             count += 1
             continue
@@ -124,7 +124,7 @@ def generate_prompt_response_pairs(output_dir: str, model_selections: List[str],
             except:
                 continue
                 
-            result_pairs.append({"prompt": prompt, model_selections[0]: response0, model_selections[1]: response1, "environment": env._id, "start_agent": start_agent._id, "end_agent": end_agent._id})
+            result_pairs.append({"prompt": prompt, "message": message, "history": curr_history, model_selections[0]: response0, model_selections[1]: response1, "environment_id": env._id, "start_agent_id": start_agent._id, "end_agent_id": end_agent._id, "scenario": env.scenario, "start_agent_name": start_agent.name, "end_agent_name": end_agent.name, "start_agent_goal": env.agent_goals[0], "end_agent_goal": env.agent_goals[1]})
         
         count += 1
         all_ids.add(f"{env._id}_{start_agent._id}_{end_agent._id}")
