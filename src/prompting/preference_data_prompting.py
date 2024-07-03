@@ -3,6 +3,7 @@ import json, jsonlines
 from collections import defaultdict
 from functools import cache
 from typing import Literal, Tuple, List, Dict
+from copy import copy
 
 from tqdm import tqdm
 
@@ -115,16 +116,29 @@ def generate_prompt_response_pairs(output_dir: str, model_selections: List[str],
         full_history = social_interaction.split("\n\n")
         curr_history = []
         for i in range(0, len(full_history), 2):
-            message = full_history[i]
             if i > 0:
-                curr_history.append([full_history[i-1], full_history[i]])
+                curr_history.append([f"Utterance {i//2 - 1} by " + full_history[i-2], 
+                                     f"Utterance {i//2 - 1} by " + full_history[i-1]])
+            message = f"Utterance {i//2} by " + full_history[i]
             try:
                 prompt, response0 = run_chat(message, curr_history, end_agent, start_agent, env, model_selections[0])
                 prompt, response1 = run_chat(message, curr_history, start_agent, end_agent, env, model_selections[1])
             except:
                 continue
                 
-            result_pairs.append({"prompt": prompt, "message": message, "history": curr_history, model_selections[0]: response0, model_selections[1]: response1, "environment_id": env._id, "start_agent_id": start_agent._id, "end_agent_id": end_agent._id, "scenario": env.scenario, "start_agent_name": start_agent.name, "end_agent_name": end_agent.name, "start_agent_goal": env.agent_goals[0], "end_agent_goal": env.agent_goals[1]})
+            result_pairs.append({"prompt": prompt, 
+                                 "message": message, 
+                                 "history": copy(curr_history), 
+                                 model_selections[0]: response0, 
+                                 model_selections[1]: response1, 
+                                 "environment_id": env._id, 
+                                 "start_agent_id": start_agent._id, 
+                                 "end_agent_id": end_agent._id, 
+                                 "scenario": env.scenario, 
+                                 "start_agent_name": start_agent.name, 
+                                 "end_agent_name": end_agent.name, 
+                                 "start_agent_goal": env.agent_goals[0], 
+                                 "end_agent_goal": env.agent_goals[1]})
         
         count += 1
         all_ids.add(f"{env._id}_{start_agent._id}_{end_agent._id}")
@@ -142,4 +156,4 @@ if __name__ == "__main__":
         agent_dict
     )
     print("Loaded data with {} episodes".format(len(envs)))
-    generate_prompt_response_pairs("../../data/gpt35_gpt4_prompt_response_pairs.json", ["gpt-3.5-turbo", "gpt-4o"], envs, start_agents, end_agents, social_interactions, 10000000)
+    generate_prompt_response_pairs("../../data/gpt35_gpt4_prompt_response_pairs.json", ["gpt-3.5-turbo", "gpt-4o"], envs, start_agents, end_agents, social_interactions, 1000000)
