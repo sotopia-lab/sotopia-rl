@@ -5,7 +5,7 @@ adapter_name_or_path: saves/llama3-8b/lora/rm
 # method
 stage: sotopia_rm
 do_train: false
-do_eval: true
+do_eval: false
 do_predict: true
 finetuning_type: lora
 lora_target: q_proj,v_proj
