@@ -144,7 +144,7 @@ def generate_prompt_response_pairs(output_dir: str, model_selections: List[str],
         all_ids.add(f"{env._id}_{start_agent._id}_{end_agent._id}")
         
         with open(output_dir, "w") as f:
-            f.write(json.dumps(result_pairs))
+            f.write(json.dumps(result_pairs, indent=4))
         if count >= num_episodes:
             break
 
@@ -156,4 +156,4 @@ if __name__ == "__main__":
         agent_dict
     )
     print("Loaded data with {} episodes".format(len(envs)))
-    generate_prompt_response_pairs("../../data/gpt35_gpt4_prompt_response_pairs.json", ["gpt-3.5-turbo", "gpt-4o"], envs, start_agents, end_agents, social_interactions, 1000000)
+    generate_prompt_response_pairs("../../data/gpt35_gpt4_prompt_response_pairs.json", ["gpt-3.5-turbo", "gpt-4o"], envs, start_agents, end_agents, social_interactions, 100000)
