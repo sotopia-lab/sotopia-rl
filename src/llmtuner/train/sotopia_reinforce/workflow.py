@@ -24,7 +24,7 @@ if TYPE_CHECKING:
     )
 
 
-def run_sft(
+def run_sotopia_reinforce(
     model_args: "ModelArguments",
     data_args: "DataArguments",
     training_args: "Seq2SeqTrainingArguments",
@@ -96,7 +96,7 @@ def run_sft(
 
     # Training
     if training_args.do_train:
-        train_result = trainer.reward_train(
+        train_result = trainer.train(
             resume_from_checkpoint=training_args.resume_from_checkpoint
         )
         trainer.save_model()

@@ -39,7 +39,10 @@ class CustomSeq2SeqTrainer(Seq2SeqTrainer):
     """
 
     def __init__(
-        self, finetuning_args: "FinetuningArguments", **kwargs
+        self, 
+        finetuning_args: "FinetuningArguments", 
+        reward_model: Optional["AutoModelForCausalLMWithValueHead"],
+        **kwargs
     ) -> None:
         super().__init__(**kwargs)
         self.finetuning_args = finetuning_args
@@ -49,46 +52,34 @@ class CustomSeq2SeqTrainer(Seq2SeqTrainer):
             self.accelerator.clip_grad_norm_ = MethodType(
                 clip_grad_norm_for_sparse_tensor, self.accelerator
             )
+        self.reward_model = reward_model
 
-    def reward_train(
-        self, resume_from_checkpoint: Optional[str] = None
-    ) -> None:
-        total_train_batch_size = (
-            self.args.per_device_train_batch_size
-            * self.args.gradient_accumulation_steps
-            * self.finetuning_args.ppo_buffer_size
-            * self.args.world_size
+
+    def compute_loss(self, model, inputs, return_outputs=False):
+        generated_ids = model.generate(
+            input_ids=inputs['input_ids'],
+            attention_mask=inputs['attention_mask'],
+            max_length=200,
+            early_stopping=True,
+            num_beams=5,
+            num_return_sequences=5,
         )
-        if self.args.max_steps > 0:
-            num_examples = total_train_batch_size * self.args.max_steps
-            num_train_epochs = sys.maxsize
-            max_steps = self.args.max_steps
-            steps_in_epoch = self.args.max_steps
-        else:
-            len_dataloader = len(self.dataloader)
-            num_examples = len(self.dataset)
-            num_train_epochs = self.args.num_train_epochs
-            max_steps = math.ceil(num_train_epochs * len_dataloader)
-            steps_in_epoch = len_dataloader
 
-        unwrapped_model: "AutoModelForCausalLMWithValueHead" = (
-            self.accelerator.unwrap_model(self.model)
-        )
-        import pdb
+        # Decode the generated sequences
+        candidates = [self.tokenizer.decode(g, skip_special_tokens=True) for g in generated_ids]
 
-        pdb.set_trace()
-        dataiter = iter(self.dataloader)
-        loss_meter = AverageMeter()
-        reward_meter = AverageMeter()
-        for step in tqdm(
-            range(max_steps), disable=not self.is_local_process_zero()
-        ):
-            try:
-                batch = next(dataiter)
-            except StopIteration:
-                dataiter = iter(self.dataloader)
-                batch = next(dataiter)
-        return
+        reward_model_inputs_list = self.prepare_rm_inputs(inputs, candidates)
+        for reward_model_inputs in reward_model_inputs_list:
+            _, _, value = self.reward_model(**reward_model_inputs)
+
+        # Custom loss computation
+        outputs = model(**inputs)
+        import pdb; pdb.set_trace()
+        logits = outputs.get("logits")
+        labels = inputs.get("labels")
+        loss = self.custom_loss_function(logits, labels)
+        return (loss, outputs) if return_outputs else loss
+     
 
     def create_optimizer(self) -> "torch.optim.Optimizer":
         if self.optimizer is None:
@@ -221,3 +212,19 @@ class CustomSeq2SeqTrainer(Seq2SeqTrainer):
                     )
                 )
             writer.write("\n".join(res))
+
+    def prepare_rm_inputs(
+        self, inputs: Dict[str, torch.Tensor], candidates: List[str]
+    ) -> Dict[str, torch.Tensor]:
+        r"""
+        Prepares inputs for the reward model.
+        """
+        inputs = self.tokenizer(
+            candidates,
+            return_tensors="pt",
+            padding=True,
+            truncation=True,
+            max_length=128,
+        )
+        inputs = {k: v.to(self.device) for k, v in inputs.items()}
+        return inputs

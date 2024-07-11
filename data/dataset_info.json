@@ -470,5 +470,16 @@
         "history": "history",
         "system": "system"
     }
-  }
+  },
+  "sotopia_pi_reinforce": {
+    "file_name": "sotopia_pi_reinforce.json",
+    "value": "value",
+    "columns": {
+        "prompt": "instruction",
+        "query": "input",
+        "response": "output",
+        "history": "history",
+        "system": "system"
+    }
+}
 }

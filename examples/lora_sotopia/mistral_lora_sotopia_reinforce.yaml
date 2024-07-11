@@ -1,5 +1,5 @@
 # model
-model_name_or_path: meta-llama/Meta-Llama-3-8B
+model_name_or_path: mistralai/Mistral-7B-Instruct-v0.1
 
 # method
 stage: sotopia_reinforce
@@ -9,7 +9,7 @@ lora_target: q_proj,v_proj
 
 # dataset
 dataset: sotopia_pi_reinforce
-template: llama3
+template: mistral
 cutoff_len: 1024
 max_samples: 1000000
 val_size: 0.1
@@ -17,7 +17,7 @@ overwrite_cache: true
 preprocessing_num_workers: 16
 
 # output
-output_dir: saves/llama3-8b-sotopia-reinforce/lora/rm
+output_dir: saves/mistral-7b-sotopia-reinforce/lora/rm
 logging_steps: 10
 save_steps: 500
 plot_loss: true

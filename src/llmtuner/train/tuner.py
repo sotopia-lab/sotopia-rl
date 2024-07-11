@@ -13,8 +13,8 @@ from .orpo import run_orpo
 from .ppo import run_ppo
 from .pt import run_pt
 from .rm import run_rm
-from .sft import run_sft
 from .sotopia_rm import run_sotopia_rm
+from .sotopia_reinforce import run_sotopia_reinforce
 
 if TYPE_CHECKING:
     from transformers import TrainerCallback
@@ -40,14 +40,14 @@ def run_exp(
         run_pt(
             model_args, data_args, training_args, finetuning_args, callbacks
         )
-    elif finetuning_args.stage == "sft":
-        run_sft(
-            model_args,
-            data_args,
-            training_args,
-            finetuning_args,
+    elif finetuning_args.stage == "sotopia_reinforce":
+        run_sotopia_reinforce(
+            model_args, 
+            data_args, 
+            training_args, 
+            finetuning_args, 
             generating_args,
-            callbacks,
+            callbacks
         )
     elif finetuning_args.stage == "rm":
         run_rm(
