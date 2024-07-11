@@ -3,7 +3,7 @@ import jsonlines
 
 def calc_reward(utter_attrib: str|float, goal_score: float) -> float:
     global fail_count, total_count
-    if type(utter_attrib) == float and utter_attrib == -1:
+    if type(utter_attrib) == int and utter_attrib == -1:
         return 0
     if utter_attrib == "YES":
         return goal_score
@@ -67,7 +67,7 @@ if __name__ == "__main__":
                         f"{speaker} {utter[0]}\nDo you think it is a key utterance contributing to the success or failure of {agent_name}?"
                     )
                     # Create a copy of the current history excluding the last two utterances for pairing
-                    history_pairs.append(history[1:-1])
+                    history_pairs.append(history[:-1] + [""])
                     reward = calc_reward(utter[1], goal_score)
                     temp_rewards.append(reward)
                     temp_rewards = add_discounted_reward(temp_rewards)

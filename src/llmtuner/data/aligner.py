@@ -55,7 +55,6 @@ def convert_alpaca(
                 prompt.append(
                     {"role": Role.ASSISTANT.value, "content": old_response}
                 )
-
         content = []
         if dataset_attr.prompt and examples[dataset_attr.prompt][i]:
             content.append(examples[dataset_attr.prompt][i])

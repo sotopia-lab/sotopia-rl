@@ -1,14 +1,6 @@
 import json
 import jsonlines
-
-
-def calc_reward(utter_attrib: float, goal_score: float) -> float:
-    if utter_attrib == -1:
-        reward = -1.0
-    else:
-        reward = utter_attrib / 3 * goal_score
-    return reward
-
+from copy import deepcopy
 
 if __name__ == "__main__":
 
@@ -21,50 +13,46 @@ if __name__ == "__main__":
     systems = []
     prompts = []
     history_pairs = []
+    model_names = []
+    pair_ids = []
 
-    for data in dataset:
-        import pdb; pdb.set_trace()
-        agent_name = data["agent"]
-        goal_score = data["goal_score"]
+    for i in range(len(dataset)):
+        data = dataset[i]
+        agent_name = data["end_agent_name"]
         scenario = data["scenario"]
-        goal = data["goal"]
-        is_first_speaker = data["is_first_speaker"]
-        history = []
+        goal = data["end_agent_goal"]
+        raw_history = data["history"]
+        history = deepcopy(raw_history)
+        message = data["message"]
+        history.append([message, ""])
+        # raw_history = data["history"]
+        # history = []
+        # for pair in raw_history:
+        #     history.append(pair[0])
+        #     history.append(pair[1])
+        # history.append(data["message"])
+        # history = history[1:]
 
-        for speaker, utter in data["attributed_utterances"].items():
-            # Append all utterances to history
-            history.append(f"{speaker} {utter[0]}")
-
-            if agent_name in speaker:
-                # Store the current history excluding the agent's current utterance
-                if is_first_speaker:
-                    systems.append(
-                        f"The scenario is {scenario}. The goal of {agent_name} is {goal}."
-                    )
-                    prompts.append(
-                        f"{speaker} {utter[0]}\nHow much does this utterance contribute to the goal of {agent_name}?"
-                    )
-                    # Create a copy of the current history excluding the last utterance for pairing
-                    history_pairs.append(history[:-1])
-                    reward = calc_reward(utter[1], goal_score)
-                    rewards.append(reward)
-
-                if not is_first_speaker:
-                    # Store the current history excluding the agent's previous utterance
-                    systems.append(
-                        f"The scenario is {scenario}. The goal of {agent_name} is {goal}."
-                    )
-                    prompts.append(
-                        f"{speaker} {utter[0]}\nHow much does this utterance contribute to the goal of {agent_name}?"
-                    )
-                    # Create a copy of the current history excluding the last two utterances for pairing
-                    history_pairs.append(history[1:-1])
-                    reward = calc_reward(utter[1], goal_score)
-                    rewards.append(reward)
+        for model_name in ["gpt-3.5-turbo", "gpt-4o"]:
+            model_response = data[model_name]
+            if not model_response.startswith("[action] "): 
+                formatted_response = f"Utterance {len(raw_history)} by {agent_name} said: {model_response}" 
+            else:
+                formatted_response = f"Utterance {len(raw_history)} by {agent_name} {model_response[9:]}"
+            systems.append(
+                f"The scenario is {scenario}. The goal of {agent_name} is {goal}."
+            )
+            prompts.append(
+                f"{formatted_response}\nDo you think it is a key utterance contributing to the success or failure of {agent_name}?"
+            )
+            history_pairs.append(history)
+            model_names.append(model_name)
+            pair_ids.append(i)
+            rewards.append(0.0)
 
     formulated_dataset = []
-    for prompt, reward, system, history in zip(
-        prompts, rewards, systems, history_pairs
+    for prompt, reward, system, history, model_name, pair_id in zip(
+        prompts, rewards, systems, history_pairs, model_names, pair_ids
     ):
         data = {
             "instruction": prompt,
@@ -72,12 +60,15 @@ if __name__ == "__main__":
             "output": "",
             "value": reward,
             "system": system,
-            "history": [
-                (history[i], history[i + 1])
-                for i in range(0, len(history) - 1, 2)
-            ],
+            "history": history,
+            # [
+            #     (history[i], history[i + 1])
+            #     for i in range(0, len(history) - 1, 2)
+            # ],
+            "model_name": model_name,
+            "pair_id": pair_id,
         }
         formulated_dataset.append(data)
 
-    with open("./data/sotopia_pi_utterance_reward.json", "w") as writer:
+    with open("./data/sotopia_pi_preference_data.json", "w") as writer:
         json.dump(formulated_dataset, writer, indent=4)

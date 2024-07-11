@@ -1,6 +1,6 @@
 # model
 model_name_or_path: meta-llama/Meta-Llama-3-8B
-adapter_name_or_path: saves/llama3-8b/lora/rm
+adapter_name_or_path: saves/llama3-8b/lora/key-uttr-rm
 
 # method
 stage: sotopia_rm
@@ -11,16 +11,16 @@ finetuning_type: lora
 lora_target: q_proj,v_proj
 
 # dataset
-dataset: sotopia_pi_utterance_reward
+dataset: sotopia_pi_preference_data
 template: llama3
 cutoff_len: 1024
-max_samples: 1000
-val_size: 0.1
+max_samples: 100000
+val_size: 1.0
 overwrite_cache: true
 preprocessing_num_workers: 16
 
 # output
-output_dir: saves/llama3-8b/lora/rm
+output_dir: saves/llama3-8b/lora/key-uttr-rm
 logging_steps: 10
 save_steps: 500
 plot_loss: true
@@ -37,5 +37,5 @@ fp16: true
 
 # eval
 per_device_eval_batch_size: 1
-evaluation_strategy: steps
+evaluation_strategy: 'no'
 eval_steps: 20

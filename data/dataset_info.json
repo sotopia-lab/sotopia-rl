@@ -472,7 +472,7 @@
     }
   },
   "sotopia_pi_preference_data": {
-    "file_name": "sotopia_pi_utterance_reward.json",
+    "file_name": "sotopia_pi_preference_data.json",
     "value": "value",
     "columns": {
         "prompt": "instruction",

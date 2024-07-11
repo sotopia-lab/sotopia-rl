@@ -35,4 +35,4 @@ fp16: true
 # eval
 per_device_eval_batch_size: 2
 evaluation_strategy: steps
-eval_steps: 500
+eval_steps: 20

@@ -8,4 +8,4 @@ credentials.json
 *.DS_Store
 *.pkl
 __pycache__/
-saves/*
+saves*
