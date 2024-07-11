@@ -9,3 +9,4 @@ credentials.json
 *.pkl
 __pycache__/
 saves/*
+**/data/*.json
