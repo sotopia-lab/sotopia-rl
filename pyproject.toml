@@ -75,7 +75,7 @@ check_untyped_defs = true
 follow_imports = "normal"
 strict = true
 plugins = ["pydantic.mypy"]
-exclude = ["src/llmtuner", "saves"]
+exclude = ["saves", "src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
