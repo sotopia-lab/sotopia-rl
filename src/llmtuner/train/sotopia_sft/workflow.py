@@ -24,7 +24,7 @@ if TYPE_CHECKING:
     )
 
 
-def run_sft(
+def run_sotopia_sft(
     model_args: "ModelArguments",
     data_args: "DataArguments",
     training_args: "Seq2SeqTrainingArguments",
