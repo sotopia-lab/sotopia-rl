@@ -470,5 +470,13 @@
         "history": "history",
         "system": "system"
     }
+  },
+  "sotopia_pi_gpt4_sft": {
+    "file_name": "sotopia_pi_gpt4_sft.json",
+    "columns": {
+        "prompt": "instruction",
+        "query": "input",
+        "response": "output"
+    }
   }
 }

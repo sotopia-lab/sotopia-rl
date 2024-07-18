@@ -12,14 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from llmtuner.train.tuner import run_exp
+from .llmtuner.train.tuner import run_exp
 
 
-def main():
+def main() -> None:
     run_exp()
 
 
-def _mp_fn(index):
+def _mp_fn(index: int) -> None:
     # For xla_spawn (TPUs)
     run_exp()
 
