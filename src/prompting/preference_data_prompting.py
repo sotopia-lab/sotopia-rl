@@ -200,7 +200,7 @@ def generate_prompt_response_pairs(
                     env,
                     model_selections[1],
                 )
-            except:
+            except Exception as e:
                 continue
 
             result_pairs.append(
