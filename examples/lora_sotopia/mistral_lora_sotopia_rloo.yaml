@@ -1,5 +1,6 @@
 # model
 model_name_or_path: ../Mistral-7B-Instruct-v0.3
+reward_model: saves/mistral-7b-instruct/lora/gpt4_sft_ds/checkpoint-100
 
 # method
 stage: sotopia_rloo

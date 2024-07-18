@@ -51,6 +51,7 @@ def run_sotopia_rloo(
     ref_model = create_ref_model(
         model_args, finetuning_args, add_valuehead=True
     )
+
     reward_model = create_reward_model(model, model_args, finetuning_args)
 
     # Initialize our Trainer
