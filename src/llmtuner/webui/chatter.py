@@ -1,14 +1,6 @@
 import json
 import os
-from typing import (
-    TYPE_CHECKING,
-    Dict,
-    Generator,
-    List,
-    Optional,
-    Sequence,
-    Tuple,
-)
+from typing import TYPE_CHECKING, Dict, Generator, List, Optional, Sequence, Tuple
 
 from numpy.typing import NDArray
 

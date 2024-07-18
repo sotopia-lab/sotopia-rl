@@ -1,31 +1,18 @@
 import json
-import math
 import os
-import sys
 from types import MethodType
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Dict,
-    List,
-    Optional,
-    Tuple,
-    Union,
-)
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import torch
-from tqdm import tqdm
 from transformers import Seq2SeqTrainer
 
 from ...extras.constants import IGNORE_INDEX
 from ...extras.logging import get_logger
-from ...extras.misc import AverageMeter
 from ..utils import create_custom_optimzer, create_custom_scheduler
 
 if TYPE_CHECKING:
     from transformers.trainer import PredictionOutput
-    from trl import AutoModelForCausalLMWithValueHead
 
     from ...hparams import FinetuningArguments
 

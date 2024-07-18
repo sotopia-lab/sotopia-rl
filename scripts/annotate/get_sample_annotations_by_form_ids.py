@@ -7,10 +7,7 @@ from src.human_annotate.form_response_retrieval import (
     get_episodes_from_form_ids,
     retrieve_responses,
 )
-from src.prompting.attribution_prompting import (
-    generate_reward_attribution,
-)
-from src.utils.preprocess import add_score
+from src.prompting.attribution_prompting import generate_reward_attribution
 
 
 def main(data_dir: str, llm_name: str, gcp_key: str) -> None:

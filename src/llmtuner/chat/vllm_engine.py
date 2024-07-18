@@ -16,12 +16,7 @@ from ..model import load_config, load_tokenizer
 from .base_engine import BaseEngine, Response
 
 if is_vllm_available():
-    from vllm import (
-        AsyncEngineArgs,
-        AsyncLLMEngine,
-        RequestOutput,
-        SamplingParams,
-    )
+    from vllm import AsyncEngineArgs, AsyncLLMEngine, RequestOutput, SamplingParams
     from vllm.lora.request import LoRARequest
     from vllm.sequence import MultiModalData
 

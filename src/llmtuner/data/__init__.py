@@ -1,10 +1,6 @@
 from .collator import PairwiseDataCollatorWithPadding
 from .loader import get_dataset
-from .template import (
-    Template,
-    get_template_and_fix_tokenizer,
-    templates,
-)
+from .template import Template, get_template_and_fix_tokenizer, templates
 from .utils import Role, split_dataset
 
 __all__ = [

@@ -80,7 +80,9 @@ def assign_key_utterances_for_conversation(
             try:
                 result = json.loads(formatted_response)
             except:
-                print("Failed to load formatted JSON string; returning empty dictionary")
+                print(
+                    "Failed to load formatted JSON string; returning empty dictionary"
+                )
                 print(formatted_response)
                 return {}
         return result
@@ -96,10 +98,10 @@ def extract_json(text: str) -> str | None:
         return None
 
 
-def generate_key_utterance_recognition(data_dir: str, llm_name: str, input_file: str, output_file: str) -> None:
-    with jsonlines.open(
-        os.path.join(data_dir, input_file), "r"
-    ) as reader:
+def generate_key_utterance_recognition(
+    data_dir: str, llm_name: str, input_file: str, output_file: str
+) -> None:
+    with jsonlines.open(os.path.join(data_dir, input_file), "r") as reader:
         data = list(reader)
 
     print(len(data))

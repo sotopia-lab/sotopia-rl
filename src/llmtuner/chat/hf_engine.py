@@ -24,11 +24,7 @@ from .base_engine import BaseEngine, Response
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
-    from transformers import (
-        PreTrainedModel,
-        PreTrainedTokenizer,
-        ProcessorMixin,
-    )
+    from transformers import PreTrainedModel, PreTrainedTokenizer, ProcessorMixin
     from transformers.image_processing_utils import BaseImageProcessor
     from trl import PreTrainedModelWrapper
 

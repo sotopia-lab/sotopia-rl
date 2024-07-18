@@ -17,11 +17,7 @@ from .trainer import SotopiaRMTrainer
 if TYPE_CHECKING:
     from transformers import Seq2SeqTrainingArguments, TrainerCallback
 
-    from ...hparams import (
-        DataArguments,
-        FinetuningArguments,
-        ModelArguments,
-    )
+    from ...hparams import DataArguments, FinetuningArguments, ModelArguments
 
 
 def run_sotopia_rm(

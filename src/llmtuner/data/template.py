@@ -1,21 +1,8 @@
 from dataclasses import dataclass
-from typing import (
-    TYPE_CHECKING,
-    Dict,
-    List,
-    Optional,
-    Sequence,
-    Tuple,
-    Union,
-)
+from typing import TYPE_CHECKING, Dict, List, Optional, Sequence, Tuple, Union
 
 from ..extras.logging import get_logger
-from .formatter import (
-    EmptyFormatter,
-    FunctionFormatter,
-    StringFormatter,
-    ToolFormatter,
-)
+from .formatter import EmptyFormatter, FunctionFormatter, StringFormatter, ToolFormatter
 from .utils import Role, infer_max_len
 
 if TYPE_CHECKING:

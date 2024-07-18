@@ -8,20 +8,14 @@ from transformers.integrations import is_deepspeed_zero3_enabled
 
 from ..extras.logging import get_logger
 from ..extras.misc import infer_optim_dtype
-from .utils.attention import (
-    configure_attn_implementation,
-    print_attn_implementation,
-)
+from .utils.attention import configure_attn_implementation, print_attn_implementation
 from .utils.checkpointing import prepare_model_for_training
 from .utils.embedding import resize_embedding_layer
 from .utils.longlora import configure_longlora
 from .utils.moe import add_z3_leaf_module, configure_moe
 from .utils.quantization import configure_quantization
 from .utils.rope import configure_rope
-from .utils.valuehead import (
-    configure_valuehead,
-    prepare_valuehead_model,
-)
+from .utils.valuehead import configure_valuehead, prepare_valuehead_model
 from .utils.visual import autocast_projector_dtype
 
 if TYPE_CHECKING:

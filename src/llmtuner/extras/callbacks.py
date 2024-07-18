@@ -17,11 +17,7 @@ from .logging import LoggerHandler, get_logger
 from .misc import fix_valuehead_checkpoint
 
 if TYPE_CHECKING:
-    from transformers import (
-        TrainerControl,
-        TrainerState,
-        TrainingArguments,
-    )
+    from transformers import TrainerControl, TrainerState, TrainingArguments
 
 
 logger = get_logger(__name__)

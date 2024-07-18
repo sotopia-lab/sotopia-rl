@@ -11,13 +11,7 @@ from transformers.utils import is_torch_cuda_available
 from ..extras.constants import TRAINING_STAGES
 from ..extras.misc import get_device_count, torch_gc
 from ..extras.packages import is_gradio_available
-from .common import (
-    get_module,
-    get_save_dir,
-    load_args,
-    load_config,
-    save_args,
-)
+from .common import get_module, get_save_dir, load_args, load_config, save_args
 from .locales import ALERTS
 from .utils import gen_cmd, get_eval_results, get_trainer_info, save_cmd
 
