@@ -5,9 +5,7 @@ import argparse
 
 from src.human_annotate.episode_sampling import sample_episodes
 from src.human_annotate.form_creation import create_forms
-from src.prompting.attribution_prompting import (
-    generate_reward_attribution,
-)
+from src.prompting.attribution_prompting import generate_reward_attribution
 from src.utils.preprocess import add_score
 
 

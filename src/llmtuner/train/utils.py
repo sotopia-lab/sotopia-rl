@@ -17,11 +17,7 @@ from ..model import (
 )
 
 if is_galore_available():
-    from galore_torch import (
-        GaLoreAdafactor,
-        GaLoreAdamW,
-        GaLoreAdamW8bit,
-    )
+    from galore_torch import GaLoreAdafactor, GaLoreAdamW, GaLoreAdamW8bit
 
 
 if TYPE_CHECKING:

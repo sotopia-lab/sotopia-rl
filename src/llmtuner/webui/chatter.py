@@ -1,14 +1,6 @@
 import json
 import os
-from typing import (
-    TYPE_CHECKING,
-    Dict,
-    Generator,
-    List,
-    Optional,
-    Sequence,
-    Tuple,
-)
+from typing import TYPE_CHECKING, Dict, Generator, List, Optional, Sequence, Tuple
 
 from numpy.typing import NDArray
 
@@ -63,7 +55,8 @@ class WebChatModel(ChatModel):
         return self.engine is not None
 
     def load_model(self, data) -> Generator[str, None, None]:
-        get = lambda elem_id: data[self.manager.get_elem_by_id(elem_id)]
+        def get(elem_id):
+            return data[self.manager.get_elem_by_id(elem_id)]
         lang = get("top.lang")
         error = ""
         if self.loaded:

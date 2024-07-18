@@ -1,9 +1,11 @@
 import json
+
 import jsonlines
 
-def calc_reward(utter_attrib: str|float, goal_score: float) -> float:
+
+def calc_reward(utter_attrib: str | float, goal_score: float) -> float:
     global fail_count, total_count
-    if type(utter_attrib) == float and utter_attrib == -1:
+    if type(utter_attrib) is float and utter_attrib == -1:
         return 0
     if utter_attrib == "YES":
         return goal_score
@@ -11,20 +13,24 @@ def calc_reward(utter_attrib: str|float, goal_score: float) -> float:
         return 0
     raise ValueError(f"Invalid utterance attribute: {utter_attrib}")
 
+
 def add_discounted_reward(temp_rewards: list[float]) -> list[float]:
     if temp_rewards[-1] != 0:
         gamma = 0.9
-        for prev_idx in range(len(temp_rewards) -2, -1, -1):
-            temp_rewards[prev_idx] = 0.5 * temp_rewards[prev_idx] + 0.5 * temp_rewards[-1] * gamma
+        for prev_idx in range(len(temp_rewards) - 2, -1, -1):
+            temp_rewards[prev_idx] = (
+                0.5 * temp_rewards[prev_idx] + 0.5 * temp_rewards[-1] * gamma
+            )
             gamma *= 0.9
     return temp_rewards
+
 
 if __name__ == "__main__":
     with jsonlines.open(
         "./data/sotopia_pi_openai_log_key_utterance.jsonl", "r"
     ) as reader:
         dataset = list(reader)
-    
+
     rewards = []
     systems = []
     prompts = []
@@ -74,7 +80,9 @@ if __name__ == "__main__":
 
         # normalize temp_rewards
         if len(temp_rewards) > 0 and max(temp_rewards) > 0:
-            temp_rewards = [reward / max(temp_rewards) for reward in temp_rewards]
+            temp_rewards = [
+                reward / max(temp_rewards) for reward in temp_rewards
+            ]
         rewards.extend(temp_rewards)
 
     formulated_dataset = []
@@ -93,7 +101,9 @@ if __name__ == "__main__":
             ],
         }
         formulated_dataset.append(data)
-    
+
     # print(f"Fail count: {fail_count}/{total_count}")
-    with open("./data/sotopia_pi_key_utterance_discounted_reward.json", "w") as writer:
+    with open(
+        "./data/sotopia_pi_key_utterance_discounted_reward.json", "w"
+    ) as writer:
         json.dump(formulated_dataset, writer, indent=4)

@@ -3,10 +3,7 @@ from typing import TYPE_CHECKING, Dict
 import torch
 from transformers.utils import cached_file
 
-from ...extras.constants import (
-    V_HEAD_SAFE_WEIGHTS_NAME,
-    V_HEAD_WEIGHTS_NAME,
-)
+from ...extras.constants import V_HEAD_SAFE_WEIGHTS_NAME, V_HEAD_WEIGHTS_NAME
 from ...extras.logging import get_logger
 
 if TYPE_CHECKING:

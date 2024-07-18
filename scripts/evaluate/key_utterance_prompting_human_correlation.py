@@ -1,15 +1,7 @@
 import argparse
 import os
 import random
-from typing import (
-    Any,
-    Iterable,
-    Iterator,
-    List,
-    Optional,
-    TextIO,
-    Tuple,
-)
+from typing import Any, Iterable, List, Tuple
 
 import jsonlines
 from scipy.stats import spearmanr

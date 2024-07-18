@@ -1,10 +1,7 @@
 from typing import TYPE_CHECKING
 
 from ...extras.logging import get_logger
-from ...extras.packages import (
-    is_flash_attn2_available,
-    is_sdpa_available,
-)
+from ...extras.packages import is_flash_attn2_available, is_sdpa_available
 
 if TYPE_CHECKING:
     from transformers import PretrainedConfig

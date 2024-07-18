@@ -22,9 +22,7 @@ def add_z3_leaf_module(model: "PreTrainedModel") -> None:
     from deepspeed.utils import set_z3_leaf_modules  # type: ignore
 
     if getattr(model.config, "model_type", None) == "mixtral":
-        from transformers.models.mixtral.modeling_mixtral import (
-            MixtralSparseMoeBlock,
-        )
+        from transformers.models.mixtral.modeling_mixtral import MixtralSparseMoeBlock
 
         set_z3_leaf_modules(model, [MixtralSparseMoeBlock])
 
@@ -36,9 +34,7 @@ def add_z3_leaf_module(model: "PreTrainedModel") -> None:
         set_z3_leaf_modules(model, [Qwen2MoeSparseMoeBlock])
 
     if getattr(model.config, "model_type", None) == "jamba":
-        from transformers.models.jamba.modeling_jamba import (
-            JambaSparseMoeBlock,
-        )
+        from transformers.models.jamba.modeling_jamba import JambaSparseMoeBlock
 
         set_z3_leaf_modules(model, [JambaSparseMoeBlock])
 

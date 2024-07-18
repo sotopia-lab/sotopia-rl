@@ -2,11 +2,7 @@
 
 from typing import TYPE_CHECKING, List, Optional
 
-from ...data import (
-    PairwiseDataCollatorWithPadding,
-    get_dataset,
-    split_dataset,
-)
+from ...data import PairwiseDataCollatorWithPadding, get_dataset, split_dataset
 from ...extras.callbacks import FixValueHeadModelCallback
 from ...extras.misc import fix_valuehead_checkpoint
 from ...extras.ploting import plot_loss
@@ -18,11 +14,7 @@ from .trainer import PairwiseTrainer
 if TYPE_CHECKING:
     from transformers import Seq2SeqTrainingArguments, TrainerCallback
 
-    from ...hparams import (
-        DataArguments,
-        FinetuningArguments,
-        ModelArguments,
-    )
+    from ...hparams import DataArguments, FinetuningArguments, ModelArguments
 
 
 def run_rm(

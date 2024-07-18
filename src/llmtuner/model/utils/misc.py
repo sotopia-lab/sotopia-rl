@@ -6,11 +6,7 @@ from ...extras.logging import get_logger
 from .quantization import QuantizationMethod
 
 if TYPE_CHECKING:
-    from transformers import (
-        PretrainedConfig,
-        PreTrainedModel,
-        PreTrainedTokenizer,
-    )
+    from transformers import PretrainedConfig, PreTrainedModel, PreTrainedTokenizer
 
 
 logger = get_logger(__name__)

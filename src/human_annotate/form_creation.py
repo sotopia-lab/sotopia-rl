@@ -4,9 +4,7 @@ import re
 from copy import deepcopy
 from typing import Any, Dict, List
 
-from src.human_annotate.google_form_apis import (
-    authenticate_google_services,
-)
+from src.human_annotate.google_form_apis import authenticate_google_services
 
 GoogleResource = Any
 

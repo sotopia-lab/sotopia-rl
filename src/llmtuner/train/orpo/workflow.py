@@ -2,11 +2,7 @@
 
 from typing import TYPE_CHECKING, List, Optional
 
-from ...data import (
-    PairwiseDataCollatorWithPadding,
-    get_dataset,
-    split_dataset,
-)
+from ...data import PairwiseDataCollatorWithPadding, get_dataset, split_dataset
 from ...extras.constants import IGNORE_INDEX
 from ...extras.ploting import plot_loss
 from ...hparams import ModelArguments

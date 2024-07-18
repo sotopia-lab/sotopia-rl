@@ -1,6 +1,6 @@
 # Contents of stubs/oauth2client/service_account/__init__.pyi
 
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 class ServiceAccountCredentials:
     def __init__(
