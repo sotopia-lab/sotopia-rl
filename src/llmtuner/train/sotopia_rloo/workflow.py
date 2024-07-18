@@ -10,7 +10,7 @@ from ...extras.misc import fix_valuehead_checkpoint
 from ...extras.ploting import plot_loss
 from ...model import load_model, load_tokenizer
 from ..utils import create_ref_model, create_reward_model
-from .trainer import CustomPPOTrainer
+from .trainer import CustomRLOOTrainer
 
 if TYPE_CHECKING:
     from transformers import Seq2SeqTrainingArguments, TrainerCallback
@@ -23,7 +23,7 @@ if TYPE_CHECKING:
     )
 
 
-def run_rloo(
+def run_sotopia_rloo(
     model_args: "ModelArguments",
     data_args: "DataArguments",
     training_args: "Seq2SeqTrainingArguments",

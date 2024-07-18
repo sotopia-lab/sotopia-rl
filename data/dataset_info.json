@@ -478,5 +478,13 @@
         "query": "input",
         "response": "output"
     }
+  },
+  "sotopia_pi_gpt4_rloo": {
+    "file_name": "sotopia_pi_gpt4_rloo.json",
+    "columns": {
+        "prompt": "instruction",
+        "query": "input",
+        "response": "output"
+    }
   }
 }

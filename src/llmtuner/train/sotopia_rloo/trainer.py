@@ -11,8 +11,9 @@ from transformers.optimization import get_scheduler
 from transformers.trainer_pt_utils import remove_dummy_checkpoint
 from transformers.trainer_utils import PREFIX_CHECKPOINT_DIR
 from transformers.utils import SAFE_WEIGHTS_NAME, WEIGHTS_NAME
-from trl import RLOOConfig, RLOOTrainer
-from trl.core import RLOODecorators, logprobs_from_logits
+from trl.trainer.rloo_config import RLOOConfig
+from trl.trainer.rloo_trainer import RLOOTrainer
+from trl.core import logprobs_from_logits
 
 from ...extras.callbacks import FixValueHeadModelCallback, LogCallback
 from ...extras.logging import get_logger
@@ -529,7 +530,6 @@ class CustomRLOOTrainer(RLOOTrainer, Trainer):
 
         return rewards
 
-    @RLOODecorators.empty_device_cache()
     def batched_forward_pass(
         self,
         model: "AutoModelForCausalLMWithValueHead",

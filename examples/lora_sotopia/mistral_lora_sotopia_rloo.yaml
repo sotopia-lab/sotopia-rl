@@ -1,0 +1,38 @@
+# model
+model_name_or_path: ../Mistral-7B-Instruct-v0.3
+
+# method
+stage: sotopia_rloo
+do_train: true
+finetuning_type: lora
+lora_target: q_proj,v_proj
+
+# dataset
+dataset: sotopia_pi_gpt4_rloo
+template: mistral
+cutoff_len: 4096
+max_samples: 1000000
+val_size: 0.1
+overwrite_cache: true
+preprocessing_num_workers: 16
+
+# output
+output_dir: saves/mistral-7b-instruct/lora/gpt4_rloo
+logging_steps: 10
+save_steps: 500
+plot_loss: true
+overwrite_output_dir: true
+
+# train
+per_device_train_batch_size: 1
+gradient_accumulation_steps: 4
+learning_rate: 0.0001
+num_train_epochs: 3.0
+lr_scheduler_type: cosine
+warmup_steps: 0
+fp16: true
+
+# eval
+per_device_eval_batch_size: 2
+evaluation_strategy: steps
+eval_steps: 500
