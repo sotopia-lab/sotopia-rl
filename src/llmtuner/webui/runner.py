@@ -48,7 +48,8 @@ class Runner:
     def _initialize(
         self, data: Dict["Component", Any], do_train: bool, from_preview: bool
     ) -> str:
-        get = lambda elem_id: data[self.manager.get_elem_by_id(elem_id)]
+        def get(elem_id):
+            return data[self.manager.get_elem_by_id(elem_id)]
         lang, model_name, model_path = (
             get("top.lang"),
             get("top.model_name"),
@@ -99,7 +100,8 @@ class Runner:
     def _parse_train_args(
         self, data: Dict["Component", Any]
     ) -> Dict[str, Any]:
-        get = lambda elem_id: data[self.manager.get_elem_by_id(elem_id)]
+        def get(elem_id):
+            return data[self.manager.get_elem_by_id(elem_id)]
         user_config = load_config()
 
         if get("top.adapter_path"):
@@ -233,7 +235,8 @@ class Runner:
         return args
 
     def _parse_eval_args(self, data: Dict["Component", Any]) -> Dict[str, Any]:
-        get = lambda elem_id: data[self.manager.get_elem_by_id(elem_id)]
+        def get(elem_id):
+            return data[self.manager.get_elem_by_id(elem_id)]
         user_config = load_config()
 
         if get("top.adapter_path"):
@@ -352,9 +355,10 @@ class Runner:
         self.aborted = False
         self.running = True
 
-        get = lambda elem_id: self.running_data[
-            self.manager.get_elem_by_id(elem_id)
-        ]
+        # change it to a function
+        def get(elem_id):
+            return self.running_data[self.manager.get_elem_by_id(elem_id)]
+
         lang = get("top.lang")
         model_name = get("top.model_name")
         finetuning_type = get("top.finetuning_type")

@@ -5,7 +5,7 @@ import jsonlines
 
 def calc_reward(utter_attrib: str | float, goal_score: float) -> float:
     global fail_count, total_count
-    if type(utter_attrib) == float and utter_attrib == -1:
+    if type(utter_attrib) is float and utter_attrib == -1:
         return 0
     if utter_attrib == "YES":
         return goal_score
