@@ -1,13 +1,6 @@
 import json
 import uuid
-from typing import (
-    TYPE_CHECKING,
-    AsyncGenerator,
-    Dict,
-    List,
-    Optional,
-    Tuple,
-)
+from typing import TYPE_CHECKING, AsyncGenerator, Dict, List, Optional, Tuple
 
 from ..data import Role as DataRole
 from ..extras.packages import is_fastapi_availble

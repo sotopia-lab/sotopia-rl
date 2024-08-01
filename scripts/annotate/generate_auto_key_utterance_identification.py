@@ -3,18 +3,15 @@ import sys
 sys.path.append("../../")
 import argparse
 
-from src.human_annotate.form_response_retrieval import (
-    get_episodes_from_form_ids,
-    retrieve_responses,
-)
-from src.prompting.key_utterance_prompting import (
-    generate_key_utterance_recognition,
-)
-from src.utils.preprocess import add_score
+from src.prompting.key_utterance_prompting import generate_key_utterance_recognition
 
 
-def main(data_dir: str, llm_name: str, input_file: str, output_file: str) -> None:
-    generate_key_utterance_recognition(data_dir, llm_name, input_file, output_file)
+def main(
+    data_dir: str, llm_name: str, input_file: str, output_file: str
+) -> None:
+    generate_key_utterance_recognition(
+        data_dir, llm_name, input_file, output_file
+    )
 
 
 if __name__ == "__main__":

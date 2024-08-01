@@ -4,10 +4,7 @@ from typing import Any, Dict, List
 
 from tqdm import tqdm
 
-from src.human_annotate.google_form_apis import (
-    get_form,
-    get_form_responses,
-)
+from src.human_annotate.google_form_apis import get_form, get_form_responses
 
 from ..utils.preprocess import extract_goal_scores
 
@@ -125,5 +122,5 @@ def add_responses_to_sheet(
                     print(log[i]["attributed_utterances"][key][3])
             else:
                 print("  No question item found")
-        print(f"Updated log")
+        print("Updated log")
     return log

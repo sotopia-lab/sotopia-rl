@@ -81,12 +81,7 @@ if __name__ == "__main__":
     spearman_corr, _ = spearmanr(human_scores, prompt_scores)
 
     # calculate the Recall / Precision / F1
-    from sklearn.metrics import (
-        accuracy_score,
-        f1_score,
-        precision_score,
-        recall_score,
-    )
+    from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 
     accuracy = accuracy_score(human_scores, prompt_scores)
     precision = precision_score(human_scores, prompt_scores)

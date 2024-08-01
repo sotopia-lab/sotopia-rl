@@ -4,12 +4,7 @@ from transformers.trainer_utils import SchedulerType
 
 from ...extras.constants import TRAINING_STAGES
 from ...extras.packages import is_gradio_available
-from ..common import (
-    DEFAULT_DATA_DIR,
-    autoset_packing,
-    list_adapters,
-    list_dataset,
-)
+from ..common import DEFAULT_DATA_DIR, autoset_packing, list_adapters, list_dataset
 from ..components.data import create_preview_box
 
 if is_gradio_available():

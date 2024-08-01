@@ -2,17 +2,7 @@ import json
 import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import (
-    Any,
-    Dict,
-    List,
-    Literal,
-    Optional,
-    Sequence,
-    Set,
-    Tuple,
-    Union,
-)
+from typing import Any, Dict, List, Literal, Optional, Sequence, Set, Tuple, Union
 
 SLOTS = Sequence[Union[str, Set[str], Dict[str, str]]]
 

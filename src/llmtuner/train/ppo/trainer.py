@@ -6,12 +6,7 @@ from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
 
 import torch
 from tqdm import tqdm
-from transformers import (
-    GenerationConfig,
-    Trainer,
-    TrainerControl,
-    TrainerState,
-)
+from transformers import GenerationConfig, Trainer, TrainerControl, TrainerState
 from transformers.optimization import get_scheduler
 from transformers.trainer_pt_utils import remove_dummy_checkpoint
 from transformers.trainer_utils import PREFIX_CHECKPOINT_DIR
@@ -45,11 +40,7 @@ if TYPE_CHECKING:
     )
     from trl import AutoModelForCausalLMWithValueHead
 
-    from ...hparams import (
-        FinetuningArguments,
-        GeneratingArguments,
-        ModelArguments,
-    )
+    from ...hparams import FinetuningArguments, GeneratingArguments, ModelArguments
 
 
 logger = get_logger(__name__)

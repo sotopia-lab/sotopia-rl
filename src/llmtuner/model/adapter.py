@@ -1,22 +1,13 @@
 from typing import TYPE_CHECKING
 
 import torch
-from peft import (
-    LoraConfig,
-    LoraModel,
-    PeftModel,
-    TaskType,
-    get_peft_model,
-)
+from peft import LoraConfig, LoraModel, PeftModel, TaskType, get_peft_model
 from transformers.integrations import is_deepspeed_zero3_enabled
 
 from ..extras.logging import get_logger
 from .utils.misc import find_all_linear_modules, find_expanded_modules
 from .utils.quantization import QuantizationMethod
-from .utils.unsloth import (
-    get_unsloth_peft_model,
-    load_unsloth_peft_model,
-)
+from .utils.unsloth import get_unsloth_peft_model, load_unsloth_peft_model
 
 if TYPE_CHECKING:
     from transformers import PretrainedConfig, PreTrainedModel

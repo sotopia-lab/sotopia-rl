@@ -6,10 +6,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from yaml import safe_dump
 
 from ..extras.constants import RUNNING_LOG, TRAINER_CONFIG, TRAINER_LOG
-from ..extras.packages import (
-    is_gradio_available,
-    is_matplotlib_available,
-)
+from ..extras.packages import is_gradio_available, is_matplotlib_available
 from ..extras.ploting import gen_loss_plot
 from .locales import ALERTS
 

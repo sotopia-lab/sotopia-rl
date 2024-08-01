@@ -1,8 +1,7 @@
 import json
 import os
 import re
-from collections import OrderedDict, Counter
-from pprint import pprint
+from collections import Counter, OrderedDict
 from typing import Any, Dict, List, Tuple
 
 import jsonlines
@@ -80,7 +79,7 @@ def generate_single_attribution_prompt(
 ) -> Tuple[str, Dict[str, List[Any]]]:
     """Generate a single prompt for GPT based on the entire conversation, agent's goals, and final goal achieving score."""
     prompt = f"{PRELOGUE_INSTRUCTIONS}\n\n"
-    prompt += f"Conversation between two agents:\n\n"
+    prompt += "Conversation between two agents:\n\n"
     prompt += f"Agent for Evaluation: {agent}\n\n"
     prompt += f"Agent Goal: {goal}\n\n"
     prompt += f"Final goal achieving score: {score}\n\n"
@@ -137,24 +136,30 @@ def generate_reward_attribution(
 ) -> None:
     with jsonlines.open(os.path.join(data_dir, input_file), "r") as reader:
         data = list(reader)
-    
-    with jsonlines.open(
-        os.path.join(data_dir, output_file), "r"
-    ) as reader:
+
+    with jsonlines.open(os.path.join(data_dir, output_file), "r") as reader:
         finished_episodes = list(reader)
-    
-    finished_episode_ids = Counter([episode["episode_id"] for episode in finished_episodes])
+
+    finished_episode_ids = Counter(
+        [episode["episode_id"] for episode in finished_episodes]
+    )
     print(len(data))
     results = finished_episodes
     for episode in tqdm(data):
-        if episode["episode_id"] in finished_episode_ids and finished_episode_ids[episode["episode_id"]] > 1:
+        if (
+            episode["episode_id"] in finished_episode_ids
+            and finished_episode_ids[episode["episode_id"]] > 1
+        ):
             print(f"finished episode {episode['episode_id']}")
             continue
-        elif episode["episode_id"] in finished_episode_ids and finished_episode_ids[episode["episode_id"]] == 1:
-            results.pop() # rerun the unfinished episode pair
+        elif (
+            episode["episode_id"] in finished_episode_ids
+            and finished_episode_ids[episode["episode_id"]] == 1
+        ):
+            results.pop()  # rerun the unfinished episode pair
             finished_episode_ids[episode["episode_id"]] -= 1
             print(f"rerun episode {episode['episode_id']}")
-        
+
         # starting from here
         conversation, goals = parse_conversation(episode)
         agents = list(goals.keys())

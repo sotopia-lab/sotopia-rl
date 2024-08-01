@@ -15,6 +15,7 @@ from .pt import run_pt
 from .rm import run_rm
 from .sft import run_sft
 from .sotopia_rm import run_sotopia_rm
+from .sotopia_sft import run_sotopia_sft
 
 if TYPE_CHECKING:
     from transformers import TrainerCallback
@@ -42,6 +43,15 @@ def run_exp(
         )
     elif finetuning_args.stage == "sft":
         run_sft(
+            model_args,
+            data_args,
+            training_args,
+            finetuning_args,
+            generating_args,
+            callbacks,
+        )
+    elif finetuning_args.stage == "sotopia_sft":
+        run_sotopia_sft(
             model_args,
             data_args,
             training_args,

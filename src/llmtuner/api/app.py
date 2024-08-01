@@ -26,10 +26,7 @@ from .protocol import (
 if is_fastapi_availble():
     from fastapi import Depends, FastAPI, HTTPException, status
     from fastapi.middleware.cors import CORSMiddleware
-    from fastapi.security.http import (
-        HTTPAuthorizationCredentials,
-        HTTPBearer,
-    )
+    from fastapi.security.http import HTTPAuthorizationCredentials, HTTPBearer
 
 
 if is_starlette_available():

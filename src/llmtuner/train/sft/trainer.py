@@ -1,31 +1,18 @@
 import json
-import math
 import os
-import sys
 from types import MethodType
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Dict,
-    List,
-    Optional,
-    Tuple,
-    Union,
-)
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import torch
-from tqdm import tqdm
 from transformers import Seq2SeqTrainer
 
 from ...extras.constants import IGNORE_INDEX
 from ...extras.logging import get_logger
-from ...extras.misc import AverageMeter
 from ..utils import create_custom_optimzer, create_custom_scheduler
 
 if TYPE_CHECKING:
     from transformers.trainer import PredictionOutput
-    from trl import AutoModelForCausalLMWithValueHead
 
     from ...hparams import FinetuningArguments
 
@@ -49,46 +36,6 @@ class CustomSeq2SeqTrainer(Seq2SeqTrainer):
             self.accelerator.clip_grad_norm_ = MethodType(
                 clip_grad_norm_for_sparse_tensor, self.accelerator
             )
-
-    def reward_train(
-        self, resume_from_checkpoint: Optional[str] = None
-    ) -> None:
-        total_train_batch_size = (
-            self.args.per_device_train_batch_size
-            * self.args.gradient_accumulation_steps
-            * self.finetuning_args.ppo_buffer_size
-            * self.args.world_size
-        )
-        if self.args.max_steps > 0:
-            num_examples = total_train_batch_size * self.args.max_steps
-            num_train_epochs = sys.maxsize
-            max_steps = self.args.max_steps
-            steps_in_epoch = self.args.max_steps
-        else:
-            len_dataloader = len(self.dataloader)
-            num_examples = len(self.dataset)
-            num_train_epochs = self.args.num_train_epochs
-            max_steps = math.ceil(num_train_epochs * len_dataloader)
-            steps_in_epoch = len_dataloader
-
-        unwrapped_model: "AutoModelForCausalLMWithValueHead" = (
-            self.accelerator.unwrap_model(self.model)
-        )
-        import pdb
-
-        pdb.set_trace()
-        dataiter = iter(self.dataloader)
-        loss_meter = AverageMeter()
-        reward_meter = AverageMeter()
-        for step in tqdm(
-            range(max_steps), disable=not self.is_local_process_zero()
-        ):
-            try:
-                batch = next(dataiter)
-            except StopIteration:
-                dataiter = iter(self.dataloader)
-                batch = next(dataiter)
-        return
 
     def create_optimizer(self) -> "torch.optim.Optimizer":
         if self.optimizer is None:

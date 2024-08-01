@@ -1,19 +1,10 @@
-import re
-import os
-from typing import TypeVar, Tuple
-from functools import cache
 import logging
+import os
+import re
+from functools import cache
+from typing import Tuple, TypeVar
 
 import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
-from transformers import (
-    AutoModelForCausalLM,
-    AutoTokenizer,
-    BitsAndBytesConfig,
-)
-from peft import PeftModel # type: ignore[attr-defined]
-from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
-from langchain_community.chat_models import ChatLiteLLM
 from langchain.chains import LLMChain
 from langchain.output_parsers import PydanticOutputParser
 from langchain.prompts import (
@@ -21,13 +12,22 @@ from langchain.prompts import (
     HumanMessagePromptTemplate,
     PromptTemplate,
 )
-from langchain.schema import BaseOutputParser, OutputParserException
+from langchain.schema import BaseOutputParser
+from langchain_community.chat_models import ChatLiteLLM
+from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
+from peft import PeftModel  # type: ignore[attr-defined]
+from transformers import (
+    AutoModelForCausalLM,
+    AutoTokenizer,
+    BitsAndBytesConfig,
+    pipeline,
+)
 
+from .langchain_callback_handler import LoggingCallbackHandler
 from .message_classes import ActionType, AgentAction
 from .sotopia_utils import format_docstring
-from .langchain_callback_handler import LoggingCallbackHandler
 
-HF_TOKEN_KEY_FILE="./hf_token.key"
+HF_TOKEN_KEY_FILE = "./hf_token.key"
 if os.path.exists(HF_TOKEN_KEY_FILE):
     with open(HF_TOKEN_KEY_FILE, "r") as f:
         os.environ["HF_TOKEN"] = f.read().strip()
@@ -35,6 +35,7 @@ if os.path.exists(HF_TOKEN_KEY_FILE):
 OutputType = TypeVar("OutputType", bound=object)
 log = logging.getLogger("generate")
 logging_handler = LoggingCallbackHandler("langchain")
+
 
 def generate_action(
     model_name: str,
@@ -48,7 +49,7 @@ def generate_action(
     Using langchain to generate an example episode
     """
     # try:
-        # Normal case, model as agent
+    # Normal case, model as agent
     template = """
         Imagine you are {agent}, your task is to act/speak as {agent} would, keeping in mind {agent}'s social goal.
         You can find {agent}'s goal (or background) in the 'Here is the context of the interaction' field.
@@ -77,47 +78,57 @@ def generate_action(
         temperature=temperature,
     )
 
+
 @cache
-def prepare_model(model_name: str) -> Tuple[AutoModelForCausalLM, AutoTokenizer]:
+def prepare_model(
+    model_name: str,
+) -> Tuple[AutoModelForCausalLM, AutoTokenizer]:
     compute_type = torch.float16
-    
-    if model_name == 'cmu-lti/sotopia-pi-mistral-7b-BC_SR':
-        tokenizer = AutoTokenizer.from_pretrained("mistralai/Mistral-7B-Instruct-v0.1", model_max_length=4096)
+
+    if model_name == "cmu-lti/sotopia-pi-mistral-7b-BC_SR":
+        tokenizer = AutoTokenizer.from_pretrained(
+            "mistralai/Mistral-7B-Instruct-v0.1", model_max_length=4096
+        )
         model = AutoModelForCausalLM.from_pretrained(
-        "mistralai/Mistral-7B-Instruct-v0.1",
-        cache_dir="./.cache",
-        device_map='cuda'
+            "mistralai/Mistral-7B-Instruct-v0.1",
+            cache_dir="./.cache",
+            device_map="cuda",
         )
         model = PeftModel.from_pretrained(model, model_name).to("cuda")
-        
-    elif model_name == 'cmu-lti/sotopia-pi-mistral-7b-BC_SR_4bit':
-        tokenizer = AutoTokenizer.from_pretrained("mistralai/Mistral-7B-Instruct-v0.1", model_max_length=4096)
+
+    elif model_name == "cmu-lti/sotopia-pi-mistral-7b-BC_SR_4bit":
+        tokenizer = AutoTokenizer.from_pretrained(
+            "mistralai/Mistral-7B-Instruct-v0.1", model_max_length=4096
+        )
         model = AutoModelForCausalLM.from_pretrained(
-        "mistralai/Mistral-7B-Instruct-v0.1",
-        cache_dir="./.cache",
-        device_map='cuda',
-        quantization_config=BitsAndBytesConfig(
-            load_in_4bit=True,
-            bnb_4bit_use_double_quant=True,
-            bnb_4bit_quant_type="nf4",
-            bnb_4bit_compute_dtype=compute_type,
-            )
+            "mistralai/Mistral-7B-Instruct-v0.1",
+            cache_dir="./.cache",
+            device_map="cuda",
+            quantization_config=BitsAndBytesConfig(
+                load_in_4bit=True,
+                bnb_4bit_use_double_quant=True,
+                bnb_4bit_quant_type="nf4",
+                bnb_4bit_compute_dtype=compute_type,
+            ),
         )
         model = PeftModel.from_pretrained(model, model_name[0:-5]).to("cuda")
-    
-    elif model_name == 'mistralai/Mistral-7B-Instruct-v0.1':
-        tokenizer = AutoTokenizer.from_pretrained("mistralai/Mistral-7B-Instruct-v0.1", model_max_length=4096)
+
+    elif model_name == "mistralai/Mistral-7B-Instruct-v0.1":
+        tokenizer = AutoTokenizer.from_pretrained(
+            "mistralai/Mistral-7B-Instruct-v0.1", model_max_length=4096
+        )
         tokenizer.model_max_length = 4096
         model = AutoModelForCausalLM.from_pretrained(
-        "mistralai/Mistral-7B-Instruct-v0.1",
-        cache_dir="./.cache",
-        # device_map='cuda'
+            "mistralai/Mistral-7B-Instruct-v0.1",
+            cache_dir="./.cache",
+            # device_map='cuda'
         )
-        
+
     else:
         raise RuntimeError(f"Model {model_name} not supported")
-    
+
     return model, tokenizer
+
 
 def obtain_chain_hf(
     model_name: str,
@@ -125,25 +136,32 @@ def obtain_chain_hf(
     input_variables: list[str],
     temperature: float = 0.7,
     max_retries: int = 6,
-    max_tokens: int = 2700
+    max_tokens: int = 2700,
 ) -> LLMChain:
     human_message_prompt = HumanMessagePromptTemplate(
-        prompt=PromptTemplate(template="[INST] " + template + " [/INST]", input_variables=input_variables)
+        prompt=PromptTemplate(
+            template="[INST] " + template + " [/INST]",
+            input_variables=input_variables,
+        )
     )
-    chat_prompt_template = ChatPromptTemplate.from_messages([human_message_prompt])
+    chat_prompt_template = ChatPromptTemplate.from_messages(
+        [human_message_prompt]
+    )
     model, tokenizer = prepare_model(model_name)
-    pipe = pipeline("text-generation", 
-                    model=model, 
-                    tokenizer=tokenizer, 
-                    max_new_tokens=100, 
-                    temperature=temperature, 
-                    return_full_text=False, 
-                    do_sample=True,
-                    num_beams=3,
-                    )
+    pipe = pipeline(
+        "text-generation",
+        model=model,
+        tokenizer=tokenizer,
+        max_new_tokens=100,
+        temperature=temperature,
+        return_full_text=False,
+        do_sample=True,
+        num_beams=3,
+    )
     hf = HuggingFacePipeline(pipeline=pipe)
     chain = LLMChain(llm=hf, prompt=chat_prompt_template)
     return chain
+
 
 def generate(
     model_name: str,
@@ -153,15 +171,18 @@ def generate(
     temperature: float = 0.7,
 ) -> Tuple[str, OutputType]:
     input_variables = re.findall(r"{(.*?)}", template)
-    assert (
-        set(input_variables) == set(list(input_values.keys()) + ["format_instructions"])
-        or set(input_variables) == set(list(input_values.keys()))
+    assert set(input_variables) == set(
+        list(input_values.keys()) + ["format_instructions"]
+    ) or set(input_variables) == set(
+        list(input_values.keys())
     ), f"The variables in the template must match input_values except for format_instructions. Got {sorted(input_values.keys())}, expect {sorted(input_variables)}"
     # process template
     template = format_docstring(template)
     chain = obtain_chain(model_name, template, input_variables, temperature)
     if "format_instructions" not in input_values:
-        input_values["format_instructions"] = output_parser.get_format_instructions()
+        input_values[
+            "format_instructions"
+        ] = output_parser.get_format_instructions()
     result = chain.predict([logging_handler], **input_values)
     prompt = logging_handler.retrive_prompt()
     # print(f"Prompt:\n {prompt}")
@@ -182,6 +203,7 @@ def generate(
         parsed_result = output_parser.parse(reformat_parsed_result)
     log.info(f"Generated result: {parsed_result}")
     return prompt, parsed_result
+
 
 def format_bad_output(
     ill_formed_output: str,
@@ -209,6 +231,7 @@ def format_bad_output(
     log.info(f"Reformated output: {reformat}")
     return reformat
 
+
 def obtain_chain(
     model_name: str,
     template: str,
@@ -219,7 +242,11 @@ def obtain_chain(
     """
     Using langchain to sample profiles for participants
     """
-    if model_name in ["cmu-lti/sotopia-pi-mistral-7b-BC_SR", "cmu-lti/sotopia-pi-mistral-7b-BC_SR_4bit", "mistralai/Mistral-7B-Instruct-v0.1"]:
+    if model_name in [
+        "cmu-lti/sotopia-pi-mistral-7b-BC_SR",
+        "cmu-lti/sotopia-pi-mistral-7b-BC_SR_4bit",
+        "mistralai/Mistral-7B-Instruct-v0.1",
+    ]:
         return obtain_chain_hf(
             model_name=model_name,
             template=template,
@@ -227,7 +254,7 @@ def obtain_chain(
             temperature=temperature,
             max_retries=max_retries,
         )
-    
+
     model_name = _return_fixed_model_version(model_name)
     chat = ChatLiteLLM(
         model=model_name,
@@ -237,11 +264,16 @@ def obtain_chain(
         client=None,
     )
     human_message_prompt = HumanMessagePromptTemplate(
-        prompt=PromptTemplate(template=template, input_variables=input_variables)
+        prompt=PromptTemplate(
+            template=template, input_variables=input_variables
+        )
     )
-    chat_prompt_template = ChatPromptTemplate.from_messages([human_message_prompt])
+    chat_prompt_template = ChatPromptTemplate.from_messages(
+        [human_message_prompt]
+    )
     chain = LLMChain(llm=chat, prompt=chat_prompt_template)
     return chain
+
 
 def _return_fixed_model_version(model_name: str) -> str:
     model_version_map = {
@@ -250,4 +282,8 @@ def _return_fixed_model_version(model_name: str) -> str:
         "gpt-4-turbo": "gpt-4-turbo",
         "gpt-4o": "gpt-4o",
     }
-    return model_version_map[model_name] if model_name in model_version_map else model_name
+    return (
+        model_version_map[model_name]
+        if model_name in model_version_map
+        else model_name
+    )
