@@ -1,5 +1,5 @@
 ### model
-model_name_or_path: meta-llama/Meta-Llama-3-8B-Instruct
+model_name_or_path: meta-llama/Meta-Llama-3-8B
 reward_model: saves/llama3-8b/lora/rm
 
 ### method
@@ -14,7 +14,7 @@ template: llama3
 cutoff_len: 1024
 max_samples: 1000
 overwrite_cache: true
-preprocessing_num_workers: 16
+preprocessing_num_workers: 1
 
 ### output
 output_dir: saves/llama3-8b/lora/ppo

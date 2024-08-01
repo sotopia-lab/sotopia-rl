@@ -65,7 +65,7 @@ class SotopiaRMTrainer(Trainer):
             **inputs, output_hidden_states=True, return_dict=True
         )
         last_indices = (inputs["attention_mask"].sum(dim=1) - 1).long()
-
+        
         # Use these indices to extract the corresponding values from 'values'
         eos_values = values[torch.arange(values.size(0)), last_indices]
 
