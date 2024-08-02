@@ -500,5 +500,8 @@
         "query": "input",
         "response": "output"
     }
+  },
+  "sotopia_pi_utterance_ppo": {
+    "file_name": "sotopia_pi_utterance_ppo.json"
   }
 }

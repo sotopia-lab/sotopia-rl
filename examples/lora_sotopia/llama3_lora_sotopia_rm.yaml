@@ -9,8 +9,8 @@ finetuning_type: lora
 lora_target: q_proj,v_proj
 
 # ddp
-ddp_timeout: 180000000
-deepspeed: examples/deepspeed/ds_z3_config.json
+# ddp_timeout: 180000000
+# deepspeed: examples/deepspeed/ds_z3_config.json
 
 # dataset
 dataset: sotopia_pi_utterance_reward_single_prompt
@@ -22,15 +22,15 @@ overwrite_cache: true
 preprocessing_num_workers: 16
 
 # output
-output_dir: saves/llama3-8b/lora/rm
+output_dir: saves/llama3-8b/lora/rm-new
 logging_steps: 10
 save_steps: 500
 plot_loss: true
 overwrite_output_dir: true
 
 # train
-per_device_train_batch_size: 4
-gradient_accumulation_steps: 2
+per_device_train_batch_size: 1
+gradient_accumulation_steps: 16
 learning_rate: 0.0001
 num_train_epochs: 3.0
 lr_scheduler_type: cosine
@@ -38,6 +38,6 @@ warmup_steps: 0
 fp16: true
 
 # eval
-per_device_eval_batch_size: 4
+per_device_eval_batch_size: 1
 evaluation_strategy: steps
-eval_steps: 20
+eval_steps: 200
