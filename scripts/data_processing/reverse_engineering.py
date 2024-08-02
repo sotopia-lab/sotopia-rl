@@ -1,7 +1,7 @@
 import argparse
 import os
 from collections import defaultdict
-from typing import Any, Dict, List, Tuple, Union, cast
+from typing import Any, Dict, List
 import transformers
 import pandas as pd
 import rich
@@ -53,7 +53,7 @@ TOKENIZER = transformers.AutoTokenizer.from_pretrained(
 )
 
 
-def to_natural_language(self) -> str:
+def to_natural_language(self: Any) -> str:
     match self.action_type:
         case "none":
             return "did nothing"
@@ -65,12 +65,13 @@ def to_natural_language(self) -> str:
             return f"[{self.action_type}] {self.argument}"
         case "leave":
             return "left the conversation"
+    return "did nothing"
 
 
 SELECTED_TAG = ["gpt-4_gpt-4_v0.0.1_clean"]
 
 
-def detect_action(msg):
+def detect_action(msg: str) -> str:
     # first detect what action type is, default at none
     if msg.startswith("said:"):
         action = "speak"
@@ -86,7 +87,7 @@ def detect_action(msg):
     return action
 
 
-def generate_result(msg):
+def generate_result(msg: str) -> str:
     action = detect_action(msg)
     result = {}
     result["action_type"] = action
@@ -106,12 +107,12 @@ def generate_result(msg):
     return str_result
 
 
-def surpass_max_token_check(string, max_token=MAX_TOKEN, tokenizer=TOKENIZER):
+def surpass_max_token_check(string: str, max_token: int=MAX_TOKEN, tokenizer: transformers.AutoTokenizer=TOKENIZER) -> int:
     prompt_tokens = len(tokenizer(string)["input_ids"])
     return max(prompt_tokens - max_token, 0)
 
 
-def truncate_prompt_to_length(dia_his, surpass_num, tokenizer=TOKENIZER):
+def truncate_prompt_to_length(dia_his: str, surpass_num: int, tokenizer: transformers.AutoTokenizer=TOKENIZER) -> str:
     # context_len = len(tokenizer(context)['input_ids'])
     dia_sen = dia_his.split("\n")
     remove_len = 0
@@ -124,10 +125,13 @@ def truncate_prompt_to_length(dia_his, surpass_num, tokenizer=TOKENIZER):
 
 
 def reverse_episode_log(
-    epilog, later_speak=False, include_format=True, max_token=MAX_TOKEN
-):
+    epilog: EpisodeLog, later_speak: bool=False, include_format: bool=True, max_token: int=MAX_TOKEN
+) -> List[Dict[str, Any]]:
     episode_msg = epilog.messages
     # per episode
+    if not epilog.models:
+        raise Exception("No models recorded in the episode log")
+    
     agent_model = epilog.models[1] if not later_speak else epilog.models[2]
     promt_template = PROMPT_TEMPLATE
 
@@ -194,7 +198,7 @@ def reverse_episode_log(
     return prompt_result_instances
 
 
-def concat_episode_msg(epilog):
+def concat_episode_msg(epilog: EpisodeLog) -> str:
     episode_msg = epilog.messages
     # per episode
 
@@ -219,7 +223,7 @@ def concat_episode_msg(epilog):
     return dial_history
 
 
-def parse_prompt_to_json(episode, dir, init_speak, include_format=False):
+def parse_prompt_to_json(episode: EpisodeLog, dir: str, init_speak: bool, include_format: bool=False) -> None:
     prompt_result_instances = reverse_episode_log(episode, init_speak, include_format)
 
     if not os.path.exists(dir):
@@ -232,7 +236,7 @@ def parse_prompt_to_json(episode, dir, init_speak, include_format=False):
             f.write(todump)
 
 
-def run_reverse_by_pk_agent(episode_pk, agent_side, save_dir):
+def run_reverse_by_pk_agent(episode_pk: str, agent_side: bool, save_dir: str) -> None:
     """
     Entry function if you want to reverse engineer given a pk, not a episode
     """
@@ -240,14 +244,3 @@ def run_reverse_by_pk_agent(episode_pk, agent_side, save_dir):
     if not episode:
         raise Exception(f"Episode {episode_pk} not found")
     parse_prompt_to_json(episode, save_dir, agent_side, False)
-
-
-def run_all_tag_reverse(filter_env_dic, dir):
-    for k, v in filter_env_dic.items():
-        cutoff = len(v) // 2
-        for i in range(len(v)):
-            episode = v[i]
-            if i < cutoff:
-                parse_prompt_to_json(episode, dir, False)
-            else:
-                parse_prompt_to_json(episode, dir, True)

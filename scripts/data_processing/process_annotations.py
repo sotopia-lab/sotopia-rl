@@ -2,6 +2,7 @@ import os
 import re
 import json
 from copy import deepcopy
+from typing import Any, Dict, List, Tuple, Union, cast
 
 from tqdm import tqdm
 
@@ -11,8 +12,7 @@ os.environ["REDIS_OM_URL"] = "redis://:QzmCUD3C3RdsR@localhost:6381"
 from reverse_engineering import run_reverse_by_pk_agent
 
 with open("../../data/sotopia_pi_openai_log_attribution.jsonl", 'r') as f:
-    data = f.readlines()
-    data = [json.loads(d) for d in data]
+    data: List[Dict[str, Any]] = [json.loads(d) for d in f.readlines()]
 
 if not os.path.exists("../../data/episode_utterances"):
     os.makedirs("../../data/episode_utterances")
