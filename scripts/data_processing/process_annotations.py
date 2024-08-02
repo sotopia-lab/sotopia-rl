@@ -73,3 +73,16 @@ for d in tqdm(attributed_data):
 
 with open("../../data/sotopia_pi_utterance_reward_single_prompt.json", 'w') as f:
     json.dump(sotopia_pi_utterance_reward, f, indent=4)
+    
+sotopia_pi_utterance_ppo = []
+for d in tqdm(attributed_data):
+    sotopia_pi_utterance_ppo.append(
+        {
+            "instruction": d['prompt'],
+            "input": "",
+            "output": d["result"],
+        }
+    )
+
+with open("../../data/sotopia_pi_utterance_ppo.json", 'w') as f:
+    json.dump(sotopia_pi_utterance_ppo, f, indent=4)
