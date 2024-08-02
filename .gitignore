@@ -11,4 +11,5 @@ __pycache__/
 saves/*
 **/*.err
 **/*.log
-**/data/*.json
+**/data/**.json
+data/episode_utterances/
