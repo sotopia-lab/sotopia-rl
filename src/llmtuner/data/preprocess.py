@@ -280,7 +280,7 @@ def preprocess_regression_dataset(
 ) -> Dict[str, List[List[int]]]:
     # build inputs with format `<bos> X Y <eos>` and labels with format `<ignore> ... <ignore> Y <eos>`
     # for multiturn examples, we only mask the prompt part in each prompt-response pair.
-    model_inputs = {"input_ids": [], "attention_mask": [], "reg_labels": []}
+    model_inputs = {"input_ids": [], "attention_mask": [], "reg_labels": [], "labels": []}
     if processor is not None:
         model_inputs["pixel_values"] = []
         preprocess_visual_inputs = partial(
@@ -319,6 +319,7 @@ def preprocess_regression_dataset(
         model_inputs["input_ids"].append(input_ids)
         model_inputs["attention_mask"].append([1] * len(input_ids))
         model_inputs["reg_labels"].append(examples["values"][i])
+        model_inputs["labels"].append([IGNORE_INDEX] * len(input_ids))
         if processor is not None:
             model_inputs["pixel_values"].append(
                 preprocess_visual_inputs(examples["images"][i])
