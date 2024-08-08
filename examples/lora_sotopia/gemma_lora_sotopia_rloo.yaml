@@ -1,0 +1,41 @@
+### model
+model_name_or_path: /dccstor/swe_haofeiyu/gemma-2-2b
+adapter_name_or_path: /dccstor/swe_haofeiyu/sotopia-rl/saves/gemma-2-2b/lora/sft/checkpoint-500
+reward_model: saves/gemma-2-2b/lora/rm/checkpoint-500
+
+### method
+stage: rloo
+do_train: true
+finetuning_type: lora
+lora_target: all
+
+### dataset
+dataset: sotopia_pi_utterance_rloo
+template: mistral
+cutoff_len: 4096
+max_samples: 1000000
+overwrite_cache: true
+preprocessing_num_workers: 1
+
+### output
+output_dir: saves/gemma-2-2b/lora/rloo
+logging_steps: 10
+save_steps: 50
+plot_loss: true
+overwrite_output_dir: true
+
+### train
+per_device_train_batch_size: 8
+gradient_accumulation_steps: 1
+learning_rate: 1.0e-5
+num_train_epochs: 3.0
+lr_scheduler_type: cosine
+warmup_ratio: 0.1
+bf16: true
+ddp_timeout: 180000000
+# deepspeed: examples/deepspeed/ds_z3_config.json
+
+### generate
+max_new_tokens: 512
+top_k: 0
+top_p: 0.9
