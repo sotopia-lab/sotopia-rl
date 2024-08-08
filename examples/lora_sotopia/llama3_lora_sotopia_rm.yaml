@@ -4,20 +4,25 @@ model_name_or_path: meta-llama/Meta-Llama-3-8B
 # method
 stage: sotopia_rm
 do_train: true
+do_eval: true
 finetuning_type: lora
 lora_target: q_proj,v_proj
 
+# ddp
+# ddp_timeout: 180000000
+# deepspeed: examples/deepspeed/ds_z3_config.json
+
 # dataset
-dataset: sotopia_pi_utterance_reward
+dataset: sotopia_pi_utterance_reward_single_prompt
 template: llama3
-cutoff_len: 1024
+cutoff_len: 4096
 max_samples: 1000000
 val_size: 0.1
 overwrite_cache: true
 preprocessing_num_workers: 16
 
 # output
-output_dir: saves/llama3-8b/lora/rm
+output_dir: saves/llama3-8b/lora/rm-new
 logging_steps: 10
 save_steps: 500
 plot_loss: true
@@ -25,7 +30,7 @@ overwrite_output_dir: true
 
 # train
 per_device_train_batch_size: 1
-gradient_accumulation_steps: 5
+gradient_accumulation_steps: 16
 learning_rate: 0.0001
 num_train_epochs: 3.0
 lr_scheduler_type: cosine
@@ -35,4 +40,4 @@ fp16: true
 # eval
 per_device_eval_batch_size: 1
 evaluation_strategy: steps
-eval_steps: 20
+eval_steps: 200
