@@ -153,6 +153,7 @@ class CustomRLOOTrainer(RLOOTrainer, Trainer):
                 "max_steps is given, it will override any value given in num_train_epochs"
             )
 
+        print(finetuning_args)
         if finetuning_args.reward_model_type == "full":
             if self.is_deepspeed_enabled:
                 if not (

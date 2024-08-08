@@ -1,5 +1,5 @@
 # model
-model_name_or_path: mistralai/Mistral-7B-Instruct-v0.1
+model_name_or_path: /dccstor/swe_haofeiyu/Mistral-7B-Instruct-v0.3
 
 # method
 stage: sotopia_rm
