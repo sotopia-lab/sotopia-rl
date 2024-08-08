@@ -45,6 +45,8 @@ def run_sotopia_rloo(
     )
 
     tokenizer.padding_side = "left"  # use left-padding in generation while using right-padding in training
+    tokenizer.padding = True
+    tokenizer.truncation = True
     data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
 
     # Create reference model and reward model
@@ -55,15 +57,15 @@ def run_sotopia_rloo(
     reward_model = create_reward_model(model, model_args, finetuning_args)
 
     # Initialize our Trainer
-    rloo_trainer = CustomPPOTrainer(
+    rloo_trainer = CustomRLOOTrainer(
         model_args=model_args,
         training_args=training_args,
         finetuning_args=finetuning_args,
         generating_args=generating_args,
         callbacks=callbacks + [FixValueHeadModelCallback()],
         model=model,
-        reward_model=reward_model,
-        ref_model=ref_model,
+        reward_model=model,
+        ref_model=model,
         tokenizer=tokenizer,
         dataset=dataset,
         data_collator=data_collator,

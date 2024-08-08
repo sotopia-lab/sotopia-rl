@@ -4,7 +4,7 @@ adapter_name_or_path: /dccstor/swe_haofeiyu/sotopia-rl/saves/gemma-2-2b/lora/sft
 reward_model: saves/gemma-2-2b/lora/rm/checkpoint-500
 
 ### method
-stage: rloo
+stage: sotopia_rloo
 do_train: true
 finetuning_type: lora
 lora_target: all

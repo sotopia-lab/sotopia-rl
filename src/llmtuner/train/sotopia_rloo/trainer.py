@@ -71,25 +71,17 @@ class CustomRLOOTrainer(RLOOTrainer, Trainer):
             * training_args.gradient_accumulation_steps
         )
         rloo_config = RLOOConfig(
-            model_name=model_args.model_name_or_path,
+            sft_model_path=model_args.model_name_or_path,
             learning_rate=training_args.learning_rate,
             mini_batch_size=training_args.per_device_train_batch_size,
-            batch_size=backward_batch_size * finetuning_args.rloo_buffer_size,
+            batch_size=backward_batch_size * finetuning_args.ppo_buffer_size,
             gradient_accumulation_steps=training_args.gradient_accumulation_steps,
-            rloo_epochs=finetuning_args.rloo_epochs,
             max_grad_norm=training_args.max_grad_norm,
             seed=training_args.seed,
-            optimize_device_cache=True,
-            target=finetuning_args.rloo_target,
-            use_score_scaling=finetuning_args.rloo_score_norm,
-            use_score_norm=finetuning_args.rloo_score_norm,
-            whiten_rewards=finetuning_args.rloo_whiten_rewards,
-            accelerator_kwargs={"step_scheduler_with_optimizer": False},
-            log_with=training_args.report_to[0]
-            if training_args.report_to
-            else None,
-            project_kwargs={"logging_dir": training_args.logging_dir},
+            whiten_rewards=finetuning_args.ppo_whiten_rewards,
+            output_dir=training_args.output_dir,
         )
+
 
         # Create optimizer and scheduler
         if training_args.max_steps > 0:
@@ -97,30 +89,33 @@ class CustomRLOOTrainer(RLOOTrainer, Trainer):
         else:
             total_train_batch_size = (
                 backward_batch_size
-                * finetuning_args.rloo_buffer_size
+                * finetuning_args.ppo_buffer_size
                 * training_args.world_size
             )
             num_training_steps = training_args.num_train_epochs * math.ceil(
                 len(dataset) / total_train_batch_size
             )
 
-        optimizer = self.create_optimizer(
-            model, training_args, finetuning_args
-        )
-        scheduler = self.create_scheduler(
-            training_args, num_training_steps, optimizer
+        
+        model.generation_config = GenerationConfig(
+            pad_token_id=tokenizer.pad_token_id,
+            eos_token_id=[tokenizer.eos_token_id]
+            + tokenizer.additional_special_tokens_ids,
+            **generating_args.to_dict(),
         )
 
         RLOOTrainer.__init__(
             self,
             config=rloo_config,
-            model=model,
-            ref_model=ref_model,
             tokenizer=tokenizer,
-            dataset=dataset,
+            policy=model,
+            ref_policy=ref_model,
+            reward_model=reward_model,
+            train_dataset=dataset,
+            eval_dataset=dataset,
             data_collator=data_collator,
-            lr_scheduler=scheduler,
         )
+        print(dataset[0])
 
         self.args = training_args
         self.model_args = model_args
@@ -195,7 +190,7 @@ class CustomRLOOTrainer(RLOOTrainer, Trainer):
         total_train_batch_size = (
             self.args.per_device_train_batch_size
             * self.args.gradient_accumulation_steps
-            * self.finetuning_args.rloo_buffer_size
+            * self.finetuning_args.ppo_buffer_size
             * self.args.world_size
         )
         if self.args.max_steps > 0:
@@ -205,7 +200,7 @@ class CustomRLOOTrainer(RLOOTrainer, Trainer):
             steps_in_epoch = self.args.max_steps
         else:
             len_dataloader = len(self.dataloader)
-            num_examples = len(self.dataset)
+            num_examples = len(self.train_dataset)
             num_train_epochs = self.args.num_train_epochs
             max_steps = math.ceil(num_train_epochs * len_dataloader)
             steps_in_epoch = len_dataloader
@@ -236,7 +231,7 @@ class CustomRLOOTrainer(RLOOTrainer, Trainer):
             )
             logger.info(
                 "  Num optimization epochs per batch = {}".format(
-                    self.finetuning_args.rloo_epochs
+                    self.finetuning_args.ppo_epochs
                 )
             )
             logger.info("  Total training steps = {}".format(max_steps))
@@ -361,55 +356,6 @@ class CustomRLOOTrainer(RLOOTrainer, Trainer):
             model=self.accelerator.unwrap_model(self.model),
         )
 
-    def create_optimizer(
-        self,
-        model: "AutoModelForCausalLMWithValueHead",
-        training_args: "Seq2SeqTrainingArguments",
-        finetuning_args: "FinetuningArguments",
-    ) -> "torch.optim.Optimizer":
-        optimizer = create_custom_optimzer(
-            model, training_args, finetuning_args
-        )
-        if optimizer is None:
-            decay_params, nodecay_params = [], []
-            decay_param_names = self.get_decay_parameter_names(model)
-            for name, param in model.named_parameters():
-                if param.requires_grad:
-                    if name in decay_param_names:
-                        decay_params.append(param)
-                    else:
-                        nodecay_params.append(param)
-
-            optim_class, optim_kwargs = Trainer.get_optimizer_cls_and_kwargs(
-                training_args
-            )
-            param_groups = [
-                dict(params=nodecay_params),
-                dict(
-                    params=decay_params,
-                    weight_decay=training_args.weight_decay,
-                ),
-            ]
-            optimizer = optim_class(param_groups, **optim_kwargs)
-
-        return optimizer
-
-    def create_scheduler(
-        self,
-        training_args: "Seq2SeqTrainingArguments",
-        num_training_steps: int,
-        optimizer: "torch.optim.Optimizer",
-    ) -> "torch.optim.lr_scheduler.LRScheduler":
-        create_custom_scheduler(training_args, num_training_steps, optimizer)
-        lr_scheduler = get_scheduler(
-            training_args.lr_scheduler_type,
-            optimizer=optimizer,
-            num_warmup_steps=training_args.get_warmup_steps(
-                num_training_steps
-            ),
-            num_training_steps=num_training_steps,
-        )
-        return lr_scheduler
 
     @torch.no_grad()
     def get_inputs(
