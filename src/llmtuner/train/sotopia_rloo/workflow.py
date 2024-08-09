@@ -34,8 +34,10 @@ def run_sotopia_rloo(
     tokenizer_module = load_tokenizer(model_args)
     tokenizer = tokenizer_module["tokenizer"]
     dataset = get_dataset(
-        model_args, data_args, training_args, stage="rloo", **tokenizer_module
+        model_args, data_args, training_args, stage="ppo", **tokenizer_module
     )
+    print(len(dataset))
+    print(dataset[0])
     model = load_model(
         tokenizer,
         model_args,
