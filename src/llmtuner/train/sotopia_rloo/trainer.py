@@ -12,8 +12,8 @@ from transformers.trainer_pt_utils import remove_dummy_checkpoint
 from transformers.trainer_utils import PREFIX_CHECKPOINT_DIR
 from transformers.utils import SAFE_WEIGHTS_NAME, WEIGHTS_NAME
 from trl.trainer.rloo_config import RLOOConfig
-from trl.trainer.rloo_trainer import RLOOTrainer
 from trl.core import logprobs_from_logits
+from .rloo_trainer import RLOOTrainer
 
 from ...extras.callbacks import FixValueHeadModelCallback, LogCallback
 from ...extras.logging import get_logger
@@ -188,7 +188,7 @@ class CustomRLOOTrainer(RLOOTrainer, Trainer):
     def rloo_train(self, resume_from_checkpoint: Optional[str] = None) -> None:
         self.train()
 
-    def save_model(self, output_dir: Optional[str] = None) -> None:
+    def save_model(self, output_dir: Optional[str] = None, _internal_call: bool = False)-> None:
         r"""
         Saves model checkpoint.
 

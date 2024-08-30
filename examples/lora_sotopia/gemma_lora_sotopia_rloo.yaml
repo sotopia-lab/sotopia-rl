@@ -1,6 +1,6 @@
 ### model
-model_name_or_path: /dccstor/swe_haofeiyu/gemma-2-2b
-adapter_name_or_path: /dccstor/swe_haofeiyu/sotopia-rl/saves/gemma-2-2b/lora/sft/checkpoint-500
+model_name_or_path: /workspace/hf_download/gemma-2-2b
+adapter_name_or_path: saves/gemma-2-2b/lora/sft/checkpoint-500
 reward_model: saves/gemma-2-2b/lora/rm/checkpoint-500
 
 ### method
@@ -12,8 +12,8 @@ lora_target: all
 ### dataset
 dataset: sotopia_pi_utterance_rloo
 template: mistral
-cutoff_len: 4096
-max_samples: 1000000
+cutoff_len: 50
+max_samples: 100
 overwrite_cache: true
 preprocessing_num_workers: 1
 
@@ -25,7 +25,7 @@ plot_loss: true
 overwrite_output_dir: true
 
 ### train
-per_device_train_batch_size: 8
+per_device_train_batch_size: 1
 gradient_accumulation_steps: 1
 learning_rate: 1.0e-5
 num_train_epochs: 3.0
