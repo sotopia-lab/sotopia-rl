@@ -267,7 +267,6 @@ def preprocess_unsupervised_dataset(
             model_inputs["pixel_values"].append(
                 preprocess_visual_inputs(examples["images"][i])
             )
-
     return model_inputs
 
 

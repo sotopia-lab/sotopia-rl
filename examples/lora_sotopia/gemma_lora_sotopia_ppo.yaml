@@ -20,12 +20,12 @@ preprocessing_num_workers: 1
 ### output
 output_dir: saves/gemma-2-2b/lora/ppo
 logging_steps: 10
-save_steps: 50
+save_steps: 10
 plot_loss: true
 overwrite_output_dir: true
 
 ### train
-per_device_train_batch_size: 8
+per_device_train_batch_size: 6
 gradient_accumulation_steps: 1
 learning_rate: 1.0e-5
 num_train_epochs: 3.0
