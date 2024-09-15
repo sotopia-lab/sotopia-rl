@@ -102,7 +102,6 @@ def _sample_env_agent_combo_and_push_to_db(env_id: str) -> None:
         ).save()
 
 
-@gin.configurable
 def _iterate_env_agent_combo_not_in_db(
     model_names: dict[str, LLM_Name],
     env_ids: list[str] = [],
@@ -164,7 +163,6 @@ def _iterate_env_agent_combo_not_in_db(
             yield env, agents
 
 
-@gin.configurable
 def run_async_server_in_batch(
     *,
     batch_size: int = 1,
