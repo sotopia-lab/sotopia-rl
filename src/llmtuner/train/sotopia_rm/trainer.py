@@ -65,7 +65,7 @@ class SotopiaRMTrainer(Trainer):
             **inputs, output_hidden_states=True, return_dict=True
         )
         last_indices = (inputs["attention_mask"].sum(dim=1) - 1).long()
-
+        
         # Use these indices to extract the corresponding values from 'values'
         eos_values = values[torch.arange(values.size(0)), last_indices]
 
@@ -73,7 +73,7 @@ class SotopiaRMTrainer(Trainer):
         loss = torch.nn.functional.mse_loss(eos_values, reg_labels)
         loss = loss / batch_size
         if return_outputs:
-            return loss, [loss, values, values]
+            return loss, [loss, eos_values, eos_values]
         return loss
 
     def save_predictions(self, predict_results: "PredictionOutput") -> None:
@@ -89,16 +89,16 @@ class SotopiaRMTrainer(Trainer):
             self.args.output_dir, "generated_predictions.jsonl"
         )
         logger.info(f"Saving prediction results to {output_prediction_file}")
-        chosen_scores, rejected_scores = predict_results.predictions
+        chosen_scores, _ = predict_results.predictions
+        # import pdb; pdb.set_trace()
 
         with open(output_prediction_file, "w", encoding="utf-8") as writer:
             res: List[str] = []
-            for c_score, r_score in zip(chosen_scores, rejected_scores):
+            for score in chosen_scores:
                 res.append(
                     json.dumps(
                         {
-                            "chosen": round(float(c_score), 2),
-                            "rejected": round(float(r_score), 2),
+                            "score": round(float(score), 2),
                         }
                     )
                 )

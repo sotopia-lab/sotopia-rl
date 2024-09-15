@@ -1,5 +1,5 @@
 # model
-model_name_or_path: mistralai/Mistral-7B-Instruct-v0.1
+model_name_or_path: /dccstor/swe_haofeiyu/Mistral-7B-Instruct-v0.3
 
 # method
 stage: sotopia_rm
@@ -35,4 +35,4 @@ fp16: true
 # eval
 per_device_eval_batch_size: 2
 evaluation_strategy: steps
-eval_steps: 500
+eval_steps: 20

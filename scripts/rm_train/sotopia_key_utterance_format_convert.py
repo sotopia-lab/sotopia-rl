@@ -73,7 +73,7 @@ if __name__ == "__main__":
                         f"{speaker} {utter[0]}\nDo you think it is a key utterance contributing to the success or failure of {agent_name}?"
                     )
                     # Create a copy of the current history excluding the last two utterances for pairing
-                    history_pairs.append(history[1:-1])
+                    history_pairs.append(history[:-1] + [""])
                     reward = calc_reward(utter[1], goal_score)
                     temp_rewards.append(reward)
                     temp_rewards = add_discounted_reward(temp_rewards)

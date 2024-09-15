@@ -110,6 +110,10 @@ class CustomPPOTrainer(PPOTrainer, Trainer):
             training_args, num_training_steps, optimizer
         )
 
+
+        print('ppo dataset')
+        print(len(dataset))
+        print(dataset[0])
         PPOTrainer.__init__(
             self,
             config=ppo_config,
