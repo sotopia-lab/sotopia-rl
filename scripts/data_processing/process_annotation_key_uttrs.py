@@ -25,9 +25,9 @@ utterance_pattern = r'Utterance (\d+) by ([A-Za-z ]+)'
 print(len(data))
 print("turning into attributed utterances")
 
-key_utter_dict = defaultdict(list)
-max_turn_dict = defaultdict(int)
-episode_id_goal_score = defaultdict(float)
+key_utter_dict: Dict[str, List[Any]] = defaultdict(list)
+max_turn_dict: Dict[str, int] = defaultdict(int)
+episode_id_goal_score: Dict[str, float] = defaultdict(float)
 
 for d in tqdm(data):
     for uttr_key, attributed_uttr in d['key_utterance_judgement'].items():
@@ -56,13 +56,13 @@ key_utter_dict = dict(key_utter_dict)
 max_turn_dict = dict(max_turn_dict)
 
 discounting_factor = 0.9
-attribution_dict = defaultdict(dict)
+attribution_dict: Dict[str, Dict[Any, Any]] = defaultdict(dict)
 
-def get_attribution_dict(hash_key: str):
+def get_attribution_dict(hash_key: str) -> None:
     episode_id, agent_name = hash_key.split("-")
-    attribution_list = [0] * (max_turn_dict[f"{episode_id}-{agent_name}"] + 1)
+    attribution_list: List[float] = [0] * (max_turn_dict[f"{episode_id}-{agent_name}"] + 1)
     for turn in sorted(key_utter_dict[f"{episode_id}-{agent_name}"]):
-        curr_reward = 1
+        curr_reward = 1.0
         for i in range(turn, -1, -1):
             attribution_list[i] += curr_reward
             curr_reward *= discounting_factor
