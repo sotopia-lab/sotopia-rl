@@ -64,14 +64,14 @@ for d in tqdm(attributed_data):
         {
             "instruction": d['prompt'],
             "input": "",
-            "output": "",
+            "output": d['result'],
             "value": calc_reward(d['attribution'], d['goal_score']),
             "system": "",
             "history": []
         }
     )
 
-with open("../../data/sotopia_pi_utterance_reward_single_prompt.json", 'w') as f:
+with open("../../data/sotopia_pi_reward_direct_prompt.json", 'w') as f:
     json.dump(sotopia_pi_utterance_reward, f, indent=4)
     
 sotopia_pi_utterance_ppo = []
