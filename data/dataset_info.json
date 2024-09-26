@@ -438,61 +438,6 @@
     },
     "folder": "python"
   },
-  "sotopia_pi_utterance_reward": {
-    "file_name": "sotopia_pi_utterance_reward.json",
-    "value": "value",
-    "columns": {
-        "prompt": "instruction",
-        "query": "input",
-        "response": "output",
-        "history": "history",
-        "system": "system"
-    }
-  },
-  "sotopia_pi_utterance_reward_single_prompt": {
-    "file_name": "sotopia_pi_utterance_reward_single_prompt.json",
-    "value": "value",
-    "columns": {
-        "prompt": "instruction",
-        "query": "input",
-        "response": "output",
-        "history": "history",
-        "system": "system"
-    }
-  },
-  "sotopia_pi_utterance_reward_toy": {
-    "file_name": "sotopia_pi_utterance_reward_toy.json",
-    "value": "value",
-    "columns": {
-        "prompt": "instruction",
-        "query": "input",
-        "response": "output",
-        "history": "history",
-        "system": "system"
-    }
-  },
-  "sotopia_pi_key_utterance_discounted_reward": {
-    "file_name": "sotopia_pi_key_utterance_discounted_reward.json",
-    "value": "value",
-    "columns": {
-        "prompt": "instruction",
-        "query": "input",
-        "response": "output",
-        "history": "history",
-        "system": "system"
-    }
-  },
-  "sotopia_pi_preference_data": {
-    "file_name": "sotopia_pi_preference_data.json",
-    "value": "value",
-    "columns": {
-        "prompt": "instruction",
-        "query": "input",
-        "response": "output",
-        "history": "history",
-        "system": "system"
-    }
-  },
   "sotopia_pi_gpt4_sft": {
     "file_name": "sotopia_pi_gpt4_sft.json",
     "columns": {
@@ -506,5 +451,38 @@
   },
   "sotopia_pi_utterance_rloo": {
     "file_name": "sotopia_pi_utterance_ppo.json"
+  },
+  "sotopia_pi_reward_baseline": {
+    "file_name": "sotopia_pi_reward_baseline.json",
+    "value": "value",
+    "columns": {
+        "prompt": "instruction",
+        "query": "input",
+        "response": "output",
+        "history": "history",
+        "system": "system"
+    }
+  },
+  "sotopia_pi_reward_direct_prompt": {
+    "file_name": "sotopia_pi_reward_direct_prompt.json",
+    "value": "value",
+    "columns": {
+        "prompt": "instruction",
+        "query": "input",
+        "response": "output",
+        "history": "history",
+        "system": "system"
+    }
+  },
+  "sotopia_pi_reward_key_utterance": {
+    "file_name": "sotopia_pi_reward_key_utterance.json",
+    "value": "value",
+    "columns": {
+        "prompt": "instruction",
+        "query": "input",
+        "response": "output",
+        "history": "history",
+        "system": "system"
+    }
   }
 }
