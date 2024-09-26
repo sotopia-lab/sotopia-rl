@@ -14,9 +14,9 @@ from .ppo import run_ppo
 from .pt import run_pt
 from .rm import run_rm
 from .sft import run_sft
+from .sotopia_rloo import run_sotopia_rloo
 from .sotopia_rm import run_sotopia_rm
 from .sotopia_sft import run_sotopia_sft
-from .sotopia_rloo import run_sotopia_rloo
 
 if TYPE_CHECKING:
     from transformers import TrainerCallback

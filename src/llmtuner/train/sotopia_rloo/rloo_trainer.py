@@ -26,8 +26,8 @@ from transformers import (
 from transformers.integrations import get_reporting_integration_callbacks
 from transformers.trainer import DEFAULT_CALLBACKS, DEFAULT_PROGRESS_CALLBACK
 from transformers.trainer_callback import CallbackHandler, PrinterCallback
-
 from trl.models.utils import unwrap_model_for_generation
+from trl.trainer.rloo_config import RLOOConfig
 from trl.trainer.utils import (
     OnlineTrainerState,
     batch_generation,
@@ -35,14 +35,11 @@ from trl.trainer.utils import (
     exact_div,
     first_true_indices,
     forward,
-    get_reward,
     prepare_deepspeed,
     print_rich_table,
+    trl_sanitze_kwargs_for_tagging,
     truncate_response,
 )
-from trl.trainer.rloo_config import RLOOConfig
-from trl.trainer.utils import trl_sanitze_kwargs_for_tagging
-
 
 INVALID_LOGPROB = 1.0
 

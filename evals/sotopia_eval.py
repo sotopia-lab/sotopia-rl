@@ -6,11 +6,8 @@ from datetime import datetime
 from logging import FileHandler
 from typing import Any, Generator, cast
 
-import gin
 from absl import flags
 from rich.logging import RichHandler
-from tqdm import tqdm
-
 from sotopia.agents import LLMAgent
 from sotopia.database import (
     AgentProfile,
@@ -27,13 +24,10 @@ from sotopia.envs.evaluators import (
 from sotopia.envs.parallel import ParallelSotopiaEnv
 from sotopia.generation_utils.generate import LLM_Name
 from sotopia.messages import AgentAction, Observation
-from sotopia.samplers import (
-    BaseSampler,
-    ConstraintBasedSampler,
-    EnvAgentCombo,
-)
+from sotopia.samplers import BaseSampler, ConstraintBasedSampler, EnvAgentCombo
 from sotopia.server import run_async_server
 from sotopia_conf.gin_utils import parse_gin_flags, run
+from tqdm import tqdm
 
 _DEFAULT_GIN_SEARCH_PATHS = [
     os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

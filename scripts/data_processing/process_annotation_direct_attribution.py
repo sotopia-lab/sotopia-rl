@@ -1,8 +1,8 @@
+import json
 import os
 import re
-import json
 from copy import deepcopy
-from typing import Any, Dict, List, Tuple, Union, cast
+from typing import Any, Dict, List
 
 from tqdm import tqdm
 
@@ -36,18 +36,18 @@ for d in tqdm(data):
             raise Exception(f"Utterance key not in correct format: {uttr_key}")
         if agent_name != d['agent']:
             continue
-        
+
         utterance_path = f"../../data/episode_utterances/{d['episode_id']}-{d['agent']}-{turn_number}.json"
         if not os.path.exists(utterance_path):
             raise Exception(f"Utterance not found: {utterance_path}")
         with open(f"../../data/episode_utterances/{d['episode_id']}-{d['agent']}-{turn_number}.json", 'r') as f:
             sotopia_utterance = json.load(f)
-        
+
         new_utterance = deepcopy(sotopia_utterance)
         new_utterance['attribution'] = attributed_uttr[1]
         new_utterance['turn_number'] = turn_number
         new_utterance['goal_score'] = d['goal_score']
-        
+
         attributed_data.append(new_utterance)
 
 
@@ -73,7 +73,7 @@ for d in tqdm(attributed_data):
 
 with open("../../data/sotopia_pi_reward_direct_prompt.json", 'w') as f:
     json.dump(sotopia_pi_utterance_reward, f, indent=4)
-    
+
 sotopia_pi_utterance_ppo = []
 for d in tqdm(attributed_data):
     sotopia_pi_utterance_ppo.append(

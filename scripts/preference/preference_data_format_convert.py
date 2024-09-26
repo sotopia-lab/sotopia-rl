@@ -1,5 +1,4 @@
 import json
-import jsonlines
 from copy import deepcopy
 
 if __name__ == "__main__":
@@ -35,8 +34,8 @@ if __name__ == "__main__":
 
         for model_name in ["gpt-3.5-turbo", "gpt-4o"]:
             model_response = data[model_name]
-            if not model_response.startswith("[action] "): 
-                formatted_response = f"Utterance {len(raw_history)} by {agent_name} said: {model_response}" 
+            if not model_response.startswith("[action] "):
+                formatted_response = f"Utterance {len(raw_history)} by {agent_name} said: {model_response}"
             else:
                 formatted_response = f"Utterance {len(raw_history)} by {agent_name} {model_response[9:]}"
             systems.append(

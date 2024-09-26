@@ -3,7 +3,6 @@ import os
 from typing import Any
 
 from absl import flags
-
 from sotopia.server import run_async_server
 
 from .gin_utils import parse_gin_flags, run
