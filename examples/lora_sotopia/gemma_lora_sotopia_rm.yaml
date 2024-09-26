@@ -1,5 +1,5 @@
 # model
-model_name_or_path: /dccstor/swe_haofeiyu/gemma-2-2b
+model_name_or_path: /workspace/sotopia-rl/gemma-2-2b
 
 # method
 stage: sotopia_rm
@@ -8,7 +8,7 @@ finetuning_type: lora
 lora_target: q_proj,v_proj
 
 # dataset
-dataset: sotopia_pi_utterance_reward
+dataset: sotopia_pi_reward_baseline
 template: mistral
 cutoff_len: 1024
 max_samples: 10000000
