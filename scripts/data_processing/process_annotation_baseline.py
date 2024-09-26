@@ -1,9 +1,9 @@
+import json
 import os
 import re
-import json
 from collections import defaultdict
 from copy import deepcopy
-from typing import Any, Dict, List, Tuple, Union, cast
+from typing import Any, Dict, List
 
 from tqdm import tqdm
 
@@ -39,7 +39,7 @@ for d in tqdm(data):
             raise Exception(f"Utterance key not in correct format: {uttr_key}")
         if agent_name != d['agent']:
             continue
-        
+
         max_turn_dict[f"{d['episode_id']}-{agent_name}"] = max(max_turn_dict[f"{d['episode_id']}-{agent_name}"], int(turn_number))
 
 max_turn_dict = dict(max_turn_dict)
@@ -54,11 +54,11 @@ def get_attribution_dict(hash_key: str) -> None:
     for i in range(max_turn_dict[f"{episode_id}-{agent_name}"], -1, -1):
         attribution_list[i] += curr_reward
         curr_reward *= discounting_factor
-    
+
     # normalize the attribution
     max_attribution = max(attribution_list)
     attribution_list = [a / max_attribution for a in attribution_list]
-    
+
     turn_reward_dict = {}
     for i in range(0, len(attribution_list)):
         turn_reward_dict[i] = attribution_list[i]
@@ -83,12 +83,12 @@ for hash_key in attribution_dict:
             raise Exception(f"Utterance not found: {utterance_path}")
         with open(f"../../data/episode_utterances/{episode_id}-{agent_name}-{turn_number}.json", 'r') as f:
             sotopia_utterance = json.load(f)
-        
+
         new_utterance = deepcopy(sotopia_utterance)
         new_utterance['attribution'] = attribution_dict[hash_key][turn_number]
         new_utterance['turn_number'] = turn_number
         new_utterance['goal_score'] = episode_id_goal_score[episode_id]
-        
+
         attributed_data.append(new_utterance)
 
 def calc_reward(utter_attrib: float, goal_score: float) -> float:

@@ -1,35 +1,15 @@
-import math
-import os
-import sys
 from types import MethodType
-from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, List, Optional
 
-import torch
-from tqdm import tqdm
 from transformers import GenerationConfig, Trainer, TrainerControl, TrainerState
-from transformers.optimization import get_scheduler
 from transformers.trainer_pt_utils import remove_dummy_checkpoint
-from transformers.trainer_utils import PREFIX_CHECKPOINT_DIR
 from transformers.utils import SAFE_WEIGHTS_NAME, WEIGHTS_NAME
 from trl.trainer.rloo_config import RLOOConfig
-from trl.core import logprobs_from_logits
-from .rloo_trainer import RLOOTrainer
 
 from ...extras.callbacks import FixValueHeadModelCallback, LogCallback
 from ...extras.logging import get_logger
-from ...extras.misc import (
-    AverageMeter,
-    count_parameters,
-    get_current_device,
-    get_logits_processor,
-)
-from ..utils import create_custom_optimzer, create_custom_scheduler
-from .utils import (
-    dump_layernorm,
-    get_rewards_from_server,
-    replace_model,
-    restore_layernorm,
-)
+from ...extras.misc import get_current_device
+from .rloo_trainer import RLOOTrainer
 
 if TYPE_CHECKING:
     from datasets import Dataset
@@ -83,20 +63,6 @@ class CustomRLOOTrainer(RLOOTrainer, Trainer):
         )
 
 
-        # Create optimizer and scheduler
-        if training_args.max_steps > 0:
-            num_training_steps = training_args.max_steps
-        else:
-            total_train_batch_size = (
-                backward_batch_size
-                * finetuning_args.ppo_buffer_size
-                * training_args.world_size
-            )
-            num_training_steps = training_args.num_train_epochs * math.ceil(
-                len(dataset) / total_train_batch_size
-            )
-
-        
         model.generation_config = GenerationConfig(
             pad_token_id=tokenizer.pad_token_id,
             eos_token_id=[tokenizer.eos_token_id]

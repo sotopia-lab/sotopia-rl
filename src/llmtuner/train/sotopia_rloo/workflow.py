@@ -9,7 +9,6 @@ from ...extras.callbacks import FixValueHeadModelCallback
 from ...extras.misc import fix_valuehead_checkpoint
 from ...extras.ploting import plot_loss
 from ...model import load_model, load_tokenizer
-from ..utils import create_ref_model, create_reward_model
 from .trainer import CustomRLOOTrainer
 
 if TYPE_CHECKING:
@@ -51,12 +50,6 @@ def run_sotopia_rloo(
     tokenizer.truncation = True
     data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
 
-    # Create reference model and reward model
-    ref_model = create_ref_model(
-        model_args, finetuning_args, add_valuehead=True
-    )
-
-    reward_model = create_reward_model(model, model_args, finetuning_args)
 
     # Initialize our Trainer
     rloo_trainer = CustomRLOOTrainer(

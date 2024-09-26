@@ -41,6 +41,8 @@ tiktoken = {version = "^0.7.0", optional = true}
 transformers_stream_generator = {version = "*", optional = true}
 modelscope = {version = "*", optional = true}
 ruff = {version = "*", optional = true}
+sotopia = {version = "^0.1.0-rc1", optional = true}
+
 
 [tool.poetry.extras]
 metrics = ["nltk", "jieba", "rouge-chinese"]
@@ -55,6 +57,7 @@ aqlm = ["aqlm"]
 qwen = ["tiktoken", "transformers_stream_generator"]
 modelscope = ["modelscope"]
 quality = ["ruff"]
+eval = ["gin-config", "sotopia"]
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "*"

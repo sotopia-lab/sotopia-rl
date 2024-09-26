@@ -1,17 +1,9 @@
-import argparse
-import os
-from collections import defaultdict
-from typing import Any, Dict, List
-import transformers
-import pandas as pd
-import rich
-from rich.console import Console
-from rich.terminal_theme import MONOKAI
-
-from sotopia.database.logs import EpisodeLog
-from sotopia.messages.message_classes import ActionType
-import numpy as np
 import json
+import os
+from typing import Any, Dict, List
+
+import transformers
+from sotopia.database.logs import EpisodeLog
 
 # PROMPT_PREFIX = "Prompt after formatting:\n"
 MAX_TOKEN = 2048  # 5000
@@ -131,7 +123,7 @@ def reverse_episode_log(
     # per episode
     if not epilog.models:
         raise Exception("No models recorded in the episode log")
-    
+
     agent_model = epilog.models[1] if not later_speak else epilog.models[2]
     promt_template = PROMPT_TEMPLATE
 
@@ -162,10 +154,10 @@ def reverse_episode_log(
                     # for the first context, we don't need \n
                     context = tpl[2]
                     dial_history += context
-            
+
             if tpl[0] == speaker and i % 2 == turn_div:
                 history.append(f"Utterance {(i - 1) // 2} by {tpl[0]} " + tpl[2])
-            
+
             if tpl[0] != "Environment" and tpl[0] != speaker and i % 2 != turn_div:
                 history.append(f"Utterance {(i - 1) // 2} by {tpl[0]} " + tpl[2])
 
@@ -194,7 +186,7 @@ def reverse_episode_log(
             turn_dic["history"] = list(history[1:])
             turn_dic["speaker"] = speaker
             prompt_result_instances.append(turn_dic)
-            
+
     return prompt_result_instances
 
 
