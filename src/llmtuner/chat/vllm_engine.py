@@ -18,7 +18,6 @@ from .base_engine import BaseEngine, Response
 if is_vllm_available():
     from vllm import AsyncEngineArgs, AsyncLLMEngine, RequestOutput, SamplingParams
     from vllm.lora.request import LoRARequest
-    from vllm.sequence import MultiModalData
 
 
 if TYPE_CHECKING:
@@ -162,18 +161,7 @@ class VllmEngine(BaseEngine):
             skip_special_tokens=True,
         )
 
-        if self.processor is not None and image is not None:
-            image_processor: "BaseImageProcessor" = getattr(
-                self.processor, "image_processor"
-            )
-            pixel_values: "torch.Tensor" = image_processor(
-                image, return_tensors="pt"
-            )["pixel_values"]
-            multi_modal_data = MultiModalData(
-                type=MultiModalData.Type.IMAGE, data=pixel_values
-            )
-        else:
-            multi_modal_data = None
+        multi_modal_data = None
 
         result_generator = self.model.generate(
             prompt=None,
