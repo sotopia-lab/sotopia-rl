@@ -1,7 +1,7 @@
 ### model
-model_name_or_path: /dccstor/swe_haofeiyu/gemma-2-2b
-adapter_name_or_path: /dccstor/swe_haofeiyu/sotopia-rl/saves/gemma-2-2b/lora/sft/checkpoint-500
-reward_model: saves/gemma-2-2b/lora/rm/checkpoint-500
+model_name_or_path: /workspace/gemma-2-2b-it
+adapter_name_or_path: /workspace/sotopia-rl/saves/gemma-2-2b/lora/sft/checkpoint-500
+reward_model: saves/gemma-2-2b/lora/rm/rm-baseline
 
 ### method
 stage: ppo
@@ -11,14 +11,14 @@ lora_target: all
 
 ### dataset
 dataset: sotopia_pi_utterance_ppo
-template: mistral
+template: gemma
 cutoff_len: 4096
 max_samples: 1000000
 overwrite_cache: true
 preprocessing_num_workers: 1
 
 ### output
-output_dir: saves/gemma-2-2b/lora/ppo
+output_dir: saves/gemma-2-2b/lora/ppo_rm_baseline
 logging_steps: 10
 save_steps: 10
 plot_loss: true

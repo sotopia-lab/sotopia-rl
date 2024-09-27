@@ -1,5 +1,5 @@
 # model
-model_name_or_path: /workspace/sotopia-rl/gemma-2-2b
+model_name_or_path: /workspace/sotopia-rl/gemma-2-2b-it
 
 # method
 stage: sotopia_rm
@@ -9,7 +9,7 @@ lora_target: q_proj,v_proj
 
 # dataset
 dataset: sotopia_pi_reward_baseline
-template: mistral
+template: gemma
 cutoff_len: 1024
 max_samples: 10000000
 val_size: 0.1
