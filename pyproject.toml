@@ -42,6 +42,7 @@ transformers_stream_generator = {version = "*", optional = true}
 modelscope = {version = "*", optional = true}
 ruff = {version = "*", optional = true}
 sotopia = {version = "^0.1.0-rc1", optional = true}
+vllm = {version = "=0.6.2", optional = true}
 
 
 [tool.poetry.extras]
