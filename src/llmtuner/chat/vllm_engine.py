@@ -21,9 +21,7 @@ if is_vllm_available():
 
 
 if TYPE_CHECKING:
-    import torch
     from numpy.typing import NDArray
-    from transformers.image_processing_utils import BaseImageProcessor
 
     from ..hparams import (
         DataArguments,
