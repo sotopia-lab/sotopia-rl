@@ -89,13 +89,13 @@ def run(main: Any) -> None:
 # ====================== Configurable Utility Functions ======================
 
 
-@gin.configurable
+@gin.configurable # type: ignore
 def bool_fn(var1: object = gin.REQUIRED) -> bool:
     """bool function to use inside gin files."""
     return bool(var1)
 
 
-@gin.configurable
+@gin.configurable # type: ignore
 def string_split_fn(
     text: str = cast(str, gin.REQUIRED),
     separator: str = cast(str, gin.REQUIRED),

@@ -7,13 +7,13 @@
     {% if (message['role'] == 'user') != (loop.index0 % 2 == 0) %}
         {{ raise_exception('Conversation roles must alternate user/assistant/user/assistant/...') }}
     {% endif %}
-    
+
     {% if message['role'] == 'assistant' %}
         {% set role = 'model' %}
     {% else %}
         {% set role = message['role'] %}
     {% endif %}
-    
+
     {{ '<start_of_turn>' + role + '\n' + message['content'] | trim + '<end_of_turn>\n' }}
 {% endfor %}
 
