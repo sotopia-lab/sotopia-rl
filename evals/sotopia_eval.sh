@@ -1,4 +1,4 @@
-CUDA_VISIBLE_DEVICES=0 python -m vllm.entrypoints.openai.api_server --model /workspace/gemma-2-2b-it --chat-template /workspace/sotopia-rl/evals/gemma-2-2b-it.jinja
+CUDA_VISIBLE_DEVICES=0 python -m vllm.entrypoints.openai.api_server --model /workspace/gemma-2-2b-it --chat-template /workspace/sotopia-rl/evals/gemma-2-2b-it.jinja 
 
 
 
