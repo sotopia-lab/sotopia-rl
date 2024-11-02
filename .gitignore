@@ -12,4 +12,6 @@ saves/*
 **/*.err
 **/*.log
 **/data/**.json
+**/wandb/*
+**/sft/*
 data/episode_utterances/
