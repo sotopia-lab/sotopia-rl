@@ -133,7 +133,6 @@ class RewardDataset(Dataset):
         
         return input_ids_padded, attention_mask, rewards
 
-
 class PPODataset(Dataset):
     def __init__(self, reward_data_path, tokenizer, template):
         self.data = self.load_reward_data(reward_data_path)
