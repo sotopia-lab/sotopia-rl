@@ -8,8 +8,8 @@ from typing import Dict, List, Literal, Tuple
 import jsonlines
 from tqdm import tqdm
 
-from src.prompting.sotopia_generate import generate_action
-from src.prompting.sotopia_utils import (
+from sotopia_rl.prompter.sotopia_generate import generate_action
+from sotopia_rl.prompter.sotopia_utils import (
     Agent,
     Environment,
     dialogue_history_prompt,

@@ -3,7 +3,7 @@ import sys
 sys.path.append("../../")
 import argparse
 
-from src.prompting.key_utterance_prompting import generate_key_utterance_recognition
+from sotopia_rl.prompting.key_utterance_prompting import generate_key_utterance_recognition
 
 
 def main(
