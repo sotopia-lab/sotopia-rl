@@ -3,7 +3,8 @@ from torch.optim import AdamW
 from torch.optim.lr_scheduler import CosineAnnealingLR, LinearLR, SequentialLR
 from torch.utils.data import DataLoader, random_split
 from torch.nn import MSELoss
-from transformers import AutoTokenizer
+from transformers import AutoTokenizer, AutoModelForCausalLM
+from peft import PeftModel, PeftModelForCausalLM
 from trl import AutoModelForCausalLMWithValueHead
 from peft import LoraConfig, get_peft_model, set_peft_model_state_dict
 from jinja2 import Environment, FileSystemLoader
@@ -21,34 +22,27 @@ class RMTrainer(Trainer):
         self.best_val_loss = float('inf')  # Initialize best validation loss
         train_dataset, eval_dataset = self.setup_dataset()
 
-        # Initialize wandb
         wandb.init(
             project=args.wandb_project, 
             name=args.wandb_run_name,
             config={k: v for k, v in vars(args).items() if isinstance(v, (int, float, str))}
         )
 
-        # Initialize model with LoRA
         peft_config = LoraConfig(
             r=args.lora_r,
             lora_alpha=args.lora_alpha,
             lora_dropout=args.lora_dropout,
             target_modules=args.target_modules.split(",")
         )
-        model = AutoModelForCausalLMWithValueHead.from_pretrained(args.model_name)
-        model = get_peft_model(model, peft_config).to(self.device)
+        model = AutoModelForCausalLM.from_pretrained(args.model_name)
+        model = PeftModelForCausalLM(model, peft_config)
+        model = AutoModelForCausalLMWithValueHead.from_pretrained(model)
         tokenizer = AutoTokenizer.from_pretrained(args.model_name)
 
+        optimizer = self.create_custom_optimzer(model, args)
+        lr_scheduler = self.create_custom_scheduler(optimizer, len(train_dataset) // args.train_batch_size)
+        
 
-        # Load LoRA checkpoint if specified
-        if args.lora_checkpoint_path:
-            self.load_lora_checkpoint(model, args.lora_checkpoint_path)
-
-        # Define optimizer and learning rate scheduler
-        optimizer = AdamW(model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
-        lr_scheduler = self.create_lr_scheduler(optimizer, len(train_dataset))
-
-        # Additional training arguments can be added here
         training_args = TrainingArguments(
             output_dir=args.checkpoint_dir,
             per_device_train_batch_size=args.train_batch_size,
@@ -64,9 +58,10 @@ class RMTrainer(Trainer):
             load_best_model_at_end=True,
             save_total_limit=10,  # Only keep the latest 3 checkpoints
             label_names=["labels"],
+            save_safetensors=False
         )
 
-        # Initialize Trainer with parent class constructor
+        
         super().__init__(
             model=model,
             args=training_args,
@@ -77,8 +72,10 @@ class RMTrainer(Trainer):
             data_collator=self.collate_fn,
             **kwargs
         )
-
         self.loss_fn = MSELoss()
+
+        if args.checkpoint_path:
+            self.load_checkpoint(args.checkpoint_path)
 
 
     def collate_fn(self, batch):
@@ -96,6 +93,7 @@ class RMTrainer(Trainer):
             "labels": labels,  # Ensure labels are present in the batch output
         }
 
+
     def setup_dataset(self):
         # Load dataset and create train/val split
         env = Environment(loader=FileSystemLoader("/".join(self.args.template_path.split("/")[:-1])))
@@ -103,11 +101,12 @@ class RMTrainer(Trainer):
         tokenizer = AutoTokenizer.from_pretrained(self.args.model_name)
         dataset = RMDataset(self.args.reward_data_path, tokenizer, template, self.args.max_length)
         
-        train_size = int(0.99 * len(dataset))
+        train_size = len(dataset) - 6
         val_size = len(dataset) - train_size
         train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
 
         return train_dataset, val_dataset
+
 
     def compute_loss(self, model, inputs, return_outputs=False, **kwargs):
         # Custom compute_loss for value head-based reward model
@@ -124,8 +123,12 @@ class RMTrainer(Trainer):
         loss = self.loss_fn(eos_values, true_rewards)
         
         return (loss, outputs) if return_outputs else loss
+        
 
-    def create_lr_scheduler(self, optimizer, steps_per_epoch):
+    def create_custom_optimzer(self, model, args):
+        return AdamW(model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
+
+    def create_custom_scheduler(self, optimizer, steps_per_epoch, **kwargs):
         warmup_scheduler = LinearLR(
             optimizer, start_factor=0.1, end_factor=1.0, total_iters=int(steps_per_epoch * self.args.warmup_epochs)
         )
@@ -135,54 +138,48 @@ class RMTrainer(Trainer):
         return SequentialLR(optimizer, schedulers=[warmup_scheduler, cosine_scheduler], milestones=[int(steps_per_epoch * self.args.warmup_epochs)])
 
     def save_model(self, output_dir=None, **kwargs):
-        # Save the LoRA model checkpoint and tokenizer
-        super().save_model(output_dir)  # This will save model, tokenizer, config, etc.
-        os.makedirs(output_dir, exist_ok=True)
-        
-        # Save LoRA-specific components (value head and LoRA parameters)
-        torch.save(self.model.v_head.state_dict(), os.path.join(output_dir, "value_head_state_dict.pt"))
-        
-        # Save LoRA parameters
-        peft_params = {
-            name: param.data 
-            for name, param in self.model.named_parameters() 
-            if 'v_head' not in name and 'lora' in name
-        }
-        torch.save(peft_params, os.path.join(output_dir, "lora_parameters.pt"))
-        
-        print(f"LoRA checkpoint saved at {output_dir}")
+        state_dict = self.model.state_dict()
+        decoder_state_dict = {}
+        v_head_state_dict = {}
+        for name, param in state_dict.items():
+            if name.startswith("v_head."):
+                v_head_state_dict[name] = param
+            else:
+                decoder_state_dict[name.replace("pretrained_model.", "")] = param
 
-    def load_lora_checkpoint(self, model, checkpoint_path):
-        # Load LoRA-specific checkpoints
-        value_head_path = os.path.join(checkpoint_path, "value_head_state_dict.pt")
+        self.model.pretrained_model.save_pretrained(
+            output_dir,
+            state_dict=decoder_state_dict or None,
+        )
+        torch.save(v_head_state_dict, os.path.join(output_dir, 'value_head.pt'))
+
+
+    def load_checkpoint(self, checkpoint_path):
+        adapter_model_path = os.path.join(checkpoint_path, 'adapter_model.safetensors')
+        if os.path.exists(adapter_model_path):
+            self.model.pretrained_model.load_adapter(checkpoint_path, adapter_name='lora')
+        else:
+            print(f"No adapter model found at {adapter_model_path}.")
+
+        value_head_path = os.path.join(checkpoint_path, 'value_head.pt')
         if os.path.exists(value_head_path):
-            model.v_head.load_state_dict(torch.load(value_head_path))
-        
-        lora_params_path = os.path.join(checkpoint_path, "lora_parameters.pt")
-        if os.path.exists(lora_params_path):
-            lora_params = torch.load(lora_params_path)
-            set_peft_model_state_dict(model, lora_params)
+            value_head_state_dict = torch.load(value_head_path, map_location=self.device)
+            self.model.v_head.load_state_dict(value_head_state_dict, strict=True)
+        else:
+            print(f"No value head state found at {value_head_path}.")
 
-        print(f"LoRA and value head checkpoint loaded from {checkpoint_path}")
+        optimizer_path = os.path.join(checkpoint_path, 'optimizer.pt')
+        if os.path.exists(optimizer_path):
+            self.optimizer.load_state_dict(torch.load(optimizer_path, map_location=self.device))
+        else:
+            print(f"No optimizer state found at {optimizer_path}.")
 
+        scheduler_path = os.path.join(checkpoint_path, 'scheduler.pt')
+        if os.path.exists(scheduler_path):
+            self.lr_scheduler.load_state_dict(torch.load(scheduler_path, map_location=self.device, weights_only=True))
+        else:
+            print(f"No scheduler state found at {scheduler_path}.")
 
-    def load_lora_checkpoint(self, checkpoint_path):
-        value_head_path = os.path.join(checkpoint_path, "value_head_state_dict.pt")
-        if os.path.exists(value_head_path):
-            self.model.v_head.load_state_dict(
-                torch.load(value_head_path)
-            )
-        
-        lora_params_path = os.path.join(checkpoint_path, "lora_parameters.pt")
-        if os.path.exists(lora_params_path):
-            lora_params = torch.load(lora_params_path)
-            
-            model_state_dict = self.model.state_dict()
-            for name, param in lora_params.items():
-                if name in model_state_dict:
-                    model_state_dict[name].copy_(param)
-            
-        print(f"LoRA and value head checkpoint loaded from {checkpoint_path}")
 
 
 if __name__ == '__main__':
@@ -214,7 +211,7 @@ if __name__ == '__main__':
 
     # Checkpoint arguments
     parser.add_argument("--checkpoint_dir", type=str, default="checkpoints", help="Directory to save the best LoRA checkpoint")
-    parser.add_argument("--lora_checkpoint_path", type=str, default=None, help="Path to load LoRA checkpoint")
+    parser.add_argument("--checkpoint_path", type=str, default=None, help="Path to load LoRA checkpoint")
 
     # Wandb arguments
     parser.add_argument("--wandb_project", type=str, default="reward-model-training", help="Wandb project name")

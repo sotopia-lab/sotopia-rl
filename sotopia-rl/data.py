@@ -132,7 +132,7 @@ class RMDataset(Dataset):
         return {
             "input_ids": tokenized_input["input_ids"].squeeze(),
             "attention_mask": tokenized_input["attention_mask"].squeeze(),
-            "labels": torch.tensor(reward_value).unsqueeze(0)  # `labels` key with reward value
+            "labels": torch.tensor(reward_value)  # `labels` key with reward value
         }
 
 
