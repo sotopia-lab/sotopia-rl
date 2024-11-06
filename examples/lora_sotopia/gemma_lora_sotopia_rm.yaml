@@ -1,5 +1,5 @@
 # model
-model_name_or_path: /workspace/sotopia-rl/gemma-2-2b-it
+model_name_or_path: /data/haofeiy2/gemma-2-2b-it
 
 # method
 stage: sotopia_rm

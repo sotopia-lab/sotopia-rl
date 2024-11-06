@@ -41,7 +41,6 @@ class RMTrainer(Trainer):
 
         optimizer = self.create_custom_optimzer(model, args)
         lr_scheduler = self.create_custom_scheduler(optimizer, len(train_dataset) // args.train_batch_size)
-        
 
         training_args = TrainingArguments(
             output_dir=args.checkpoint_dir,
@@ -101,8 +100,10 @@ class RMTrainer(Trainer):
         tokenizer = AutoTokenizer.from_pretrained(self.args.model_name)
         dataset = RMDataset(self.args.reward_data_path, tokenizer, template, self.args.max_length)
         
-        train_size = len(dataset) - 6
-        val_size = len(dataset) - train_size
+        #train_size = int(len(dataset) * 0.95)
+        train_size = 40
+        #val_size = len(dataset) - train_size
+        val_size = 10
         train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
 
         return train_dataset, val_dataset
@@ -143,7 +144,7 @@ class RMTrainer(Trainer):
         v_head_state_dict = {}
         for name, param in state_dict.items():
             if name.startswith("v_head."):
-                v_head_state_dict[name] = param
+                v_head_state_dict[name.replace("v_head.", "")] = param
             else:
                 decoder_state_dict[name.replace("pretrained_model.", "")] = param
 
@@ -152,6 +153,11 @@ class RMTrainer(Trainer):
             state_dict=decoder_state_dict or None,
         )
         torch.save(v_head_state_dict, os.path.join(output_dir, 'value_head.pt'))
+
+
+    def _load_best_model(self):
+        checkpoint_path = self.state.best_model_checkpoint
+        self.load_checkpoint(checkpoint_path)
 
 
     def load_checkpoint(self, checkpoint_path):
