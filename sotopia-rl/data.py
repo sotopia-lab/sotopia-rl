@@ -1,21 +1,11 @@
 import json
+from typing import Any, Dict
+
 import torch
-from torch.utils.data import Dataset
 from torch.nn.utils.rnn import pad_sequence
-
-
-import json
-import torch
 from torch.utils.data import Dataset
 from transformers import PreTrainedTokenizer
-from typing import Dict, Any
 
-from jinja2 import Environment, FileSystemLoader
-import torch
-from torch.utils.data import Dataset
-from transformers import PreTrainedTokenizer
-import json
-from typing import Dict, Any
 
 class SFTDataset(Dataset):
     def __init__(self, data_path: str, tokenizer: PreTrainedTokenizer, max_length: int, template):
@@ -162,7 +152,7 @@ class PPODataset(Dataset):
             ],
             add_generation_prompt=False  # Set to True if generation prompt is required
         )
-        
+
         input_ids = self.tokenizer(input_text, return_tensors="pt", padding=True, truncation=True).input_ids.squeeze()
         return input_ids
 
@@ -170,7 +160,7 @@ class PPODataset(Dataset):
         input_ids = zip(*batch)
 
         input_ids_padded = pad_sequence(input_ids, batch_first=True, padding_value=self.tokenizer.pad_token_id)
-        
+
         attention_mask = (input_ids_padded != self.tokenizer.pad_token_id).long()
-        
+
         return input_ids_padded, attention_mask

@@ -38,4 +38,3 @@ CUDA_VISIBLE_DEVICES=3 python /data/haofeiy2/sotopia-rl/sotopia-rl/train_rm.py \
 --reward_data_path /data/haofeiy2/sotopia-rl/data/sotopia_pi_reward_baseline.json \
 --template_path /data/haofeiy2/sotopia-rl/evals/gemma-2-2b-it.jinja \
 --checkpoint_dir /data/haofeiy2/sotopia-rl/saves/rm_key_utterance
-

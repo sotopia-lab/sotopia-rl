@@ -1,19 +1,19 @@
+import argparse
+import os
+
 import torch
+from jinja2 import Environment, FileSystemLoader
+from peft import LoraConfig, PeftModelForCausalLM
+from torch.nn import MSELoss
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import CosineAnnealingLR, LinearLR, SequentialLR
-from torch.utils.data import DataLoader, random_split
-from torch.nn import MSELoss
-from transformers import AutoTokenizer, AutoModelForCausalLM
-from peft import PeftModel, PeftModelForCausalLM
+from torch.utils.data import random_split
+from transformers import AutoModelForCausalLM, AutoTokenizer, Trainer, TrainingArguments
 from trl import AutoModelForCausalLMWithValueHead
-from peft import LoraConfig, get_peft_model, set_peft_model_state_dict
-from jinja2 import Environment, FileSystemLoader
-from data import RMDataset
-from tqdm import tqdm
-import os
+
 import wandb
-import argparse
-from transformers import Trainer, TrainingArguments
+from data import RMDataset
+
 
 class RMTrainer(Trainer):
     def __init__(self, args, **kwargs):
@@ -23,7 +23,7 @@ class RMTrainer(Trainer):
         train_dataset, eval_dataset = self.setup_dataset()
 
         wandb.init(
-            project=args.wandb_project, 
+            project=args.wandb_project,
             name=args.wandb_run_name,
             config={k: v for k, v in vars(args).items() if isinstance(v, (int, float, str))}
         )
@@ -60,7 +60,7 @@ class RMTrainer(Trainer):
             save_safetensors=False
         )
 
-        
+
         super().__init__(
             model=model,
             args=training_args,
@@ -99,7 +99,7 @@ class RMTrainer(Trainer):
         template = env.get_template(self.args.template_path.split("/")[-1])
         tokenizer = AutoTokenizer.from_pretrained(self.args.model_name)
         dataset = RMDataset(self.args.reward_data_path, tokenizer, template, self.args.max_length)
-        
+
         #train_size = int(len(dataset) * 0.95)
         train_size = 40
         #val_size = len(dataset) - train_size
@@ -114,17 +114,17 @@ class RMTrainer(Trainer):
         input_ids = inputs["input_ids"].to(self.device)
         attention_masks = inputs["attention_mask"].to(self.device)
         true_rewards = inputs["labels"].to(self.device)
-        
+
         # Forward pass
         _, _, outputs = model(input_ids, attention_mask=attention_masks, return_dict=True)
-        
+
         # Compute loss using value head outputs
         last_indices = (attention_masks.sum(dim=1) - 1).long()
         eos_values = outputs[torch.arange(outputs.size(0)), last_indices]
         loss = self.loss_fn(eos_values, true_rewards)
-        
+
         return (loss, outputs) if return_outputs else loss
-        
+
 
     def create_custom_optimzer(self, model, args):
         return AdamW(model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
@@ -198,7 +198,7 @@ if __name__ == '__main__':
     parser.add_argument("--num_epochs", type=int, default=5, help="Number of training epochs")
     parser.add_argument("--reward_data_path", type=str, required=True, help="Path to the reward data file")
     parser.add_argument("--template_path", type=str, required=True, help="Path to the Jinja template file")
-    
+
     # Tokenizer max length and gradient accumulation
     parser.add_argument("--max_length", type=int, default=1024, help="Maximum length for tokenized inputs")
     parser.add_argument("--accumulation_steps", type=int, default=4, help="Number of gradient accumulation steps")

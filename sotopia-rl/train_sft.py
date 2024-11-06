@@ -1,15 +1,15 @@
-import torch
-from transformers import AutoTokenizer, Trainer, TrainingArguments
-from trl import AutoModelForCausalLMWithValueHead, SFTTrainer
-from peft import LoraConfig, get_peft_model
-from torch.utils.data import DataLoader, random_split
-from data import SFTDataset
-from jinja2 import Environment, FileSystemLoader
-import wandb
-import os
 import argparse
+import os
 
-from transformers import AutoModelForCausalLM
+import torch
+from jinja2 import Environment, FileSystemLoader
+from peft import LoraConfig, get_peft_model
+from torch.utils.data import random_split
+from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments
+from trl import SFTTrainer
+
+import wandb
+from data import SFTDataset
 
 
 class SFTTrainerWrapper:
@@ -19,7 +19,7 @@ class SFTTrainerWrapper:
 
         # Initialize wandb
         wandb.init(
-            project=args.wandb_project, 
+            project=args.wandb_project,
             name=args.wandb_run_name,
             config={k: v for k, v in vars(args).items() if isinstance(v, (int, float, str))}
         )

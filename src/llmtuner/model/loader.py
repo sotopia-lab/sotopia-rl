@@ -162,7 +162,6 @@ def load_model(
         config, model, model_args, finetuning_args, is_trainable
     )
 
-    import pdb; pdb.set_trace()
     if add_valuehead:
         model = AutoModelForCausalLMWithValueHead.from_pretrained(model)
         patch_valuehead_model(model)
