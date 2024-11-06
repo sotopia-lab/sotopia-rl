@@ -3,10 +3,10 @@ import sys
 sys.path.append("../../")
 import argparse
 
-from src.human_annotate.episode_sampling import sample_episodes
-from src.human_annotate.form_creation import create_forms
-from src.prompting.attribution_prompting import generate_reward_attribution
-from src.utils.preprocess import add_score
+from sotopia_rl.annotator.episode_sampling import sample_episodes
+from sotopia_rl.annotator.form_creation import create_forms
+from sotopia_rl.prompting.attribution_prompting import generate_reward_attribution
+from sotopia_rl.utils.preprocess import add_score
 
 
 def main(data_dir: str, llm_name: str, gcp_key: str) -> None:

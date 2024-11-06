@@ -3,11 +3,11 @@ import sys
 sys.path.append("../../")
 import argparse
 
-from src.human_annotate.form_response_retrieval import (
+from sotopia_rl.annotator.form_response_retrieval import (
     get_episodes_from_form_ids,
     retrieve_responses,
 )
-from src.prompting.attribution_prompting import generate_reward_attribution
+from sotopia_rl.prompting.attribution_prompting import generate_reward_attribution
 
 
 def main(data_dir: str, llm_name: str, gcp_key: str) -> None:

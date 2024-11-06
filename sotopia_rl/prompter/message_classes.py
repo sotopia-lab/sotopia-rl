@@ -3,7 +3,7 @@ from typing import Literal, cast
 
 from pydantic import BaseModel, Field
 
-from src.prompting.sotopia_utils import format_docstring
+from sotopia_rl.prompter.sotopia_utils import format_docstring
 
 ActionType = Literal[
     "none", "speak", "non-verbal communication", "action", "leave"

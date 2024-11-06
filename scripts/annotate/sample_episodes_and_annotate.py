@@ -3,8 +3,8 @@ import sys
 sys.path.append("../../")
 import argparse
 
-from src.prompting.attribution_prompting import generate_reward_attribution
-from src.utils.preprocess import add_score
+from sotopia_rl.prompting.attribution_prompting import generate_reward_attribution
+from sotopia_rl.utils.preprocess import add_score
 
 
 def main(data_dir: str, llm_name: str) -> None:
