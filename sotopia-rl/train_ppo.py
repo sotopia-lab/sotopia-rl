@@ -1,15 +1,17 @@
-import torch
-from torch.optim import AdamW
-from transformers import AutoTokenizer
-from trl import AutoModelForCausalLMWithValueHead, PPOTrainer, PPOConfig
-from peft import LoraConfig, get_peft_model
-from data import PPODataset
-from jinja2 import Environment, FileSystemLoader
-from tqdm import tqdm
 import argparse
-from torch.utils.data import DataLoader
 
-class PPOTrainerWrapper:
+import torch
+from jinja2 import Environment, FileSystemLoader
+from peft import LoraConfig
+from torch.utils.data import DataLoader
+from tqdm import tqdm
+from transformers import AutoTokenizer
+from trl import AutoModelForCausalLMWithValueHead, PPOConfig, PPOTrainer
+
+from data import PPODataset
+
+
+class PPOTrainerWrapper(object):
     def __init__(self, args):
         self.args = args
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -101,5 +103,5 @@ if __name__ == '__main__':
     parser.add_argument("--target_modules", type=str, default="c_attn,q_proj,v_proj", help="Comma-separated list of target modules for LoRA")
 
     args = parser.parse_args()
-    trainer = PPOTraining(args)
+    trainer = PPOTrainerWrapper(args)
     trainer.train()
