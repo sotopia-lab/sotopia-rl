@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "sotopia-rl"
+name = "sotopia_rl"
 version = "0.0.1"
 description = "Online RL framework for sotopia social agents."
 authors = ["Haofei Yu <yuhaofei44@gmail.com>", "Zhengyang Qi <jasonqi146@gmail.com>"]
