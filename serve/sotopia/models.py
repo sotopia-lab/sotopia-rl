@@ -64,7 +64,7 @@ class RejectionSampler:
 
         value_head_path = os.path.join(checkpoint_path, 'value_head.pt')
         if os.path.exists(value_head_path):
-            value_head_state_dict = torch.load(value_head_path, map_location=self.reward_device)
+            value_head_state_dict = torch.load(value_head_path, map_location=self.reward_device, weights_only=True)
             new_value_head_state_dict = {}
             for name, param in value_head_state_dict.items():
                 if name.startswith('v_head.'):
@@ -112,9 +112,10 @@ class RejectionSampler:
             # Exclude the prompt from the decoded output to get only the generated portion
             generated_tokens = outputs[0, prompt_length:]  # Slice to keep only new tokens
             sample = self.tokenizer.decode(generated_tokens, skip_special_tokens=True)
+            full_context = self.tokenizer.decode(outputs[0], skip_special_tokens=False)
 
             # Score sample using reward model
-            score = self.evaluate_reward(sample)
+            score = self.evaluate_reward(full_context)
 
             # Update top sample if the score is the highest so far
             if score >= top_score:
