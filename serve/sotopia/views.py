@@ -1,57 +1,37 @@
-from django.shortcuts import render
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-import json
+from rest_framework.decorators import api_view
+from django.apps import apps
 import time
 import uuid
 
-@csrf_exempt
+@api_view(["POST"])
 def chat_completions(request):
-    if request.method == "POST":
-        # Parse JSON request body
-        try:
-            data = json.loads(request.body)
-        except json.JSONDecodeError:
-            return JsonResponse({"error": "Invalid JSON format"}, status=400)
-        
-        # Extract model and messages from the request body
-        model = data.get("model", "gpt-4o-mini")
-        messages = data.get("messages", [])
-        
-        # Simulate a response (replace this part with actual API call or LLM processing as needed)
-        response_content = "This is a test!"  # Stub response text
-        created_time = int(time.time())
-        completion_id = f"chatcmpl-{uuid.uuid4().hex[:6]}"
+    messages = request.data.get("messages")
+    if not messages:
+        return JsonResponse({"error": "Messages are required."}, status=400)
 
-        # Mock response structure
+    # Access the globally loaded RejectionSampler instance
+    sampler = apps.get_app_config("sotopia").rejection_sampler
+    top_response = sampler.inference(messages)
+
+    if top_response is not None:
+        # Format the response to mimic OpenAI's chat completion response
         response = {
-            "id": completion_id,
+            "id": f"chatcmpl-{uuid.uuid4().hex[:6]}",
             "object": "chat.completion",
-            "created": created_time,
-            "model": model,
-            "usage": {
-                "prompt_tokens": 13,
-                "completion_tokens": 7,
-                "total_tokens": 20,
-                "completion_tokens_details": {
-                    "reasoning_tokens": 0,
-                    "accepted_prediction_tokens": 0,
-                    "rejected_prediction_tokens": 0
-                }
-            },
+            "created": int(time.time()),
+            "model": "custom-rejection-sampler-model",
             "choices": [
                 {
                     "message": {
                         "role": "assistant",
-                        "content": response_content
+                        "content": top_response
                     },
-                    "logprobs": None,
                     "finish_reason": "stop",
                     "index": 0
                 }
             ]
         }
-
         return JsonResponse(response, status=200)
     else:
-        return JsonResponse({"error": "Invalid HTTP method"}, status=405)
+        return JsonResponse({"error": "No sample met the threshold."}, status=200)
