@@ -2,6 +2,7 @@ import argparse
 import os
 
 import torch
+import wandb
 from jinja2 import Environment, FileSystemLoader
 from peft import LoraConfig, PeftModelForCausalLM
 from torch.nn import MSELoss
@@ -11,7 +12,6 @@ from torch.utils.data import random_split
 from transformers import AutoModelForCausalLM, AutoTokenizer, Trainer, TrainingArguments
 from trl import AutoModelForCausalLMWithValueHead
 
-import wandb
 from data import RMDataset
 
 

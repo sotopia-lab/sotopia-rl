@@ -3,7 +3,6 @@ from typing import Any, Iterable, List, Tuple
 import jsonlines
 import numpy as np
 from scipy.stats import spearmanr
-
 from src.utils.correlation import fleiss_kappa
 
 

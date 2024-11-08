@@ -1,8 +1,10 @@
-from django.http import JsonResponse
-from rest_framework.decorators import api_view
-from django.apps import apps
 import time
 import uuid
+
+from django.apps import apps
+from django.http import JsonResponse
+from rest_framework.decorators import api_view
+
 
 @api_view(["POST"])
 def chat_completions(request):

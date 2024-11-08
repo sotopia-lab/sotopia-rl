@@ -1,4 +1,5 @@
 from sotopia.database.logs import EpisodeLog
+
 # find episode log by tag
 Episodes = EpisodeLog.find(EpisodeLog.tag == "sotopia_gemma-2-2b-it-sft_vs_sotopia_gemma-2-2b-it-sft-1107_v2").all()
 Episodes = EpisodeLog.find(EpisodeLog.tag == "sotopia_rejection-sampling-rm-baselin-and-sft_vs_sotopia_gemma-2-2b-it-sft-1107").all()
@@ -21,7 +22,8 @@ for episode in Episodes:
         for key, value in reward2.items():
             tot_rewards2[key] += value
         episode_num += 1
-    except:
+    except Exception as e:
+        print(e)
         pass
 
 for key in tot_rewards1:
