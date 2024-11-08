@@ -7,9 +7,9 @@ from peft import PeftConfig, get_peft_model, PeftModelForCausalLM
 import os
 
 class RejectionSampler:
-    def __init__(self, sft_model_path, reward_model_path, model_name, template_path, rejection_threshold=0.5, max_samples=5, max_length=4096):
+    def __init__(self, sft_model_path, reward_model_path, model_name, template_path, rejection_threshold=0.5, max_responses=5, max_length=4096):
         self.rejection_threshold = rejection_threshold
-        self.max_samples = max_samples
+        self.max_responses = max_responses
 
         # Set up devices: Assign different devices if multiple GPUs are available
         if torch.cuda.device_count() > 1:
@@ -30,7 +30,6 @@ class RejectionSampler:
         self.sft_model = get_peft_model(model, sft_peft_config)
         self.load_sft_model(sft_model_path)
         
-
         # Load reward model and move it to its designated device
         reward_model = AutoModelForCausalLM.from_pretrained(model_name)
         reward_model = PeftModelForCausalLM(reward_model, rm_peft_config)
@@ -77,7 +76,6 @@ class RejectionSampler:
 
 
     def format_prompt(self, messages):
-        # Render messages into a formatted prompt using the loaded Jinja template
         return self.template.render(
             bos_token=self.tokenizer.bos_token,
             messages=messages,
@@ -85,51 +83,46 @@ class RejectionSampler:
         )
 
     def inference(self, messages):
-        # Format messages into a prompt using Jinja
         prompt = self.format_prompt(messages)
 
-        # Tokenize prompt and move input_ids to the SFT device
-        input_ids = self.tokenizer(
-            prompt, 
-            return_tensors="pt", 
+        inputs = self.tokenizer(
+            prompt,
+            return_tensors="pt",
             max_length=self.max_length,
             truncation=True,
-        ).input_ids.to(self.sft_device)
-        prompt_length = input_ids.size(1)  # Get the length of the prompt
+            padding=True,
+        ).to(self.sft_device)
 
-        top_sample = None
-        top_score = self.rejection_threshold
+        prompt_length = input_ids.size(1)
 
-        for _ in range(self.max_samples):
-            # Generate sample from SFT model, keeping only generated tokens
+        top_response = None
+        top_reward = self.rejection_threshold
+
+        for _ in range(self.max_responses):
             outputs = self.sft_model.generate(
-                input_ids,
+                **inputs,
                 max_new_tokens=200,
-                do_sample=True,
-                pad_token_id=self.tokenizer.eos_token_id
+                do_response=True,
+                pad_token_id=self.tokenizer.pad_token_id
             )
             
-            # Exclude the prompt from the decoded output to get only the generated portion
             generated_tokens = outputs[0, prompt_length:]  # Slice to keep only new tokens
-            sample = self.tokenizer.decode(generated_tokens, skip_special_tokens=True)
-            full_context = self.tokenizer.decode(outputs[0], skip_special_tokens=False)
+            response = self.tokenizer.decode(generated_tokens, skip_special_tokens=True)
+            messages.append({'role': 'assistant', 'content': response})
 
-            # Score sample using reward model
-            score = self.evaluate_reward(full_context)
+            reward = self.inference_rm(messages)
 
-            # Update top sample if the score is the highest so far
-            if score >= top_score:
-                top_sample = sample
-                top_score = score
+            if reward >= top_reward:
+                top_response = response
+                top_reward = reward
 
-        return top_sample if top_sample is not None else "No valid samples found."
+        return top_response if top_response is not None else "No valid responses found."
 
-    def evaluate_reward(self, sample_text):
-        # Tokenize sample for reward model evaluation and move inputs to the reward device
-        inputs = self.tokenizer(sample_text, return_tensors="pt").to(self.reward_device)
+    def inference_rm(self, messages):
+        prompt = self.format_prompt(messages)
+        inputs = self.tokenizer(prompt, return_tensors="pt").to(self.reward_device)
         _, _, outputs = self.reward_model(**inputs, return_dict=True)
 
-        # Reward scoring based on EOS token
         attention_masks = inputs['attention_mask']
         last_indices = (attention_masks.sum(dim=1) - 1).long()
         eos_value = outputs[torch.arange(outputs.size(0)), last_indices]
