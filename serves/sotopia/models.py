@@ -82,15 +82,15 @@ class RejectionSampler:
         return model.to(self.reward_device)
 
 
-    def format_prompt(self, messages):
+    def format_prompt(self, messages, add_generation_prompt=True):
         return self.template.render(
             bos_token=self.tokenizer.bos_token,
             messages=messages,
-            add_generation_prompt=True,
+            add_generation_prompt=add_generation_prompt,
         )
 
     def inference(self, messages, temperature=1.0, stream=False, n=1):
-        prompt = self.format_prompt(messages)
+        prompt = self.format_prompt(messages, add_generation_prompt=True)
         inputs = self.tokenizer(prompt, return_tensors="pt").to(self.sft_device)
 
         prompt_length = inputs['input_ids'].size(1)
@@ -121,7 +121,7 @@ class RejectionSampler:
         return top_response if top_response is not None else "No valid responses found."
 
     def inference_rm(self, messages):
-        prompt = self.format_prompt(messages)
+        prompt = self.format_prompt(messages, add_generation_prompt=False)
         inputs = self.tokenizer(prompt, return_tensors="pt").to(self.reward_device)
         _, _, outputs = self.reward_model(**inputs, return_dict=True)
 

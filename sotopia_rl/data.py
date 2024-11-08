@@ -27,7 +27,7 @@ class SFTDataset(Dataset):
                 {"role": "user", "content": item["instruction"]},
                 {"role": "assistant", "content": item["output"]}
             ],
-            add_generation_prompt=False
+            add_generation_prompt=True
         )
 
         tokens = self.tokenizer(
@@ -149,7 +149,7 @@ class PPODataset(Dataset):
                 {"role": "user", "content": item["instruction"]},
                 {"role": "assistant", "content": item["output"]}
             ],
-            add_generation_prompt=False  # Set to True if generation prompt is required
+            add_generation_prompt=True  # Set to True if generation prompt is required
         )
 
         input_ids = self.tokenizer(input_text, return_tensors="pt", padding=True, truncation=True).input_ids.squeeze()

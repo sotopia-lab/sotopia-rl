@@ -6,8 +6,11 @@ from datetime import datetime
 from logging import FileHandler
 from typing import Any, Generator, cast
 
+import gin
 from absl import flags
 from rich.logging import RichHandler
+from tqdm import tqdm
+
 from sotopia.agents import LLMAgent
 from sotopia.database import (
     AgentProfile,
@@ -24,10 +27,13 @@ from sotopia.envs.evaluators import (
 from sotopia.envs.parallel import ParallelSotopiaEnv
 from sotopia.generation_utils.generate import LLM_Name
 from sotopia.messages import AgentAction, Observation
-from sotopia.samplers import BaseSampler, ConstraintBasedSampler, EnvAgentCombo
+from sotopia.samplers import (
+    BaseSampler,
+    ConstraintBasedSampler,
+    EnvAgentCombo,
+)
 from sotopia.server import run_async_server
 from sotopia_conf.gin_utils import parse_gin_flags, run
-from tqdm import tqdm
 
 _DEFAULT_GIN_SEARCH_PATHS = [
     os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -96,6 +102,7 @@ def _sample_env_agent_combo_and_push_to_db(env_id: str) -> None:
         ).save()
 
 
+@gin.configurable
 def _iterate_env_agent_combo_not_in_db(
     model_names: dict[str, LLM_Name],
     env_ids: list[str] = [],
@@ -116,6 +123,12 @@ def _iterate_env_agent_combo_not_in_db(
             )
             assert env_agent_combo_storage_list
         first_env_agent_combo_storage_to_run: EnvAgentComboStorage | None = None
+
+        # TODO (haofeiyu): we always choose the first env-agent combo to run
+        env_agent_combo_storage_list = sorted(
+            env_agent_combo_storage_list, key=lambda x: x.pk
+        )[:1]
+
         for env_agent_combo_storage in env_agent_combo_storage_list:
             env_agent_combo_storage = cast(
                 EnvAgentComboStorage, env_agent_combo_storage
@@ -157,13 +170,14 @@ def _iterate_env_agent_combo_not_in_db(
             yield env, agents
 
 
+@gin.configurable
 def run_async_server_in_batch(
     *,
     batch_size: int = 1,
     model_names: dict[str, LLM_Name] = {
         "env": "gpt-4",
-        "agent1": "gpt-3.5-turbo",
-        "agent2": "gpt-3.5-turbo",
+        "agent1": "gpt-4o-mini",
+        "agent2": "gpt-4o-mini",
     },
     tag: str | None = None,
     verbose: bool = False,
@@ -175,10 +189,10 @@ def run_async_server_in_batch(
         logger.removeHandler(rich_handler)
 
     # we cannot get the exact length of the generator, we just give an estimate of the length
-    env_agent_combo_iter = _iterate_env_agent_combo_not_in_db(model_names=model_names)
+    env_agent_combo_iter = _iterate_env_agent_combo_not_in_db(model_names=model_names, tag=tag)
     env_agent_combo_iter_length = sum(1 for _ in env_agent_combo_iter)
 
-    env_agent_combo_iter = _iterate_env_agent_combo_not_in_db(model_names=model_names)
+    env_agent_combo_iter = _iterate_env_agent_combo_not_in_db(model_names=model_names, tag=tag)
     env_agent_combo_batch: list[EnvAgentCombo[Observation, AgentAction]] = []
 
     while True:
