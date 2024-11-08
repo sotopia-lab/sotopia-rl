@@ -138,9 +138,11 @@ def _iterate_env_agent_combo_not_in_db(
                 logging.info(
                     f"Episode for {env_id} with agents {agent_ids} using {list(model_names.values())} already exists"
                 )
+                print(f"Episode for {env_id} with agents {agent_ids} using {list(model_names.values())} already exists")
                 continue
             first_env_agent_combo_storage_to_run = env_agent_combo_storage
             break
+
         if first_env_agent_combo_storage_to_run:
             env_profile = EnvironmentProfile.get(env_id)
             env = ParallelSotopiaEnv(

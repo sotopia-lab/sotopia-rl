@@ -5,6 +5,7 @@ from jinja2 import Environment, FileSystemLoader
 from peft import PeftConfig, PeftModelForCausalLM, get_peft_model
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from trl import AutoModelForCausalLMWithValueHead
+import numpy as np
 
 
 class RejectionSampler:
@@ -14,9 +15,13 @@ class RejectionSampler:
         model_name,
         template_path,
         max_responses,
-        max_length=4096
+        max_length=4096,
+        sft_batch_size=1,
+        rm_batch_size=1,
     ):
         self.max_responses = max_responses
+        self.sft_batch_size = sft_batch_size
+        self.rm_batch_size = rm_batch_size
 
         # Set up devices: Assign different devices if multiple GPUs are available
         if torch.cuda.device_count() > 1:
@@ -92,41 +97,70 @@ class RejectionSampler:
     def inference(self, messages, temperature=1.0, stream=False, n=1):
         prompt = self.format_prompt(messages, add_generation_prompt=True)
         inputs = self.tokenizer(prompt, return_tensors="pt").to(self.sft_device)
-
         prompt_length = inputs['input_ids'].size(1)
 
-        top_response = None
-        top_reward = -float('inf')
+        total_responses = []
+        total_responses_generated = 0
 
-        for _ in range(self.max_responses):
+        while total_responses_generated < self.max_responses:
+            current_batch_size = min(self.sft_batch_size, self.max_responses - total_responses_generated)
+
+            # Generate current batch of responses
             outputs = self.sft_model.generate(
-                **inputs,
+                input_ids=inputs['input_ids'].repeat(current_batch_size, 1),
+                attention_mask=inputs['attention_mask'].repeat(current_batch_size, 1),
                 max_new_tokens=200,
                 temperature=temperature,
-                num_return_sequences=n,
+                num_return_sequences=1,
+                do_sample=True,
                 pad_token_id=self.tokenizer.pad_token_id
             )
 
-            generated_tokens = outputs[0, prompt_length:]  # Slice to keep only new tokens
-            response = self.tokenizer.decode(generated_tokens, skip_special_tokens=True)
+            # Process generated responses
+            for i in range(outputs.size(0)):
+                generated_tokens = outputs[i, prompt_length:]  # Slice to keep only new tokens
+                response = self.tokenizer.decode(generated_tokens, skip_special_tokens=True)
+                total_responses.append(response)
 
-            messages.append({'role': 'assistant', 'content': response})
-            reward = self.inference_rm(messages)
-            messages.pop()
+            total_responses_generated += current_batch_size
 
-            if reward >= top_reward:
-                top_response = response
-                top_reward = reward
+        # Prepare messages with generated responses
+        messages_list = []
+        for response in total_responses:
+            messages_with_response = messages + [{'role': 'assistant', 'content': response}]
+            messages_list.append(messages_with_response)
+
+        # Evaluate responses with reward model in batches
+        rewards = self.inference_rm(messages_list)
+
+        # Find the best response
+        top_index = np.argmax(rewards)
+        top_response = total_responses[top_index]
 
         return top_response if top_response is not None else "No valid responses found."
 
-    def inference_rm(self, messages):
-        prompt = self.format_prompt(messages, add_generation_prompt=False)
-        inputs = self.tokenizer(prompt, return_tensors="pt").to(self.reward_device)
-        _, _, outputs = self.reward_model(**inputs, return_dict=True)
+    def inference_rm(self, messages_list):
+        rewards = []
+        for i in range(0, len(messages_list), self.rm_batch_size):
+            batch_messages = messages_list[i:i + self.rm_batch_size]
 
-        attention_masks = inputs['attention_mask']
-        last_indices = (attention_masks.sum(dim=1) - 1).long()
-        eos_value = outputs[torch.arange(outputs.size(0)), last_indices]
+            # Format prompts for the current batch
+            prompts = [
+                self.format_prompt(msgs, add_generation_prompt=False) for msgs in batch_messages
+            ]
+            inputs = self.tokenizer(
+                prompts, return_tensors="pt", padding=True, truncation=True, max_length=self.max_length
+            ).to(self.reward_device)
 
-        return eos_value.item()
+            # Forward pass through the reward model
+            _, _, outputs = self.reward_model(**inputs, return_dict=True)
+
+            # Extract reward values
+            attention_masks = inputs['attention_mask']
+            last_indices = (attention_masks.sum(dim=1) - 1).long()
+            eos_values = outputs[torch.arange(outputs.size(0)), last_indices]
+
+            batch_rewards = eos_values.detach().cpu().numpy()
+            rewards.extend(batch_rewards)
+
+        return rewards
