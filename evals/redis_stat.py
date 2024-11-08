@@ -1,8 +1,7 @@
 from sotopia.database.logs import EpisodeLog
 
 # find episode log by tag
-Episodes = EpisodeLog.find(EpisodeLog.tag == "sotopia_gemma-2-2b-it-sft_vs_sotopia_gemma-2-2b-it-sft-1107_v2").all()
-Episodes = EpisodeLog.find(EpisodeLog.tag == "sotopia_rejection-sampling-rm-baselin-and-sft_vs_sotopia_gemma-2-2b-it-sft-1107").all()
+Episodes = EpisodeLog.find(EpisodeLog.tag == "sotopia_rejection-sampling-rm-baselin-and-sft_vs_sotopia_gemma-2-2b-it-sft-1107_sample_1_v2").all()
 #Episodes = EpisodeLog.find(EpisodeLog.tag == "sotopia_gemma-2-2b-it-sft-ppo-rm-key_vs_sotopia_gemma-2-2b-it-sft-1010_v2").all()
 #Episodes = EpisodeLog.find(EpisodeLog.tag == "sotopia_gemma-2-2b-it-sft-ppo-rm-direct_vs_sotopia_gemma-2-2b-it-sft-1010").all()
 

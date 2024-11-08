@@ -33,15 +33,15 @@ class RejectionSampler:
         rm_peft_config = self.load_peft_config(reward_model_path)
 
         # Load SFT model and move it to its designated device
-        model = AutoModelForCausalLM.from_pretrained(sft_model_path).to(self.sft_device)
-        self.sft_model = get_peft_model(model, sft_peft_config)
-        self.load_sft_model(sft_model_path)
+        model = AutoModelForCausalLM.from_pretrained(sft_model_path)
+        sft_model = get_peft_model(model, sft_peft_config)
+        self.sft_model = self.load_sft_model(sft_model, sft_model_path)
 
         # Load reward model and move it to its designated device
         reward_model = AutoModelForCausalLM.from_pretrained(model_name)
         reward_model = PeftModelForCausalLM(reward_model, rm_peft_config)
-        self.reward_model = AutoModelForCausalLMWithValueHead.from_pretrained(reward_model)
-        self.load_reward_model(reward_model_path)
+        reward_model = AutoModelForCausalLMWithValueHead.from_pretrained(reward_model)
+        self.reward_model = self.load_reward_model(reward_model, reward_model_path)
 
         # Load Jinja template from file
         env = Environment(loader=FileSystemLoader("/".join(template_path.split("/")[:-1])))
@@ -57,14 +57,14 @@ class RejectionSampler:
             print(f"No PEFT configuration file found in {checkpoint_path}")
             return None
 
-    def load_sft_model(self, checkpoint_path):
-        self.sft_model.load_adapter(checkpoint_path, adapter_name="default")
-        self.sft_model = self.sft_model.to(self.sft_device)
+    def load_sft_model(self, model, checkpoint_path):
+        model.load_adapter(checkpoint_path, adapter_name="default")
+        return model.to(self.sft_device)
 
-    def load_reward_model(self, checkpoint_path):
+    def load_reward_model(self, model, checkpoint_path):
         adapter_model_path = os.path.join(checkpoint_path, 'adapter_model.safetensors')
         if os.path.exists(adapter_model_path):
-            self.reward_model.pretrained_model.load_adapter(checkpoint_path, adapter_name='lora')
+            model.pretrained_model.load_adapter(checkpoint_path, adapter_name='lora')
         else:
             print(f"No adapter model found at {adapter_model_path}.")
 
@@ -75,23 +75,22 @@ class RejectionSampler:
             for name, param in value_head_state_dict.items():
                 if name.startswith('v_head.'):
                     new_value_head_state_dict[name[len('v_head.'):]] = value_head_state_dict[name]
-            self.reward_model.v_head.load_state_dict(new_value_head_state_dict, strict=True)
+            model.v_head.load_state_dict(new_value_head_state_dict, strict=True)
         else:
             print(f"No value head state found at {value_head_path}.")
 
-        self.reward_model = self.reward_model.to(self.reward_device)
+        return model.to(self.reward_device)
 
 
     def format_prompt(self, messages):
         return self.template.render(
             bos_token=self.tokenizer.bos_token,
             messages=messages,
-            add_generation_prompt=False,
+            add_generation_prompt=True,
         )
 
-    def inference(self, messages):
+    def inference(self, messages, temperature=1.0, stream=False, n=1):
         prompt = self.format_prompt(messages)
-
         inputs = self.tokenizer(prompt, return_tensors="pt").to(self.sft_device)
 
         prompt_length = inputs['input_ids'].size(1)
@@ -103,7 +102,8 @@ class RejectionSampler:
             outputs = self.sft_model.generate(
                 **inputs,
                 max_new_tokens=200,
-                do_sample=True,
+                temperature=temperature,
+                num_return_sequences=n,
                 pad_token_id=self.tokenizer.pad_token_id
             )
 
