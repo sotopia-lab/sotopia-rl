@@ -6,7 +6,7 @@ from jinja2 import Environment, FileSystemLoader
 from peft import PeftConfig, get_peft_model, PeftModelForCausalLM
 import os
 
-class Rejectionresponser:
+class RejectionSampler:
     def __init__(self, sft_model_path, reward_model_path, model_name, template_path, rejection_threshold=0.5, max_responses=5, max_length=4096):
         self.rejection_threshold = rejection_threshold
         self.max_responses = max_responses
