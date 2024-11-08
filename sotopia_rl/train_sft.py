@@ -2,13 +2,13 @@ import argparse
 import os
 
 import torch
+import wandb
 from jinja2 import Environment, FileSystemLoader
 from peft import LoraConfig, get_peft_model
 from torch.utils.data import random_split
 from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments
 from trl import SFTTrainer
 
-import wandb
 from data import SFTDataset
 
 

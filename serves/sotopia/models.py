@@ -1,10 +1,11 @@
+import os
+
 import torch
+from jinja2 import Environment, FileSystemLoader
+from peft import PeftConfig, PeftModelForCausalLM, get_peft_model
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from trl import AutoModelForCausalLMWithValueHead
-from jinja2 import Template
-from jinja2 import Environment, FileSystemLoader
-from peft import PeftConfig, get_peft_model, PeftModelForCausalLM
-import os
+
 
 class RejectionSampler:
     def __init__(self, sft_model_path, reward_model_path, model_name, template_path, rejection_threshold=0.5, max_responses=5, max_length=4096):
@@ -29,7 +30,7 @@ class RejectionSampler:
         model = AutoModelForCausalLM.from_pretrained(sft_model_path).to(self.sft_device)
         self.sft_model = get_peft_model(model, sft_peft_config)
         self.load_sft_model(sft_model_path)
-        
+
         # Load reward model and move it to its designated device
         reward_model = AutoModelForCausalLM.from_pretrained(model_name)
         reward_model = PeftModelForCausalLM(reward_model, rm_peft_config)
@@ -85,15 +86,9 @@ class RejectionSampler:
     def inference(self, messages):
         prompt = self.format_prompt(messages)
 
-        inputs = self.tokenizer(
-            prompt,
-            return_tensors="pt",
-            max_length=self.max_length,
-            truncation=True,
-            padding=True,
-        ).to(self.sft_device)
+        inputs = self.tokenizer(prompt, return_tensors="pt").to(self.sft_device)
 
-        prompt_length = input_ids.size(1)
+        prompt_length = inputs['input_ids'].size(1)
 
         top_response = None
         top_reward = self.rejection_threshold
@@ -102,15 +97,16 @@ class RejectionSampler:
             outputs = self.sft_model.generate(
                 **inputs,
                 max_new_tokens=200,
-                do_response=True,
+                do_sample=True,
                 pad_token_id=self.tokenizer.pad_token_id
             )
-            
+
             generated_tokens = outputs[0, prompt_length:]  # Slice to keep only new tokens
             response = self.tokenizer.decode(generated_tokens, skip_special_tokens=True)
-            messages.append({'role': 'assistant', 'content': response})
 
+            messages.append({'role': 'assistant', 'content': response})
             reward = self.inference_rm(messages)
+            messages.pop()
 
             if reward >= top_reward:
                 top_response = response

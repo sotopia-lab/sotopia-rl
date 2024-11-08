@@ -2,9 +2,8 @@ import json
 import os
 from typing import Any, Dict, List
 
-from tqdm import tqdm
-
 from src.human_annotate.google_form_apis import get_form, get_form_responses
+from tqdm import tqdm
 
 from ..utils.preprocess import extract_goal_scores
 
