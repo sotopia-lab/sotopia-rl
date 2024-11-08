@@ -8,8 +8,14 @@ from trl import AutoModelForCausalLMWithValueHead
 
 
 class RejectionSampler:
-    def __init__(self, sft_model_path, reward_model_path, model_name, template_path, rejection_threshold=0.5, max_responses=5, max_length=4096):
-        self.rejection_threshold = rejection_threshold
+    def __init__(self,
+        sft_model_path,
+        reward_model_path,
+        model_name,
+        template_path,
+        max_responses,
+        max_length=4096
+    ):
         self.max_responses = max_responses
 
         # Set up devices: Assign different devices if multiple GPUs are available
@@ -91,7 +97,7 @@ class RejectionSampler:
         prompt_length = inputs['input_ids'].size(1)
 
         top_response = None
-        top_reward = self.rejection_threshold
+        top_reward = -float('inf')
 
         for _ in range(self.max_responses):
             outputs = self.sft_model.generate(
