@@ -93,7 +93,7 @@ class RejectionSampler:
             padding=True,
         ).to(self.sft_device)
 
-        prompt_length = input_ids.size(1)
+        prompt_length = inputs['input_ids'].size(1)
 
         top_response = None
         top_reward = self.rejection_threshold
