@@ -8,12 +8,12 @@ from trl import AutoModelForCausalLMWithValueHead
 
 
 class RejectionSampler:
-    def __init__(self, 
-        sft_model_path, 
-        reward_model_path, 
-        model_name, 
-        template_path, 
-        max_responses, 
+    def __init__(self,
+        sft_model_path,
+        reward_model_path,
+        model_name,
+        template_path,
+        max_responses,
         max_length=4096
     ):
         self.max_responses = max_responses
