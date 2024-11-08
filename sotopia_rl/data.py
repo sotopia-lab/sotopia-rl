@@ -125,7 +125,6 @@ class RMDataset(Dataset):
             "labels": torch.tensor(reward_value)  # `labels` key with reward value
         }
 
-
 class PPODataset(Dataset):
     def __init__(self, reward_data_path, tokenizer, template):
         self.data = self.load_reward_data(reward_data_path)
