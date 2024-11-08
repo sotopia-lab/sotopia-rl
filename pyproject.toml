@@ -28,11 +28,9 @@ vllm = {version = "=0.6.2", optional = true}
 
 
 [tool.poetry.extras]
-metrics = ["nltk", "jieba", "rouge-chinese"]
-aqlm = ["aqlm"]
-modelscope = ["modelscope"]
+metrics = ["nltk"]
 quality = ["ruff"]
-eval = ["gin-config", "sotopia"]
+eval = ["gin-config"]
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "*"
