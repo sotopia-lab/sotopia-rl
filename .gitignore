@@ -15,3 +15,4 @@ saves/*
 **/wandb/*
 **/sft/*
 data/episode_utterances/
+**/.DS_Store
