@@ -1,4 +1,4 @@
-CUDA_VISIBLE_DEVICES=1 python /data/haofeiy2/sotopia-rl/sotopia_rl/ppo_trainer.py \
+CUDA_VISIBLE_DEVICES=1 python /data/haofeiy2/sotopia-rl/scripts/train_ppo.py \
   --model_name "/data/models/gemma-2-2b-it" \
   --batch_size 1 \
   --num_epochs 3 \

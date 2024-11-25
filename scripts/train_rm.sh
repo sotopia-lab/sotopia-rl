@@ -1,4 +1,4 @@
-CUDA_VISIBLE_DEVICES=0 python /data/haofeiy2/sotopia-rl/sotopia_rl/rm_trainer.py \
+CUDA_VISIBLE_DEVICES=0 python /data/haofeiy2/sotopia-rl/scripts/train_rm.py \
 --model_name /data/models/gemma-2-2b-it \
 --learning_rate 1e-5 \
 --max_length 4096 \
