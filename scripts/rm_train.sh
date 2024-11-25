@@ -1,4 +1,4 @@
-CUDA_VISIBLE_DEVICES=0 python /data/haofeiy2/sotopia-rl/sotopia-rl/train_rm.py \
+CUDA_VISIBLE_DEVICES=0 python /data/haofeiy2/sotopia-rl/sotopia_rl/rm_trainer.py \
 --model_name /data/models/gemma-2-2b-it \
 --learning_rate 1e-5 \
 --max_length 4096 \
@@ -12,7 +12,7 @@ CUDA_VISIBLE_DEVICES=0 python /data/haofeiy2/sotopia-rl/sotopia-rl/train_rm.py \
 --checkpoint_dir /data/haofeiy2/sotopia-rl/saves/rm_baseline
 
 
-CUDA_VISIBLE_DEVICES=2 python /data/haofeiy2/sotopia-rl/sotopia-rl/train_rm.py \
+CUDA_VISIBLE_DEVICES=2 python /data/haofeiy2/sotopia-rl/sotopia_rl/rm_trainer.py \
 --model_name /data/models/gemma-2-2b-it \
 --learning_rate 1e-5 \
 --max_length 4096 \
@@ -26,7 +26,7 @@ CUDA_VISIBLE_DEVICES=2 python /data/haofeiy2/sotopia-rl/sotopia-rl/train_rm.py \
 --checkpoint_dir /data/haofeiy2/sotopia-rl/saves/rm_direct_prompt
 
 
-CUDA_VISIBLE_DEVICES=3 python /data/haofeiy2/sotopia-rl/sotopia-rl/train_rm.py \
+CUDA_VISIBLE_DEVICES=3 python /data/haofeiy2/sotopia-rl/sotopia_rl/rm_trainer.py \
 --model_name /data/models/gemma-2-2b-it \
 --learning_rate 1e-5 \
 --max_length 4096 \
