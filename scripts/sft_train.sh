@@ -1,4 +1,4 @@
-CUDA_VISIBLE_DEVICES=6 python /data/haofeiy2/sotopia-rl/sotopia-rl/train_sft.py \
+CUDA_VISIBLE_DEVICES=6 python /data/haofeiy2/sotopia-rl/sotopia_rl/sft_trainer.py \
 --model_name /data/models/gemma-2-2b-it \
 --learning_rate 1e-5 \
 --max_length 4096 \
