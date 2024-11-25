@@ -1,5 +1,6 @@
-from sotopia_rl import SotopiaPPOTrainer
 import argparse
+
+from sotopia_rl import SotopiaPPOTrainer
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Train a model with PPO using a reward model.")

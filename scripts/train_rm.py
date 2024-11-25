@@ -1,3 +1,5 @@
+import argparse
+
 from sotopia_rl import SotopiaRMTrainer
 
 if __name__ == '__main__':

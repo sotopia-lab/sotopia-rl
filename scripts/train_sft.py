@@ -1,5 +1,6 @@
-from sotopia_rl import SotopiaSFTTrainer
 import argparse
+
+from sotopia_rl import SotopiaSFTTrainer
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Train a reward model using SFT with LoRA.")

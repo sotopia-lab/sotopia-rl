@@ -1,11 +1,11 @@
 import os
 
+import numpy as np
 import torch
 from jinja2 import Environment, FileSystemLoader
 from peft import PeftConfig, PeftModelForCausalLM, get_peft_model
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from trl import AutoModelForCausalLMWithValueHead
-import numpy as np
 
 
 class RejectionSampler:

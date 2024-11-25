@@ -1,4 +1,3 @@
-import argparse
 
 import torch
 from jinja2 import Environment, FileSystemLoader
@@ -84,4 +83,3 @@ class SotopiaPPOTrainer(object):
             _, _, output_values = self.reward_model(generated_output, attention_mask=attention_mask)
         rewards = output_values.squeeze(-1)  # Adjust if needed based on output format
         return rewards
-
