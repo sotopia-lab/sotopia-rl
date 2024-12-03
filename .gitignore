@@ -16,3 +16,6 @@ saves/*
 **/sft/*
 data/episode_utterances/
 **/.DS_Store
+**/data/jasonqi
+**/data/models
+**/.vscode/**
