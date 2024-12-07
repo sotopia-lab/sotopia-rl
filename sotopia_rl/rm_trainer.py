@@ -11,7 +11,7 @@ from torch.utils.data import random_split
 from transformers import AutoModelForCausalLM, AutoTokenizer, Trainer, TrainingArguments
 from trl import AutoModelForCausalLMWithValueHead
 
-from data import RMDataset
+from .data import RMDataset
 
 
 class SotopiaRMTrainer(Trainer):

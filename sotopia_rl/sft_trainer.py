@@ -8,7 +8,7 @@ from torch.utils.data import random_split
 from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments
 from trl import SFTTrainer
 
-from data import SFTDataset
+from .data import SFTDataset
 
 
 class SotopiaSFTTrainer:

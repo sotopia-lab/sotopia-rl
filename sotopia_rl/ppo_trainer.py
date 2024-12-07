@@ -7,7 +7,7 @@ from tqdm import tqdm
 from transformers import AutoTokenizer
 from trl import AutoModelForCausalLMWithValueHead, PPOConfig, PPOTrainer
 
-from data import PPODataset
+from .data import PPODataset
 
 
 class SotopiaPPOTrainer(object):
@@ -45,7 +45,7 @@ class SotopiaPPOTrainer(object):
         # Load dataset and set up template
         env = Environment(loader=FileSystemLoader("/".join(args.template_path.split("/")[:-1])))
         self.template = env.get_template(args.template_path.split("/")[-1])
-        self.dataset = PPODataset(args.ppo_data_path, self.tokenizer, self.template)
+        self.dataset = PPODataset(args.ppo_data_path, self.tokenizer, self.template, max_length=args.max_length)
 
         # Initialize the PPOTrainer with model, ref_model (copy of policy_model), and config
         self.ppo_trainer = PPOTrainer(
@@ -63,11 +63,11 @@ class SotopiaPPOTrainer(object):
         for epoch in range(self.args.num_epochs):
             epoch_loss = 0
             for batch in tqdm(train_loader, desc=f"Epoch {epoch + 1}/{self.args.num_epochs}"):
-                input_ids, attention_mask = batch
+                input_ids, attention_mask = batch["input_ids"], batch["attention_mask"]
                 input_ids, attention_mask = input_ids.to(self.device), attention_mask.to(self.device)
 
                 # Generate actions (outputs) and compute rewards
-                generated_output = self.policy_model.generate(input_ids=input_ids, attention_mask=attention_mask)
+                generated_output = self.policy_model.generate(input_ids=input_ids, attention_mask=attention_mask, max_length=4096)
 
                 # Obtain rewards by evaluating generated outputs with the reward model
                 batch_rewards = self.compute_rewards(generated_output, attention_mask)

@@ -12,6 +12,7 @@ if __name__ == '__main__':
     parser.add_argument("--ppo_epochs", type=int, default=4, help="Number of PPO epochs per update")
     parser.add_argument("--gamma", type=float, default=0.99, help="Discount factor")
     parser.add_argument("--lam", type=float, default=0.95, help="GAE lambda for advantage estimation")
+    parser.add_argument("--max_length", type=int, default=4096, help="Maximum length of input sequences")
 
     # LoRA-specific arguments
     parser.add_argument("--lora_r", type=int, default=8, help="LoRA rank (dimension of the low-rank matrices)")
