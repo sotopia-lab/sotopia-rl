@@ -1,4 +1,5 @@
 import os
+os.environ["REDIS_OM_URL"] = "redis://:QzmCUD3C3RdsR@34.132.61.229:6379"
 
 import numpy as np
 import torch
@@ -7,6 +8,8 @@ from peft import PeftConfig, PeftModelForCausalLM, get_peft_model
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from trl import AutoModelForCausalLMWithValueHead
 
+from sotopia.database import EpisodeLog
+from sotopia_rl.ppo_trainer import SotopiaPPOTrainer
 
 class RejectionSampler:
     def __init__(self,
@@ -164,3 +167,34 @@ class RejectionSampler:
             rewards.extend(batch_rewards)
 
         return rewards
+
+class OnlinePPORejectionSampler(RejectionSampler, SotopiaPPOTrainer):
+    def __init__(self,
+        sft_model_path,
+        reward_model_path,
+        model_name,
+        template_path,
+        max_responses,
+        max_length=4096,
+        sft_batch_size=1,
+        rm_batch_size=1,
+    ):
+        RejectionSampler.__init__(self,        
+                                    sft_model_path,
+                                    reward_model_path,
+                                    model_name,
+                                    template_path,
+                                    max_responses,
+                                    max_length=max_length,
+                                    sft_batch_size=sft_batch_size,
+                                    rm_batch_size=rm_batch_size)
+        # for ppo trainer
+        self.train_batch_size = sft_batch_size
+        self.policy_model = self.sft_model
+        self.device = self.sft_device
+        self.dataset = None
+    
+    def train_on_episode_tag(self, tag: str):
+        Episodes = EpisodeLog.find(EpisodeLog.tag == "sotopia_rejection-sampling-rm-direct-prompt-and-sft_vs_sotopia_gemma-2-2b-it-sft-1204_sample_40").all()
+        print(f"Training on episodes: {Episodes}")
+        

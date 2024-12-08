@@ -18,6 +18,6 @@ from django.contrib import admin
 from django.urls import include, path
 
 urlpatterns = [
-    path("sotopia/", include("sotopia.urls")),
+    path("sotopia_server/", include("sotopia_server.urls")),
     path("admin/", admin.site.urls),
 ]

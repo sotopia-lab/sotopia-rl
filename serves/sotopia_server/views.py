@@ -16,7 +16,7 @@ def chat_completions(request):
         return JsonResponse({"error": "Messages are required."}, status=400)
 
     # Access the globally loaded RejectionSampler instance
-    sampler = apps.get_app_config("sotopia").rejection_sampler
+    sampler = apps.get_app_config("sotopia_server").rejection_sampler
     top_response = sampler.inference(messages, temperature, stream, n)
 
     if top_response is not None:
@@ -40,3 +40,13 @@ def chat_completions(request):
         return JsonResponse(response, status=200)
     else:
         return JsonResponse({"error": "No sample met the threshold."}, status=200)
+
+@api_view(["POST"])
+def train_on_tag(request):
+    tag = request.data.get("tag")
+    sampler = apps.get_app_config("sotopia_server").rejection_sampler
+    try:
+        sampler.train_on_episode_tag(tag)
+        return JsonResponse({}, status=200)
+    except Exception as e:
+        return JsonResponse({"Internal Error": e}, status=500)

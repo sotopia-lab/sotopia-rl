@@ -1,7 +1,7 @@
-# sotopia/management/commands/start_with_config.py
+# sotopia_server/management/commands/start_with_config.py
 from django.core.management.base import BaseCommand
-from sotopia.apps import RejectionSamplerConfig
-from sotopia.models import RejectionSampler
+from sotopia_server.apps import RejectionSamplerConfig
+from sotopia_server.models import RejectionSampler, OnlinePPORejectionSampler
 from django.core.management import execute_from_command_line
 
 class Command(BaseCommand):
@@ -32,7 +32,7 @@ class Command(BaseCommand):
         }
 
         # # Initialize the rejection_sampler directly
-        RejectionSamplerConfig.rejection_sampler = RejectionSampler(**config)
+        RejectionSamplerConfig.rejection_sampler = OnlinePPORejectionSampler(**config)
 
         # Start the server with the specified port
         self.stdout.write(f"Starting the Django server on port {options['port']} with custom configuration...")

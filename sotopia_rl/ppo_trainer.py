@@ -57,8 +57,20 @@ class SotopiaPPOTrainer(object):
         )
 
 
-    def train(self):
-        train_loader = DataLoader(self.dataset, batch_size=self.args.batch_size, shuffle=True, collate_fn=self.dataset.collate_fn)
+    def train(self, dataset=None, batch_size=-1):
+        
+        # for backward compatablity
+        if not dataset:
+            if not self.dataset:
+                raise ValueError("dataset provided")
+            dataset = self.dataset
+        if batch_size == -1:
+            if self.train_batch_size:
+                batch_size
+            elif self.args.batch_size:
+                batch_size = self.args.batch_size
+        
+        train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=self.dataset.collate_fn)
 
         for epoch in range(self.args.num_epochs):
             epoch_loss = 0
