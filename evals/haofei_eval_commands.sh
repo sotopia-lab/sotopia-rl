@@ -34,7 +34,12 @@ poetry run python examples/experiment_eval.py \
 '--gin.AGENT2_MODEL="custom/sotopia_gemma-2-2b-it-sft@http://localhost:8005/v1"' \
 '--gin.BATCH_SIZE=1' \
 '--gin.PUSH_TO_DB=True' \
+<<<<<<< HEAD
 '--gin.TAG="sotopia_rejection-sampling-rm-direct-prompt-and-sft_vs_sotopia_gemma-2-2b-it-sft-1204_v2_sample_20"'
+=======
+'--gin.TAG="sotopia_rejection-sampling-rm-direct-prompt-and-sft_vs_sotopia_gemma-2-2b-it-sft-1203_sample_20"'
+
+>>>>>>> 431586d62b1dd908eac9e982a80bef3c292a2248
 
 
 
