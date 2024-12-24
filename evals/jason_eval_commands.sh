@@ -1,11 +1,11 @@
-export PYTHONPATH="/root/sotopia-rl:$PYTHONPATH"
+export PYTHONPATH="/workspace/sotopia-rl:$PYTHONPATH"
 
 # rejection sampling
 python manage.py start_with_config \
-    --sft_model_path "/root/sotopia-rl/data/models/sft_checkpoint-270" \
-    --reward_model_path "/root/sotopia-rl/data/models/rm_baseline_checkpoint-14000" \
+    --sft_model_path "/workspace/sotopia-rl/data/models/sft_checkpoint-270" \
+    --reward_model_path "/workspace/sotopia-rl/data/models/rm_baseline_checkpoint-14000" \
     --model_name "google/gemma-2-2b-it" \
-    --template_path "/root/sotopia-rl/evals/gemma-2-2b-it.jinja" \
+    --template_path "/workspace/sotopia-rl/evals/gemma-2-2b-it.jinja" \
     --max_responses 10 \
     --sft_batch_size 2 \
     --max_length 4096 \
@@ -13,10 +13,10 @@ python manage.py start_with_config \
 
 # ppo 
 python manage.py start_with_config \
-    --sft_model_path "/root/sotopia-rl/data/models/sft_checkpoint-270" \
-    --reward_model_path "/root/sotopia-rl/data/models/rm_baseline_checkpoint-14000" \
+    --sft_model_path "/workspace/sotopia-rl/data/models/sft_checkpoint-270" \
+    --reward_model_path "/workspace/sotopia-rl/data/models/rm_baseline_checkpoint-14000" \
     --model_name "google/gemma-2-2b-it" \
-    --template_path "/root/sotopia-rl/evals/gemma-2-2b-it.jinja" \
+    --template_path "/workspace/sotopia-rl/evals/gemma-2-2b-it.jinja" \
     --max_responses 10 \
     --sft_batch_size 2 \
     --max_length 4096 \
@@ -36,9 +36,9 @@ curl -X POST http://localhost:8002/sotopia_server/train/tag \
 -H "Authorization: Bearer $OPENAI_API_KEY" \
 -d '{"tag": "example_tag"}'
 
-CUDA_VISIBLE_DEVICES=2 python -m vllm.entrypoints.openai.api_server --model google/gemma-2-2b-it --chat-template /root/sotopia-rl/evals/gemma-2-2b-it.jinja --port 8005 --enable-lora --lora-modules sotopia_gemma-2-2b-it-sft=/root/sotopia-rl/data/models/sft_checkpoint-270
+CUDA_VISIBLE_DEVICES=2 python -m vllm.entrypoints.openai.api_server --model google/gemma-2-2b-it --chat-template /workspace/sotopia-rl/evals/gemma-2-2b-it.jinja --port 8005 --enable-lora --lora-modules sotopia_gemma-2-2b-it-sft=/workspace/sotopia-rl/data/models/sft_checkpoint-270
 
-poetry run python /root/sotopia-rl/evals/experiment_eval.py \
+poetry run python /workspace/sotopia-rl/evals/experiment_eval.py \
 --gin_file sotopia_conf/generation_utils_conf/generate.gin \
 --gin_file sotopia_conf/server_conf/server.gin \
 --gin_file sotopia_conf/run_async_server_in_batch.gin \
