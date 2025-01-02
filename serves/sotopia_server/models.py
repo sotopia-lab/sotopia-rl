@@ -195,6 +195,7 @@ class OnlinePPORejectionSampler(RejectionSampler, SotopiaPPOTrainer):
         self.dataset = None
     
     def train_on_episode_tag(self, tag: str):
-        Episodes = EpisodeLog.find(EpisodeLog.tag == "sotopia_rejection-sampling-rm-direct-prompt-and-sft_vs_sotopia_gemma-2-2b-it-sft-1204_sample_40").all()
-        print(f"Training on episodes: {Episodes}")
+        print(f"Training on tag: {tag}")
+        episodes = EpisodeLog.find(EpisodeLog.tag == "sotopia_rejection-sampling-rm-direct-prompt-and-sft_vs_sotopia_gemma-2-2b-it-sft-1204_sample_40").all()
+        print(f"Number of episodes: {len(episodes)}")
         

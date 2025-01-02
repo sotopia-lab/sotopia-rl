@@ -11,7 +11,9 @@ python manage.py start_with_config \
     --max_length 4096 \
     --port 8001
 
-# ppo 
+# ppo
+export PYTHONPATH="/workspace/sotopia-rl:$PYTHONPATH"
+
 python manage.py start_with_config \
     --sft_model_path "/workspace/sotopia-rl/data/models/sft_checkpoint-270" \
     --reward_model_path "/workspace/sotopia-rl/data/models/rm_baseline_checkpoint-14000" \
