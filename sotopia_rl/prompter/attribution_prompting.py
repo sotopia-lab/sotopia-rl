@@ -137,8 +137,11 @@ def generate_reward_attribution(
     with jsonlines.open(os.path.join(data_dir, input_file), "r") as reader:
         data = list(reader)
 
-    with jsonlines.open(os.path.join(data_dir, output_file), "r") as reader:
-        finished_episodes = list(reader)
+    if os.path.exists(os.path.join(data_dir, output_file)):
+        with jsonlines.open(os.path.join(data_dir, output_file), "r") as reader:
+            finished_episodes = list(reader)
+    else:
+        finished_episodes = []
 
     finished_episode_ids = Counter(
         [episode["episode_id"] for episode in finished_episodes]
