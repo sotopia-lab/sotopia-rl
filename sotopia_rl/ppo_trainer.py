@@ -1,182 +1,126 @@
-import json
-from typing import Any, Dict
-
 import torch
-from torch.nn.utils.rnn import pad_sequence
-from torch.utils.data import Dataset
-from transformers import PreTrainedTokenizer
+import wandb
+from jinja2 import Environment, FileSystemLoader
+from peft import LoraConfig
+from torch.utils.data import DataLoader
+from tqdm import tqdm
+from transformers import AutoTokenizer
+from trl import AutoModelForCausalLMWithValueHead, PPOConfig, PPOTrainer
+from sotopia_rl.data import PPODataset
+import os
 
 
-class SFTDataset(Dataset):
-    def __init__(self, data_path: str, tokenizer: PreTrainedTokenizer, max_length: int, template):
-        with open(data_path, "r") as f:
-            self.data = json.load(f)
+class SotopiaPPOTrainer(object):
+    def __init__(self, args):
+        self.args = args
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        self.tokenizer = tokenizer
-        self.max_length = max_length
-        self.template = template
-
-    def __len__(self):
-        return len(self.data)
-
-    def __getitem__(self, idx: int) -> Dict[str, Any]:
-        item = self.data[idx]
-        rendered_text = self.template.render(
-            bos_token=self.tokenizer.bos_token,
-            messages=[
-                {"role": "user", "content": item["instruction"]},
-                {"role": "assistant", "content": item["output"]}
-            ],
-            add_generation_prompt=True
+        wandb.init(
+            project=args.wandb_project,
+            name=args.wandb_run_name,
+            config={k: v for k, v in vars(args).items() if isinstance(v, (int, float, str))}
         )
 
-        tokens = self.tokenizer(
-            rendered_text,
-            max_length=self.max_length,
-            padding=True,  # Ensures each sample is padded to max_length
-            truncation=True,
-            return_tensors="pt"
+        # Initialize tokenizer and reward model (reward model remains frozen)
+        self.tokenizer = AutoTokenizer.from_pretrained(args.model_name)
+        # self.reward_model = AutoModelForCausalLMWithValueHead.from_pretrained(args.model_name)
+        self.reward_model = AutoModelForCausalLMWithValueHead.from_pretrained(args.reward_model_name)
+        self.reward_model.eval()  # Freeze the reward model
+        self.reward_model.to(self.device)
+
+        # Configure and initialize the PPO policy model with LoRA
+        peft_config = LoraConfig(
+            r=args.lora_r,
+            lora_alpha=args.lora_alpha,
+            lora_dropout=args.lora_dropout,
+            target_modules=args.target_modules.split(",")  # Specify modules for LoRA
+        )
+        self.policy_model = AutoModelForCausalLMWithValueHead.from_pretrained(args.model_name, peft_config=peft_config)
+        self.policy_model.to(self.device)
+
+        self.ref_model = AutoModelForCausalLMWithValueHead.from_pretrained(args.model_name)
+        self.ref_model.eval()
+        self.ref_model.to(self.device)
+
+        # Set up PPO configuration and trainer
+        ppo_config = PPOConfig(
+            batch_size=args.batch_size,
+            ppo_epochs=args.ppo_epochs,
+            gamma=args.gamma,
+            lam=args.lam,
+            mini_batch_size=1,
+            gradient_accumulation_steps=1,
+            seed=42  # Set the seed value here
         )
 
-        input_ids = tokens["input_ids"]
-        attention_mask = tokens["attention_mask"]
+        # Load dataset and set up template
+        env = Environment(loader=FileSystemLoader("/".join(args.template_path.split("/")[:-1])))
+        self.template = env.get_template(args.template_path.split("/")[-1])
+        self.dataset = PPODataset(args.ppo_data_path, self.tokenizer, self.template, max_length=args.max_length)
 
-        instruction_text = self.template.render(
-            bos_token=self.tokenizer.bos_token,
-            messages=[{"role": "user", "content": item["instruction"]}],
-            add_generation_prompt=False
-        )
-        instruction_tokens = self.tokenizer(
-            instruction_text,
-            max_length=self.max_length,
-            truncation=True,
-            return_tensors="pt"
-        )
-
-        labels = input_ids.clone()
-        instruction_length = instruction_tokens["input_ids"].size(1)
-        labels[:, :instruction_length] = -100
-
-        return {
-            "input_ids": input_ids.squeeze(),
-            "attention_mask": attention_mask.squeeze(),
-            "labels": labels.squeeze(),
-        }
-
-    def collate_fn(self, batch):
-        input_ids = torch.nn.utils.rnn.pad_sequence(
-            [item["input_ids"] for item in batch], batch_first=True, padding_value=self.tokenizer.pad_token_id
-        )
-        attention_masks = torch.nn.utils.rnn.pad_sequence(
-            [item["attention_mask"] for item in batch], batch_first=True, padding_value=0
-        )
-        labels = torch.nn.utils.rnn.pad_sequence(
-            [item["labels"] for item in batch], batch_first=True, padding_value=-100
+        # Initialize the PPOTrainer with model, ref_model (copy of policy_model), and config
+        self.ppo_trainer = PPOTrainer(
+            model=self.policy_model,
+            ref_model=self.ref_model,  # Reference model to stabilize updates
+            config=ppo_config,
+            tokenizer=self.tokenizer,
+            data_collator=self.dataset.collate_fn
         )
 
-        return {
-            "input_ids": input_ids,
-            "labels": labels,
-            "attention_mask": attention_masks,
-        }
+    def train(self):
+        train_loader = DataLoader(self.dataset, batch_size=self.args.batch_size, shuffle=True,
+                                  collate_fn=self.dataset.collate_fn)
 
-class RMDataset(Dataset):
-    def __init__(self, reward_data_path, tokenizer, template, max_length=512):
-        self.data = self.load_reward_data(reward_data_path)
-        self.tokenizer = tokenizer
-        self.template = template
-        self.max_length = max_length
+        for epoch in range(self.args.num_epochs):
+            epoch_loss = 0
+            for batch in tqdm(train_loader, desc=f"Epoch {epoch + 1}/{self.args.num_epochs}"):
+                input_ids, attention_mask = batch["input_ids"], batch["attention_mask"]
+                input_ids, attention_mask = input_ids.to(self.device), attention_mask.to(self.device)
 
-    def load_reward_data(self, file_path):
-        with open(file_path, "r") as f:
-            data = json.load(f)
-        return data
+                # Generate actions (outputs) and compute rewards
+                generated_output = self.policy_model.generate(input_ids=input_ids, attention_mask=attention_mask,
+                                                              max_length=4096)
 
-    def __len__(self):
-        return len(self.data)
+                # Obtain rewards by evaluating generated outputs with the reward model
+                batch_rewards = self.compute_rewards(generated_output, attention_mask)
 
-    def __getitem__(self, idx):
-        item = self.data[idx]
-        reward_value = item["value"]
+                # Perform PPO update
+                if isinstance(input_ids, torch.Tensor):
+                    input_ids = list(input_ids.unbind(0))
+                if isinstance(generated_output, torch.Tensor):
+                    generated_output = list(generated_output.unbind(0))
+                if isinstance(batch_rewards, torch.Tensor):
+                    if batch_rewards.dim() == 0:
+                        batch_rewards = [batch_rewards]
+                    else:
+                        batch_rewards = list(batch_rewards.unbind(0))
 
-        # Render the conversation using the Jinja template
-        input_text = self.template.render(
-            bos_token=self.tokenizer.bos_token,
-            messages=[
-                {"role": "user", "content": item["instruction"]},
-                {"role": "assistant", "content": item["output"]}
-            ],
-            add_generation_prompt=False  # Set to True if generation prompt is required
-        )
+                loss = self.ppo_trainer.step(input_ids, generated_output, batch_rewards)
+                epoch_loss += loss["ppo/loss/total"]
+            print(f"Epoch {epoch + 1} - PPO Loss: {epoch_loss / len(train_loader):.4f}")
 
-        # Tokenize with max_length and truncation
-        tokenized_input = self.tokenizer(
-            input_text,
-            return_tensors="pt",
-            padding=True,
-            max_length=self.max_length,
-            truncation=True
-        )
+            checkpoint_dir = os.path.join(self.args.checkpoint_dir, f"checkpoint-epoch-{epoch + 1}")
+            os.makedirs(checkpoint_dir, exist_ok=True)
+            self.policy_model.save_pretrained(checkpoint_dir)
 
-        # Return a dictionary as expected by the Trainer
-        return {
-            "input_ids": tokenized_input["input_ids"].squeeze(),
-            "attention_mask": tokenized_input["attention_mask"].squeeze(),
-            "labels": torch.tensor(reward_value)  # `labels` key with reward value
-        }
+        final_checkpoint_dir = os.path.join(self.args.checkpoint_dir, "final_checkpoint")
+        os.makedirs(final_checkpoint_dir, exist_ok=True)
+        self.policy_model.save_pretrained(final_checkpoint_dir)
+        print(f"Final checkpoint saved at {final_checkpoint_dir}")
 
-class PPODataset(Dataset):
-    def __init__(self, reward_data_path, tokenizer, template, max_length=512):
-        self.data = self.load_reward_data(reward_data_path)
-        self.tokenizer = tokenizer
-        self.template = template
-        self.max_length = max_length
+    def compute_rewards(self, generated_output, attention_mask):
+        """Compute rewards using the frozen reward model."""
+        with torch.no_grad():
+            _, _, output_values = self.reward_model(generated_output, attention_mask=attention_mask)
+        rewards = output_values.mean(dim=-1)
+        if rewards.dim() > 1:
+            rewards = rewards.mean(dim=-1)
+        if rewards.dim() == 0:
+            rewards = rewards.unsqueeze(0)
+        return rewards
 
-    def load_reward_data(self, file_path):
-        with open(file_path, "r") as f:
-            data = json.load(f)
-        return data
-
-    def __len__(self):
-        return len(self.data)
-
-    def __getitem__(self, idx):
-        item = self.data[idx]
-
-        # Render the conversation using the Jinja template
-        input_text = self.template.render(
-            bos_token=self.tokenizer.bos_token,
-            messages=[
-                {"role": "user", "content": item["instruction"]},
-                {"role": "assistant", "content": item["output"]}
-            ],
-            add_generation_prompt=False  # Set to True if generation prompt is required
-        )
-
-        # Tokenize with max_length and truncation
-        tokenized_input = self.tokenizer(
-            input_text,
-            return_tensors="pt",
-            padding=True,
-            max_length=self.max_length,
-            truncation=True
-        )
-
-        # Return a dictionary as expected by the Trainer
-        return {
-            "input_ids": tokenized_input["input_ids"].squeeze(),
-            "attention_mask": tokenized_input["attention_mask"].squeeze(),
-        }
-
-    def collate_fn(self, batch):
-        input_ids = torch.nn.utils.rnn.pad_sequence(
-            [item["input_ids"] for item in batch], batch_first=True, padding_value=self.tokenizer.pad_token_id
-        )
-        attention_masks = torch.nn.utils.rnn.pad_sequence(
-            [item["attention_mask"] for item in batch], batch_first=True, padding_value=0
-        )
-
-        return {
-            "input_ids": input_ids,
-            "attention_mask": attention_masks,
-        }
+    def save_checkpoint(self, checkpoint_path):
+        os.makedirs(checkpoint_path, exist_ok=True)
+        self.policy_model.save_pretrained(checkpoint_path)
+        self.tokenizer.save_pretrained(checkpoint_path)
+        print(f"Checkpoint saved to {checkpoint_path}")
