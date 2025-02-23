@@ -19,3 +19,4 @@ data/episode_utterances/
 **/data/jasonqi
 **/data/models
 **/.vscode/**
+**/saves_qwen/*

@@ -17,7 +17,7 @@ curl http://localhost:8002/sotopia/chat/completions \
      "temperature": 0.7
    }'
 
-CUDA_VISIBLE_DEVICES=0 python -m vllm.entrypoints.openai.api_server --model google/gemma-2-2b-it --chat-template /root/sotopia-rl/evals/gemma-2-2b-it.jinja --port 8005 --enable-lora --lora-modules sotopia_gemma-2-2b-it-sft=/root/sotopia-rl/data/models/sft_checkpoint-270
+CUDA_VISIBLE_DEVICES=2 python -m vllm.entrypoints.openai.api_server --model google/gemma-2-2b-it --chat-template /root/sotopia-rl/evals/gemma-2-2b-it.jinja --port 8005 --enable-lora --lora-modules sotopia_gemma-2-2b-it-sft=/root/sotopia-rl/data/models/sft_checkpoint-270
 
 poetry run python /root/sotopia-rl/evals/experiment_eval.py \
 --gin_file sotopia_conf/generation_utils_conf/generate.gin \

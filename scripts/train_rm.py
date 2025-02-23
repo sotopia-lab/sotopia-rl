@@ -18,6 +18,8 @@ if __name__ == '__main__':
     parser.add_argument("--accumulation_steps", type=int, default=4, help="Number of gradient accumulation steps")
     parser.add_argument("--evaluation_steps", type=int, default=100, help="Number of steps between evaluations")
 
+    parser.add_argument("--use_qlora", action="store_true", help="Use QLoRA (4-bit) for model loading.")
+
     # Learning rate scheduler arguments
     parser.add_argument("--warmup_epochs", type=float, default=0.1, help="Number of warmup epochs (as a fraction)")
     parser.add_argument("--min_lr", type=float, default=1e-6, help="Minimum learning rate for cosine decay")

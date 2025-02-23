@@ -2,7 +2,7 @@ from sotopia.database.logs import EpisodeLog
 
 # find episode log by tag
 #Episodes = EpisodeLog.find(EpisodeLog.tag == "sotopia_rejection-sampling-rm-baseline-and-sft_vs_sotopia_gemma-2-2b-it-sft-1108_sample_5").all()
-Episodes = EpisodeLog.find(EpisodeLog.tag == "sotopia_rejection-sampling-rm-direct-prompt-and-sft_vs_sotopia_gemma-2-2b-it-sft-1109_sample_10").all()
+Episodes = EpisodeLog.find(EpisodeLog.tag == "sotopia_rejection-sampling-rm-direct-prompt-and-sft_vs_sotopia_gemma-2-2b-it-sft-1204_sample_40").all()
 #Episodes = EpisodeLog.find(EpisodeLog.tag == "sotopia_rejection-sampling-rm-key-utterance-and-sft_vs_sotopia_gemma-2-2b-it-sft-1109_sample_1").all()
 
 #Episodes = EpisodeLog.find(EpisodeLog.tag == "sotopia_gemma-2-2b-it-sft-ppo-rm-key_vs_sotopia_gemma-2-2b-it-sft-1010_v2").all()
@@ -14,11 +14,14 @@ print(len(Episodes))  ## Episode Log
 '''
 for episode in Episodes:
     conversation = episode.messages[1:]
-    print(len(conversation))
-    if len(conversation) <=2 :
+    rewards = episode.rewards
+    if rewards == [0, 0]:
         EpisodeLog.delete(episode.pk)
-import pdb; pdb.set_trace()
+    print(len(conversation))
+    #if len(conversation) <=2 :
+    #    EpisodeLog.delete(episode.pk)
 '''
+import pdb; pdb.set_trace()
 
 tot_rewards1 = {'believability': 0.0, 'relationship': 0.0, 'knowledge': 0.0, 'secret': 0.0, 'social_rules': 0.0, 'financial_and_material_benefits': 0.0, 'goal': 0.0, 'overall_score': 0.0}
 tot_rewards2 = {'believability': 0.0, 'relationship': 0.0, 'knowledge': 0.0, 'secret': 0.0, 'social_rules': 0.0, 'financial_and_material_benefits': 0.0, 'goal': 0.0, 'overall_score': 0.0}
@@ -27,6 +30,7 @@ Episodes = Episodes[-20:]
 print(len(Episodes))
 for episode in Episodes:
     rewards = episode.rewards
+    print(rewards)
     conversation = episode.messages[1:]
     print(len(conversation))
     #if len(conversation) < 5:
