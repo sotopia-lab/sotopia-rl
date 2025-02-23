@@ -32,6 +32,8 @@ if __name__ == '__main__':
     parser.add_argument("--wandb_project", type=str, default="sft-project", help="Wandb project name")
     parser.add_argument("--wandb_run_name", type=str, default="sft-run", help="Wandb run name")
 
+    parser.add_argument("--use_qlora", action="store_true", help="Use QLoRA (4-bit) for model loading.")
+
     args = parser.parse_args()
     trainer = SotopiaSFTTrainer(args)
     trainer.train()

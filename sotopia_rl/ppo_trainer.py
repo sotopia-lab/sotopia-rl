@@ -1,4 +1,3 @@
-
 import torch
 import wandb
 from jinja2 import Environment, FileSystemLoader
@@ -68,9 +67,9 @@ class SotopiaPPOTrainer(object):
             data_collator=self.dataset.collate_fn
         )
 
-
     def train(self):
-        train_loader = DataLoader(self.dataset, batch_size=self.args.batch_size, shuffle=True, collate_fn=self.dataset.collate_fn)
+        train_loader = DataLoader(self.dataset, batch_size=self.args.batch_size, shuffle=True,
+                                  collate_fn=self.dataset.collate_fn)
 
         for epoch in range(self.args.num_epochs):
             epoch_loss = 0
@@ -79,8 +78,8 @@ class SotopiaPPOTrainer(object):
                 input_ids, attention_mask = input_ids.to(self.device), attention_mask.to(self.device)
 
                 # Generate actions (outputs) and compute rewards
-                generated_output = self.policy_model.generate(input_ids=input_ids, attention_mask=attention_mask, max_length=4096)
-
+                generated_output = self.policy_model.generate(input_ids=input_ids, attention_mask=attention_mask,
+                                                              max_length=4096)
 
                 # Obtain rewards by evaluating generated outputs with the reward model
                 batch_rewards = self.compute_rewards(generated_output, attention_mask)
@@ -100,15 +99,14 @@ class SotopiaPPOTrainer(object):
                 epoch_loss += loss["ppo/loss/total"]
             print(f"Epoch {epoch + 1} - PPO Loss: {epoch_loss / len(train_loader):.4f}")
 
-            checkpoint_dir = os.path.join(self.args.checkpoint_dir, f"checkpoint-epoch-{epoch+1}")
+            checkpoint_dir = os.path.join(self.args.checkpoint_dir, f"checkpoint-epoch-{epoch + 1}")
             os.makedirs(checkpoint_dir, exist_ok=True)
             self.policy_model.save_pretrained(checkpoint_dir)
-            
+
         final_checkpoint_dir = os.path.join(self.args.checkpoint_dir, "final_checkpoint")
         os.makedirs(final_checkpoint_dir, exist_ok=True)
         self.policy_model.save_pretrained(final_checkpoint_dir)
         print(f"Final checkpoint saved at {final_checkpoint_dir}")
-
 
     def compute_rewards(self, generated_output, attention_mask):
         """Compute rewards using the frozen reward model."""
@@ -120,7 +118,6 @@ class SotopiaPPOTrainer(object):
         if rewards.dim() == 0:
             rewards = rewards.unsqueeze(0)
         return rewards
-    
 
     def save_checkpoint(self, checkpoint_path):
         os.makedirs(checkpoint_path, exist_ok=True)

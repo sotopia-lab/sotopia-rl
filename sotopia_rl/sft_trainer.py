@@ -11,8 +11,11 @@ from trl import SFTTrainer
 from sotopia_rl.data import SFTDataset
 
 from transformers import AutoConfig
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> 4cd3d6a03b7d23ef240b8bb0838e90de02f38fc8
 
 
 class SotopiaSFTTrainer:
@@ -33,19 +36,33 @@ class SotopiaSFTTrainer:
         self.tokenizer = AutoTokenizer.from_pretrained(args.model_name)
         self.tokenizer.model_max_length = args.max_length
 
+<<<<<<< HEAD
         quantization_config = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_compute_dtype=torch.bfloat16, bnb_4bit_use_double_quant=True, bnb_4bit_quant_type="nf4",)
+=======
+        quantization_config = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_compute_dtype=torch.bfloat16,
+                                                 bnb_4bit_use_double_quant=True, bnb_4bit_quant_type="nf4", )
+>>>>>>> 4cd3d6a03b7d23ef240b8bb0838e90de02f38fc8
 
         if args.use_qlora:
             print(f"Using QLoRA (4bit) to load model: {args.model_name}")
             base_model = AutoModelForCausalLM.from_pretrained(
                 args.model_name,
                 torch_dtype=torch.float16,
+<<<<<<< HEAD
                 device_map="auto", 
                 quantization_config=quantization_config,        
             )
         else:
             base_model = AutoModelForCausalLM.from_pretrained(args.model_name).to(self.device)
         
+=======
+                device_map="auto",
+                quantization_config=quantization_config,
+            )
+        else:
+            base_model = AutoModelForCausalLM.from_pretrained(args.model_name).to(self.device)
+
+>>>>>>> 4cd3d6a03b7d23ef240b8bb0838e90de02f38fc8
         if args.use_lora:
             peft_config = LoraConfig(
                 r=args.lora_r,
@@ -117,7 +134,8 @@ class SotopiaSFTTrainer:
 
     def setup_dataloaders(self):
         # Load dataset and create train/val split
-        dataset = SFTDataset(self.args.reward_data_path, self.tokenizer, max_length=self.args.max_length, template=self.template)
+        dataset = SFTDataset(self.args.reward_data_path, self.tokenizer, max_length=self.args.max_length,
+                             template=self.template)
         train_size = int(0.95 * len(dataset))
         val_size = len(dataset) - train_size
         self.train_dataset, self.val_dataset = random_split(dataset, [train_size, val_size])
