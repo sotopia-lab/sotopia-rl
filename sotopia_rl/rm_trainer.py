@@ -8,10 +8,10 @@ from torch.nn import MSELoss
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import CosineAnnealingLR, LinearLR, SequentialLR
 from torch.utils.data import random_split
-from transformers import AutoModelForCausalLM, AutoTokenizer, Trainer, TrainingArguments
+from transformers import AutoModelForCausalLM, AutoTokenizer, Trainer, TrainingArguments, BitsAndBytesConfig
 from trl import AutoModelForCausalLMWithValueHead
 
-from .data import RMDataset
+from sotopia_rl.data import RMDataset
 
 
 class SotopiaRMTrainer(Trainer):
@@ -27,13 +27,24 @@ class SotopiaRMTrainer(Trainer):
             config={k: v for k, v in vars(args).items() if isinstance(v, (int, float, str))}
         )
 
+        quantization_config = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_compute_dtype=torch.bfloat16, bnb_4bit_use_double_quant=True, bnb_4bit_quant_type="nf4")
+
         peft_config = LoraConfig(
             r=args.lora_r,
             lora_alpha=args.lora_alpha,
             lora_dropout=args.lora_dropout,
             target_modules=args.target_modules.split(",")
         )
-        model = AutoModelForCausalLM.from_pretrained(args.model_name)
+        if args.use_qlora:
+            print(f"Using QLoRA (4bit) to load model: {args.model_name}")
+            model = AutoModelForCausalLM.from_pretrained(
+                args.model_name,
+                torch_dtype=torch.float16,
+                device_map="auto", 
+                quantization_config=quantization_config,        
+            )
+        else:
+            model = AutoModelForCausalLM.from_pretrained(args.model_name).to(self.device)
         model = PeftModelForCausalLM(model, peft_config)
         model = AutoModelForCausalLMWithValueHead.from_pretrained(model)
         tokenizer = AutoTokenizer.from_pretrained(args.model_name)
@@ -56,7 +67,9 @@ class SotopiaRMTrainer(Trainer):
             load_best_model_at_end=True,
             save_total_limit=10,  # Only keep the latest 3 checkpoints
             label_names=["labels"],
-            save_safetensors=False
+            save_safetensors=False,
+            optim="paged_adamw_8bit" if args.use_qlora else "adamw_torch",
+            fp16=True
         )
 
 
@@ -98,13 +111,10 @@ class SotopiaRMTrainer(Trainer):
         template = env.get_template(self.args.template_path.split("/")[-1])
         tokenizer = AutoTokenizer.from_pretrained(self.args.model_name)
         dataset = RMDataset(self.args.reward_data_path, tokenizer, template, self.args.max_length)
-
-        #train_size = int(len(dataset) * 0.95)
-        train_size = 40
-        #val_size = len(dataset) - train_size
-        val_size = 10
+        print(f"dataset: {len(dataset)}")
+        train_size = int(len(dataset) * 0.95)
+        val_size = len(dataset) - train_size
         train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
-
         return train_dataset, val_dataset
 
 

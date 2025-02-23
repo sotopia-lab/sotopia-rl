@@ -17,6 +17,8 @@ if __name__ == '__main__':
     parser.add_argument("--evaluation_steps", type=int, default=100, help="Evaluation interval in steps")
     parser.add_argument("--accumulation_steps", type=int, default=1, help="Gradient accumulation steps")
 
+    parser.add_argument("--use_qlora", action="store_true", help="Use QLoRA (4-bit) for model loading.")
+
     # LoRA-specific arguments
     parser.add_argument("--use_lora", action="store_true", help="Use LoRA for fine-tuning")
     parser.add_argument("--lora_r", type=int, default=8, help="LoRA rank")

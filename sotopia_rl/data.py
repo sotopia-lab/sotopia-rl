@@ -90,7 +90,7 @@ class RMDataset(Dataset):
     def load_reward_data(self, file_path):
         with open(file_path, "r") as f:
             data = json.load(f)
-        return data[:50]
+        return data
 
     def __len__(self):
         return len(self.data)
