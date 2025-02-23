@@ -1,4 +1,4 @@
-CUDA_VISIBLE_DEVICES=2 python /data/haofeiy2/sotopia-rl/scripts/train_rm.py \
+CUDA_VISIBLE_DEVICES=1 python /data/haofeiy2/sotopia-rl/scripts/train_rm.py \
 --model_name /data/models/Qwen2.5-7B-Instruct \
 --learning_rate 1e-5 \
 --max_length 4096 \

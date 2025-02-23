@@ -34,14 +34,12 @@ ACTION_LIST = "none action speak non-verbal communication leave"  # " ".join(Act
 ACTION_REVERSE_MAP = {"left ": "leave", "did n": "none", "said:": "speak"}
 
 MODEL_CHECKPOINT = "meta-llama/Llama-2-13b-chat-hf"
-HF_TOKEN = "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"
 
 
 TOKENIZER = transformers.AutoTokenizer.from_pretrained(
     MODEL_CHECKPOINT,
     padding=False,
     truncation=False,
-    token=HF_TOKEN,
 )
 
 
