@@ -8,10 +8,10 @@ from torch.nn import MSELoss
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import CosineAnnealingLR, LinearLR, SequentialLR
 from torch.utils.data import random_split
-from transformers import AutoModelForCausalLM, AutoTokenizer, Trainer, TrainingArguments
+from transformers import AutoModelForCausalLM, AutoTokenizer, Trainer, TrainingArguments, BitsAndBytesConfig
 from trl import AutoModelForCausalLMWithValueHead
 
-from data import RMDataset
+from sotopia_rl.data import RMDataset
 
 
 class SotopiaRMTrainer(Trainer):
@@ -27,13 +27,25 @@ class SotopiaRMTrainer(Trainer):
             config={k: v for k, v in vars(args).items() if isinstance(v, (int, float, str))}
         )
 
+        quantization_config = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_compute_dtype=torch.bfloat16,
+                                                 bnb_4bit_use_double_quant=True, bnb_4bit_quant_type="nf4")
+
         peft_config = LoraConfig(
             r=args.lora_r,
             lora_alpha=args.lora_alpha,
             lora_dropout=args.lora_dropout,
             target_modules=args.target_modules.split(",")
         )
-        model = AutoModelForCausalLM.from_pretrained(args.model_name)
+        if args.use_qlora:
+            print(f"Using QLoRA (4bit) to load model: {args.model_name}")
+            model = AutoModelForCausalLM.from_pretrained(
+                args.model_name,
+                torch_dtype=torch.float16,
+                device_map="auto",
+                quantization_config=quantization_config,
+            )
+        else:
+            model = AutoModelForCausalLM.from_pretrained(args.model_name).to(self.device)
         model = PeftModelForCausalLM(model, peft_config)
         model = AutoModelForCausalLMWithValueHead.from_pretrained(model)
         tokenizer = AutoTokenizer.from_pretrained(args.model_name)
@@ -56,9 +68,10 @@ class SotopiaRMTrainer(Trainer):
             load_best_model_at_end=True,
             save_total_limit=10,  # Only keep the latest 3 checkpoints
             label_names=["labels"],
-            save_safetensors=False
+            save_safetensors=False,
+            optim="paged_adamw_8bit" if args.use_qlora else "adamw_torch",
+            fp16=True
         )
-
 
         super().__init__(
             model=model,
@@ -75,7 +88,6 @@ class SotopiaRMTrainer(Trainer):
         if args.checkpoint_path:
             self.load_checkpoint(args.checkpoint_path)
 
-
     def collate_fn(self, batch):
         input_ids = torch.nn.utils.rnn.pad_sequence(
             [item["input_ids"] for item in batch], batch_first=True, padding_value=self.processing_class.pad_token_id
@@ -91,22 +103,17 @@ class SotopiaRMTrainer(Trainer):
             "labels": labels,  # Ensure labels are present in the batch output
         }
 
-
     def setup_dataset(self):
         # Load dataset and create train/val split
         env = Environment(loader=FileSystemLoader("/".join(self.args.template_path.split("/")[:-1])))
         template = env.get_template(self.args.template_path.split("/")[-1])
         tokenizer = AutoTokenizer.from_pretrained(self.args.model_name)
         dataset = RMDataset(self.args.reward_data_path, tokenizer, template, self.args.max_length)
-
-        #train_size = int(len(dataset) * 0.95)
-        train_size = 40
-        #val_size = len(dataset) - train_size
-        val_size = 10
+        print(f"dataset: {len(dataset)}")
+        train_size = int(len(dataset) * 0.95)
+        val_size = len(dataset) - train_size
         train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
-
         return train_dataset, val_dataset
-
 
     def compute_loss(self, model, inputs, return_outputs=False, **kwargs):
         # Custom compute_loss for value head-based reward model
@@ -124,7 +131,6 @@ class SotopiaRMTrainer(Trainer):
 
         return (loss, outputs) if return_outputs else loss
 
-
     def create_custom_optimzer(self, model, args):
         return AdamW(model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
 
@@ -135,7 +141,8 @@ class SotopiaRMTrainer(Trainer):
         cosine_scheduler = CosineAnnealingLR(
             optimizer, T_max=self.args.num_epochs * steps_per_epoch, eta_min=self.args.min_lr
         )
-        return SequentialLR(optimizer, schedulers=[warmup_scheduler, cosine_scheduler], milestones=[int(steps_per_epoch * self.args.warmup_epochs)])
+        return SequentialLR(optimizer, schedulers=[warmup_scheduler, cosine_scheduler],
+                            milestones=[int(steps_per_epoch * self.args.warmup_epochs)])
 
     def save_model(self, output_dir=None, **kwargs):
         state_dict = self.model.state_dict()
@@ -153,11 +160,9 @@ class SotopiaRMTrainer(Trainer):
         )
         torch.save(v_head_state_dict, os.path.join(output_dir, 'value_head.pt'))
 
-
     def _load_best_model(self):
         checkpoint_path = self.state.best_model_checkpoint
         self.load_checkpoint(checkpoint_path)
-
 
     def load_checkpoint(self, checkpoint_path):
         adapter_model_path = os.path.join(checkpoint_path, 'adapter_model.safetensors')

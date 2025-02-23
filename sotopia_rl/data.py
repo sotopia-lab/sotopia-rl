@@ -90,7 +90,7 @@ class RMDataset(Dataset):
     def load_reward_data(self, file_path):
         with open(file_path, "r") as f:
             data = json.load(f)
-        return data[:50]
+        return data
 
     def __len__(self):
         return len(self.data)
@@ -126,10 +126,11 @@ class RMDataset(Dataset):
         }
 
 class PPODataset(Dataset):
-    def __init__(self, reward_data_path, tokenizer, template):
+    def __init__(self, reward_data_path, tokenizer, template, max_length=512):
         self.data = self.load_reward_data(reward_data_path)
         self.tokenizer = tokenizer
         self.template = template
+        self.max_length = max_length
 
     def load_reward_data(self, file_path):
         with open(file_path, "r") as f:
@@ -149,17 +150,33 @@ class PPODataset(Dataset):
                 {"role": "user", "content": item["instruction"]},
                 {"role": "assistant", "content": item["output"]}
             ],
-            add_generation_prompt=True  # Set to True if generation prompt is required
+            add_generation_prompt=False  # Set to True if generation prompt is required
         )
 
-        input_ids = self.tokenizer(input_text, return_tensors="pt", padding=True, truncation=True).input_ids.squeeze()
-        return input_ids
+        # Tokenize with max_length and truncation
+        tokenized_input = self.tokenizer(
+            input_text,
+            return_tensors="pt",
+            padding=True,
+            max_length=self.max_length,
+            truncation=True
+        )
+
+        # Return a dictionary as expected by the Trainer
+        return {
+            "input_ids": tokenized_input["input_ids"].squeeze(),
+            "attention_mask": tokenized_input["attention_mask"].squeeze(),
+        }
 
     def collate_fn(self, batch):
-        input_ids = zip(*batch)
+        input_ids = torch.nn.utils.rnn.pad_sequence(
+            [item["input_ids"] for item in batch], batch_first=True, padding_value=self.tokenizer.pad_token_id
+        )
+        attention_masks = torch.nn.utils.rnn.pad_sequence(
+            [item["attention_mask"] for item in batch], batch_first=True, padding_value=0
+        )
 
-        input_ids_padded = pad_sequence(input_ids, batch_first=True, padding_value=self.tokenizer.pad_token_id)
-
-        attention_mask = (input_ids_padded != self.tokenizer.pad_token_id).long()
-
-        return input_ids_padded, attention_mask
+        return {
+            "input_ids": input_ids,
+            "attention_mask": attention_masks,
+        }
