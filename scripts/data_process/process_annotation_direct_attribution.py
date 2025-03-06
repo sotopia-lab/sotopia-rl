@@ -5,11 +5,7 @@ from copy import deepcopy
 from typing import Any, Dict, List
 import click
 from tqdm import tqdm
-
-# TODO: Fill in REDIS OM URL in the form of `redis://:password@host:port`
-os.environ["REDIS_OM_URL"] = "redis://:QzmCUD3C3RdsR@35.232.108.130:6379"
-
-from reverse_engineering import run_reverse_by_pk_agent
+from db_free_reverse_engineering import run_reverse_by_pk_agent
 
 def get_attributed_data(data: List[Dict[str, Any]], utterance_pattern: str) -> List[Dict[str, Any]]:
     attributed_data = []
@@ -45,8 +41,8 @@ def get_attributed_data(data: List[Dict[str, Any]], utterance_pattern: str) -> L
 @click.option("--data_dir", type=str, required=True, help="Directory containing data files.")
 @click.option("--input_file", type=str, required=True, help="Path to the raw JSON file.")
 @click.option("--reward_output_file", type=str, required=True, help="Path to the processed JSON file.")
-@click.option("--ppo_output_file", type=str, required=True, help="Path to the processed JSON file.")
-def main(data_dir: str, input_file: str, reward_output_file: str, ppo_output_file: str) -> None:
+@click.option("--sft_output_file", type=str, required=True, help="Path to the processed JSON file.")
+def main(data_dir: str, input_file: str, reward_output_file: str, sft_output_file: str) -> None:
     with open(os.path.join(data_dir, input_file), 'r') as f:
         data: List[Dict[str, Any]] = [json.loads(d) for d in f.readlines()]
     
@@ -85,9 +81,9 @@ def main(data_dir: str, input_file: str, reward_output_file: str, ppo_output_fil
     with open(os.path.join(data_dir, reward_output_file), 'w') as f:
         json.dump(sotopia_pi_utterance_reward, f, indent=4)
 
-    sotopia_pi_utterance_ppo = []
+    sotopia_pi_utterance_sft = []
     for d in tqdm(attributed_data):
-        sotopia_pi_utterance_ppo.append(
+        sotopia_pi_utterance_sft.append(
             {
                 "instruction": d['prompt'],
                 "input": "",
@@ -95,8 +91,8 @@ def main(data_dir: str, input_file: str, reward_output_file: str, ppo_output_fil
             }
         )
 
-    with open(os.path.join(data_dir, ppo_output_file), 'w') as f:
-        json.dump(sotopia_pi_utterance_ppo, f, indent=4)
+    with open(os.path.join(data_dir, sft_output_file), 'w') as f:
+        json.dump(sotopia_pi_utterance_sft, f, indent=4)
 
 if __name__ == "__main__":
     main()
