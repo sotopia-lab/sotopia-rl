@@ -1,16 +1,22 @@
 import os
 
 import torch
-import wandb
 from jinja2 import Environment, FileSystemLoader
 from peft import LoraConfig, PeftModelForCausalLM
 from torch.nn import MSELoss
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import CosineAnnealingLR, LinearLR, SequentialLR
 from torch.utils.data import random_split
-from transformers import AutoModelForCausalLM, AutoTokenizer, Trainer, TrainingArguments, BitsAndBytesConfig
+from transformers import (
+    AutoModelForCausalLM,
+    AutoTokenizer,
+    BitsAndBytesConfig,
+    Trainer,
+    TrainingArguments,
+)
 from trl import AutoModelForCausalLMWithValueHead
 
+import wandb
 from sotopia_rl.data import RMDataset
 
 
@@ -28,7 +34,7 @@ class SotopiaRMTrainer(Trainer):
         )
 
         quantization_config = BitsAndBytesConfig(
-            load_in_4bit=True, 
+            load_in_4bit=True,
             bnb_4bit_compute_dtype=torch.bfloat16,
             bnb_4bit_use_double_quant=True, bnb_4bit_quant_type="nf4"
         )

@@ -1,17 +1,20 @@
 import os
 
 import torch
-import wandb
 from jinja2 import Environment, FileSystemLoader
 from peft import LoraConfig, get_peft_model
 from torch.utils.data import random_split
-from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments, BitsAndBytesConfig
+from transformers import (
+    AutoConfig,
+    AutoModelForCausalLM,
+    AutoTokenizer,
+    BitsAndBytesConfig,
+    TrainingArguments,
+)
 from trl import SFTTrainer
-from transformers.integrations import WandbCallback
 
+import wandb
 from sotopia_rl.data import SFTDataset
-
-from transformers import AutoConfig
 
 
 class SotopiaSFTTrainer:
@@ -33,9 +36,9 @@ class SotopiaSFTTrainer:
         self.tokenizer.model_max_length = args.max_length
 
         quantization_config = BitsAndBytesConfig(
-            load_in_4bit=True, 
+            load_in_4bit=True,
             bnb_4bit_compute_dtype=torch.bfloat16,
-            bnb_4bit_use_double_quant=True, bnb_4bit_quant_type="nf4", 
+            bnb_4bit_use_double_quant=True, bnb_4bit_quant_type="nf4",
         )
 
         if args.use_qlora:
@@ -131,11 +134,11 @@ class SotopiaSFTTrainer:
     def train(self):
         # Begin training with SFTTrainer
         self.trainer.train()
-        
+
         # Evaluate one last time to log final metrics
         eval_results = self.trainer.evaluate()
         wandb.log({"final_eval_loss": eval_results["eval_loss"]})
-        
+
         # Save the final model
         self.save_lora_checkpoint()
 

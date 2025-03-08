@@ -1,8 +1,9 @@
 # sotopia/management/commands/start_with_config.py
+from django.core.management import execute_from_command_line
 from django.core.management.base import BaseCommand
 from sotopia.apps import RejectionSamplerConfig
 from sotopia.models import RejectionSampler
-from django.core.management import execute_from_command_line
+
 
 class Command(BaseCommand):
     help = 'Start the server with custom RejectionSampler configuration'
