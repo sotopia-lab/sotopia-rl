@@ -10,5 +10,5 @@ CUDA_VISIBLE_DEVICES=3 python /data/haofeiy2/sotopia-rl/scripts/train_sft.py \
 --evaluation_steps 500 \
 --sft_data_path /data/haofeiy2/sotopia-rl/data/sotopia_pi_bc_episodes_sft.json \
 --template_path /data/haofeiy2/sotopia-rl/evals/qwen2.5-7b.jinja \
---checkpoint_dir sft \
+--checkpoint_dir sft_qwen25_7b_instruct \
 --use_qlora

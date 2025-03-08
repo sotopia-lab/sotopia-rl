@@ -10,7 +10,7 @@ if __name__ == '__main__':
     parser.add_argument("--train_batch_size", type=int, default=2, help="Training batch size")
     parser.add_argument("--val_batch_size", type=int, default=2, help="Validation batch size")
     parser.add_argument("--num_epochs", type=int, default=3, help="Number of training epochs")
-    parser.add_argument("--reward_data_path", type=str, required=True, help="Path to reward data")
+    parser.add_argument("--sft_data_path", type=str, required=True, help="Path to reward data")
     parser.add_argument("--template_path", type=str, required=True, help="Path to the Jinja template file")
     parser.add_argument("--max_length", type=int, default=512, help="Max sequence length")
     parser.add_argument("--weight_decay", type=float, default=0.01, help="Weight decay")
