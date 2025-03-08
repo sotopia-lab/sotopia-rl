@@ -100,12 +100,6 @@ class SotopiaSFTTrainer:
             tokenizer=self.tokenizer,
             data_collator=self.collate_fn,
         )
-    
-    def compute_metrics(eval_pred):
-        logits, labels = eval_pred
-        # Compute the loss here. For example:
-        loss = ((logits - labels.float()) ** 2).mean().item()  # Replace with your actual loss computation
-        return {"eval_loss": loss}
 
     def collate_fn(self, batch):
         input_ids = torch.nn.utils.rnn.pad_sequence(
