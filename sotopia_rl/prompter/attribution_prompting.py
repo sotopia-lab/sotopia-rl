@@ -46,7 +46,7 @@ def parse_conversation(
 client = OpenAI()
 
 
-PRELOGUE_INSTRUCTIONS = """
+DEFAULT_PRELOGUE_INSTRUCTIONS = """
 For this task, you will receive the dialogue history between two conversational agents, the social goal of one of the agents, and the final goal achieving score recieved by this agent. Your objective is to assess how much each of the agent's utterance (marked by the agent's name and the utterance number) contributed to the final goal achieving score. You also need to consider the response of the other agent in the conversation to evaluate the impact of the utterance.
 
 For the goal achieving score, if it is <5, the agent fails, so you need to think which utterance is the most important one that leads to the failure of the goal and assign the critical utterance that leads to the failure to be 3. If it is >=5, the agent succeeds, so you need to think which utterance is the most important one that leads to the success of the goal and assign the critical utterance that leads to the success to be 3.
@@ -55,7 +55,7 @@ Following the same logic, if you believe an utterance had no impact on the final
 """
 
 
-def get_epilogue_instructions(agent: str) -> str:
+def get_attribution_formatting_instructions(agent: str) -> str:
     return f"""
 Please format your response as JSON with the following structure:
 {{
@@ -67,14 +67,15 @@ The utterance numbers should correspond to their order in the conversation. Each
 """
 
 
-def generate_single_attribution_prompt(
+def get_single_attribution_prompt(
     conversation: List[Tuple[str, str]],
     goal: str,
     score: float,
     agent: str,
+    attribution_instruction: str
 ) -> Tuple[str, Dict[str, List[Any]]]:
     """Generate a single prompt for GPT based on the entire conversation, agent's goals, and final goal achieving score."""
-    prompt = f"{PRELOGUE_INSTRUCTIONS}\n\n"
+    prompt = f"{attribution_instruction}\n\n"
     prompt += "Conversation between two agents:\n\n"
     prompt += f"Agent for Evaluation: {agent}\n\n"
     prompt += f"Agent Goal: {goal}\n\n"
@@ -87,7 +88,7 @@ def generate_single_attribution_prompt(
             utterance,
             0,
         ]
-    prompt += "\n" + get_epilogue_instructions(agent)
+    prompt += "\n" + get_attribution_formatting_instructions(agent)
     return prompt, key_utterance_dict
 
 
@@ -129,6 +130,7 @@ def generate_reward_attribution(
     llm_name: str = "gpt-3.5-turbo",
     input_file: str = "example_episodes_with_scores.jsonl",
     output_file: str = "openai_log_attribution.jsonl",
+    attribution_instruction: str = DEFAULT_PRELOGUE_INSTRUCTIONS,
 ) -> None:
     with jsonlines.open(os.path.join(data_dir, input_file), "r") as reader:
         data = list(reader)
@@ -163,8 +165,8 @@ def generate_reward_attribution(
         conversation, goals = parse_conversation(episode)
         agents = list(goals.keys())
         for agent in agents:
-            prompt, key_prompt_dict = generate_single_attribution_prompt(
-                conversation, goals[agent], episode["scores"][agent], agent
+            prompt, key_prompt_dict = get_single_attribution_prompt(
+                conversation, goals[agent], episode["scores"][agent], agent, attribution_instruction=attribution_instruction
             )
             attribution_scores = assign_attributions_for_conversation(
                 prompt, llm_name=llm_name

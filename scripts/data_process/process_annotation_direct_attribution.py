@@ -70,10 +70,8 @@ def main(data_dir: str, input_file: str, reward_output_file: str, sft_output_fil
         sotopia_pi_utterance_reward.append(
             {
                 "instruction": d['prompt'],
-                "input": "",
                 "output": d['result'],
                 "value": calc_reward(d['attribution'], d['goal_score']),
-                "system": "",
                 "history": []
             }
         )
