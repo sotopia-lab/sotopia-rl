@@ -73,7 +73,8 @@ class SotopiaRMTrainer(Trainer):
             label_names=["labels"],
             save_safetensors=False,
             optim="paged_adamw_8bit" if args.use_qlora else "adamw_torch",
-            fp16=True
+            fp16=True,
+            remove_unused_columns=False,
         )
 
         super().__init__(
