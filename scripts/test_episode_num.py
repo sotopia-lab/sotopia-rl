@@ -10,5 +10,5 @@ for data in dataset:
     setting = parts[8] + parts[9]
     if setting not in settings:
         settings.append(setting) 
-print(len(dataset))
-print(len(settings))
+print('Total utterances:', len(dataset))
+print('Total AgentEnvCombos:', len(settings))
