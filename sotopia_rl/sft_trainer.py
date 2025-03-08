@@ -7,6 +7,7 @@ from peft import LoraConfig, get_peft_model
 from torch.utils.data import random_split
 from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments, BitsAndBytesConfig
 from trl import SFTTrainer
+from transformers.integrations import WandbCallback
 
 from sotopia_rl.data import SFTDataset
 
@@ -81,10 +82,13 @@ class SotopiaSFTTrainer:
             eval_steps=args.evaluation_steps,
             save_steps=args.evaluation_steps,
             logging_dir="./logs",
-            report_to="wandb",  # Log to wandb
+            report_to="wandb",
             gradient_checkpointing=False,
             optim="paged_adamw_8bit" if args.use_qlora else "adamw_torch",
-            fp16=True
+            fp16=True,
+            load_best_model_at_end=True,  # Load the best model at the end of training
+            metric_for_best_model="eval_loss",  # Use eval_loss as the metric to determine the best model
+            greater_is_better=False,  # Lower eval_loss is better
         )
 
         # Initialize SFTTrainer
@@ -95,6 +99,7 @@ class SotopiaSFTTrainer:
             eval_dataset=self.val_dataset,
             tokenizer=self.tokenizer,
             data_collator=self.collate_fn,
+            callbacks=[CustomWandbCallback()],  # Add a custom callback for enhanced logging
         )
 
     def collate_fn(self, batch):
@@ -127,6 +132,11 @@ class SotopiaSFTTrainer:
     def train(self):
         # Begin training with SFTTrainer
         self.trainer.train()
+        
+        # Evaluate one last time to log final metrics
+        eval_results = self.trainer.evaluate()
+        wandb.log({"final_eval_loss": eval_results["eval_loss"]})
+        
         # Save the final model
         self.save_lora_checkpoint()
 
@@ -142,3 +152,15 @@ class SotopiaSFTTrainer:
         # Load LoRA checkpoint in standard PEFT format
         self.model = self.model.from_pretrained(self.model, checkpoint_path)
         print(f"LoRA checkpoint loaded from {checkpoint_path}")
+
+
+class CustomWandbCallback(WandbCallback):
+    def on_evaluate(self, args, state, control, metrics=None, **kwargs):
+        if metrics is not None and 'eval_loss' in metrics:
+            wandb.log({
+                "eval/loss": metrics['eval_loss'],
+                "eval/perplexity": torch.exp(torch.tensor(metrics['eval_loss'])).item(),
+                "global_step": state.global_step,
+            })
+        
+        super().on_evaluate(args, state, control, metrics, **kwargs)
