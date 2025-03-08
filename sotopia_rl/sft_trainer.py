@@ -116,7 +116,7 @@ class SotopiaSFTTrainer:
 
     def setup_dataloaders(self):
         # Load dataset and create train/val split
-        dataset = SFTDataset(self.args.reward_data_path, self.tokenizer, max_length=self.args.max_length,
+        dataset = SFTDataset(self.args.sft_data_path, self.tokenizer, max_length=self.args.max_length,
                              template=self.template)
         train_size = int(0.95 * len(dataset))
         val_size = len(dataset) - train_size
@@ -133,7 +133,7 @@ class SotopiaSFTTrainer:
     def save_lora_checkpoint(self):
         # Save model in standard PEFT format if LoRA is used
         if self.args.use_lora:
-            checkpoint_path = os.path.join(self.args.output_dir, "best_lora_checkpoint")
+            checkpoint_path = os.path.join(self.args.checkpoint_dir, "best_lora_checkpoint")
             os.makedirs(checkpoint_path, exist_ok=True)
             self.model.save_pretrained(checkpoint_path)
             print(f"LoRA checkpoint saved at {checkpoint_path}")
