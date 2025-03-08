@@ -1,4 +1,4 @@
-CUDA_VISIBLE_DEVICES=1 python /data/haofeiy2/sotopia-rl/scripts/train_rm.py \
+CUDA_VISIBLE_DEVICES=4 python /data/haofeiy2/sotopia-rl/scripts/train_rm.py \
 --model_name /data/models/Qwen2.5-7B-Instruct \
 --learning_rate 1e-5 \
 --max_length 4096 \
@@ -7,9 +7,9 @@ CUDA_VISIBLE_DEVICES=1 python /data/haofeiy2/sotopia-rl/scripts/train_rm.py \
 --accumulation_steps 4 \
 --num_epochs 3 \
 --evaluation_steps 2000 \
---reward_data_path /data/haofeiy2/sotopia-rl/data/sotopia_pi_bc_episodes_annotated_reward.json \
+--reward_data_path /data/haofeiy2/sotopia-rl/data/sotopia_pi_bc_episodes_reward_o3-mini_attribution_direct.json \
 --template_path /data/haofeiy2/sotopia-rl/evals/qwen2.5-7b.jinja \
---checkpoint_dir /data/haofeiy2/sotopia-rl/saves_qwen-7b/rm_baseline\
+--checkpoint_dir /data/haofeiy2/sotopia-rl/rm_direct \
 --use_qlora
 
 

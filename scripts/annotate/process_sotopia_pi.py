@@ -1,8 +1,10 @@
-import click
 import json
+import os
+
+import click
 import jsonlines
 from rich import print
-import os
+
 
 @click.command()
 @click.option("--data_dir", type=str, required=True, help="Directory containing data files.")
@@ -15,7 +17,7 @@ def main(data_dir: str, input_file: str, output_file: str) -> None:
     with open(os.path.join(data_dir, input_file), "r") as f:
         episodes = [json.loads(line) for line in f]
     print("[bold green]Successfully loaded episodes:[/bold green]")
-    
+
     behavior_cloning_episodes = []
     for episode in episodes:
         if episode["experiment_model_name_pairs"][0] == "gpt-4" and episode["experiment_model_name_pairs"][1] == "gpt-4":

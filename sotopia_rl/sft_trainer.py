@@ -1,17 +1,20 @@
 import os
 
 import torch
-import wandb
 from jinja2 import Environment, FileSystemLoader
 from peft import LoraConfig, get_peft_model
 from torch.utils.data import random_split
-from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments, BitsAndBytesConfig
+from transformers import (
+    AutoConfig,
+    AutoModelForCausalLM,
+    AutoTokenizer,
+    BitsAndBytesConfig,
+    TrainingArguments,
+)
 from trl import SFTTrainer
-from transformers.integrations import WandbCallback
 
+import wandb
 from sotopia_rl.data import SFTDataset
-
-from transformers import AutoConfig
 
 
 class SotopiaSFTTrainer:
@@ -32,8 +35,11 @@ class SotopiaSFTTrainer:
         self.tokenizer = AutoTokenizer.from_pretrained(args.model_name)
         self.tokenizer.model_max_length = args.max_length
 
-        quantization_config = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_compute_dtype=torch.bfloat16,
-                                                 bnb_4bit_use_double_quant=True, bnb_4bit_quant_type="nf4", )
+        quantization_config = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_compute_dtype=torch.bfloat16,
+            bnb_4bit_use_double_quant=True, bnb_4bit_quant_type="nf4",
+        )
 
         if args.use_qlora:
             print(f"Using QLoRA (4bit) to load model: {args.model_name}")
@@ -86,9 +92,6 @@ class SotopiaSFTTrainer:
             gradient_checkpointing=False,
             optim="paged_adamw_8bit" if args.use_qlora else "adamw_torch",
             fp16=True,
-            load_best_model_at_end=True,  # Load the best model at the end of training
-            metric_for_best_model="eval_loss",  # Use eval_loss as the metric to determine the best model
-            greater_is_better=False,  # Lower eval_loss is better
         )
 
         # Initialize SFTTrainer
@@ -99,7 +102,6 @@ class SotopiaSFTTrainer:
             eval_dataset=self.val_dataset,
             tokenizer=self.tokenizer,
             data_collator=self.collate_fn,
-            callbacks=[CustomWandbCallback()],  # Add a custom callback for enhanced logging
         )
 
     def collate_fn(self, batch):
@@ -132,11 +134,11 @@ class SotopiaSFTTrainer:
     def train(self):
         # Begin training with SFTTrainer
         self.trainer.train()
-        
+
         # Evaluate one last time to log final metrics
         eval_results = self.trainer.evaluate()
         wandb.log({"final_eval_loss": eval_results["eval_loss"]})
-        
+
         # Save the final model
         self.save_lora_checkpoint()
 
@@ -152,15 +154,3 @@ class SotopiaSFTTrainer:
         # Load LoRA checkpoint in standard PEFT format
         self.model = self.model.from_pretrained(self.model, checkpoint_path)
         print(f"LoRA checkpoint loaded from {checkpoint_path}")
-
-
-class CustomWandbCallback(WandbCallback):
-    def on_evaluate(self, args, state, control, metrics=None, **kwargs):
-        if metrics is not None and 'eval_loss' in metrics:
-            wandb.log({
-                "eval/loss": metrics['eval_loss'],
-                "eval/perplexity": torch.exp(torch.tensor(metrics['eval_loss'])).item(),
-                "global_step": state.global_step,
-            })
-        
-        super().on_evaluate(args, state, control, metrics, **kwargs)
