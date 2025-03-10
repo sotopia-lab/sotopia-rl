@@ -1,13 +1,15 @@
+import os
+
 import torch
-import wandb
 from jinja2 import Environment, FileSystemLoader
 from peft import LoraConfig
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 from transformers import AutoTokenizer
 from trl import AutoModelForCausalLMWithValueHead, PPOConfig, PPOTrainer
+
+import wandb
 from sotopia_rl.data import PPODataset
-import os
 
 
 class SotopiaPPOTrainer(object):

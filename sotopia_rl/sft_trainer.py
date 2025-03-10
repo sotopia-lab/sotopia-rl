@@ -1,17 +1,21 @@
 import os
 
 import torch
-import wandb
 from jinja2 import Environment, FileSystemLoader
 from peft import LoraConfig, get_peft_model
 from torch.utils.data import random_split
-from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments, BitsAndBytesConfig
-from trl import SFTTrainer
+from transformers import (
+    AutoConfig,
+    AutoModelForCausalLM,
+    AutoTokenizer,
+    BitsAndBytesConfig,
+    TrainingArguments,
+)
 from transformers.integrations import WandbCallback
+from trl import SFTTrainer
 
+import wandb
 from sotopia_rl.data import SFTDataset
-
-from transformers import AutoConfig
 
 
 class SotopiaSFTTrainer:
@@ -132,11 +136,11 @@ class SotopiaSFTTrainer:
     def train(self):
         # Begin training with SFTTrainer
         self.trainer.train()
-        
+
         # Evaluate one last time to log final metrics
         eval_results = self.trainer.evaluate()
         wandb.log({"final_eval_loss": eval_results["eval_loss"]})
-        
+
         # Save the final model
         self.save_lora_checkpoint()
 
@@ -162,5 +166,5 @@ class CustomWandbCallback(WandbCallback):
                 "eval/perplexity": torch.exp(torch.tensor(metrics['eval_loss'])).item(),
                 "global_step": state.global_step,
             })
-        
+
         super().on_evaluate(args, state, control, metrics, **kwargs)

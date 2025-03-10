@@ -1,16 +1,22 @@
 import os
 
 import torch
-import wandb
 from jinja2 import Environment, FileSystemLoader
 from peft import LoraConfig, PeftModelForCausalLM
 from torch.nn import MSELoss
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import CosineAnnealingLR, LinearLR, SequentialLR
 from torch.utils.data import random_split
-from transformers import AutoModelForCausalLM, AutoTokenizer, Trainer, TrainingArguments, BitsAndBytesConfig
+from transformers import (
+    AutoModelForCausalLM,
+    AutoTokenizer,
+    BitsAndBytesConfig,
+    Trainer,
+    TrainingArguments,
+)
 from trl import AutoModelForCausalLMWithValueHead
 
+import wandb
 from sotopia_rl.data import RMDataset
 
 
