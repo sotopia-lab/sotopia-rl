@@ -33,8 +33,11 @@ class SotopiaRMTrainer(Trainer):
             config={k: v for k, v in vars(args).items() if isinstance(v, (int, float, str))}
         )
 
-        quantization_config = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_compute_dtype=torch.bfloat16,
-                                                 bnb_4bit_use_double_quant=True, bnb_4bit_quant_type="nf4")
+        quantization_config = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_compute_dtype=torch.bfloat16,
+            bnb_4bit_use_double_quant=True, bnb_4bit_quant_type="nf4"
+        )
 
         peft_config = LoraConfig(
             r=args.lora_r,
@@ -76,7 +79,8 @@ class SotopiaRMTrainer(Trainer):
             label_names=["labels"],
             save_safetensors=False,
             optim="paged_adamw_8bit" if args.use_qlora else "adamw_torch",
-            fp16=True
+            fp16=True,
+            remove_unused_columns=False,
         )
 
         super().__init__(
