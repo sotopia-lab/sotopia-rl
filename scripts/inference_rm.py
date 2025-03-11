@@ -1,11 +1,13 @@
 import argparse
-import torch
 import json
-from jinja2 import Environment, FileSystemLoader, Template
+import os
+
+import torch
+from jinja2 import Environment, FileSystemLoader
 from peft import PeftModelForCausalLM
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 from trl import AutoModelForCausalLMWithValueHead
-import os
+
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -22,18 +24,18 @@ def parse_args():
                         help="Path to Jinja2 template file (optional)")
     parser.add_argument("--prompt_file", type=str, default=None,
                         help="Path to JSON file containing conversation data (optional)")
-    parser.add_argument("--use_4bit", action="store_true", 
+    parser.add_argument("--use_4bit", action="store_true",
                         help="Whether to use 4-bit quantization for inference")
-    
+
     return parser.parse_args()
 
 def load_model_and_tokenizer(args):
     print(f"Loading base model: {args.base_model}")
-    
+
     # Set up tokenizer
     tokenizer = AutoTokenizer.from_pretrained(args.base_model)
     tokenizer.pad_token = tokenizer.eos_token
-    
+
     # Set up model with potential quantization
     if args.use_4bit:
         print("Using 4-bit quantization for inference")
@@ -43,7 +45,7 @@ def load_model_and_tokenizer(args):
             bnb_4bit_use_double_quant=True,
             bnb_4bit_quant_type="nf4"
         )
-        
+
         base_model = AutoModelForCausalLM.from_pretrained(
             args.base_model,
             torch_dtype=torch.float16,
@@ -52,11 +54,11 @@ def load_model_and_tokenizer(args):
         )
     else:
         base_model = AutoModelForCausalLM.from_pretrained(
-            args.base_model, 
+            args.base_model,
             torch_dtype=torch.float16,
             device_map="auto"
         )
-    
+
     # Load PEFT adapter
     adapter_path = os.path.join(args.checkpoint_path, 'adapter_model')
     if os.path.exists(adapter_path + '.safetensors') or os.path.exists(adapter_path + '.bin'):
@@ -65,10 +67,10 @@ def load_model_and_tokenizer(args):
     else:
         print(f"No adapter found at {adapter_path}, using base model")
         peft_model = base_model
-    
+
     # Convert to value head model
     model = AutoModelForCausalLMWithValueHead.from_pretrained(peft_model)
-    
+
     # Load value head weights
     value_head_path = os.path.join(args.checkpoint_path, 'value_head.pt')
     if os.path.exists(value_head_path):
@@ -77,21 +79,21 @@ def load_model_and_tokenizer(args):
         model.v_head.load_state_dict(value_head_state_dict)
     else:
         print(f"WARNING: No value head weights found at {value_head_path}")
-    
+
     # Ensure model is in evaluation mode
     model.eval()
-    
+
     return model, tokenizer
 
 def load_template_from_file(template_path):
     # Get directory and filename
     template_dir = os.path.dirname(template_path)
     template_file = os.path.basename(template_path)
-    
+
     # If template is in the current directory, adjust accordingly
     if not template_dir:
         template_dir = "."
-    
+
     env = Environment(loader=FileSystemLoader(template_dir))
     # Add the "tojson" filter
     env.filters['tojson'] = lambda obj: json.dumps(obj)
@@ -105,30 +107,30 @@ def create_template_from_string(template_string):
 def evaluate_single_prompt(model, tokenizer, prompt):
     # Tokenize the input
     inputs = tokenizer(prompt, return_tensors="pt", truncation=True)
-    
+
     # Get the device from the model
     device = next(model.parameters()).device
-    
+
     # Move inputs to the device
     inputs = {k: v.to(device) for k, v in inputs.items()}
-    
+
     # Generate reward score
     with torch.no_grad():
         # Assumes the model returns logits, hidden states, and a value tensor
         _, _, values = model(**inputs)
-    
+
     # Extract reward score from the last token's value
     last_index = inputs['attention_mask'].sum(dim=1) - 1
     reward = values[0, last_index].cpu().item()
-    
+
     return reward
 
 def main():
     args = parse_args()
-    
+
     # Load model and tokenizer
     model, tokenizer = load_model_and_tokenizer(args)
-    
+
     # Load conversation data or use default.
     # Here we assume that the conversation item includes "instruction" and "output"
     if args.prompt_file:
@@ -146,7 +148,7 @@ def main():
             "output": "Your expected assistant response (if any) can be provided here."
         }
         print("Using default conversation data")
-    
+
     # Load template from file, string, or use default template.
     if args.template_path:
         template = load_template_from_file(args.template_path)
@@ -168,7 +170,7 @@ def main():
         )
         template = create_template_from_string(default_template)
 
-    import pdb; pdb.set_trace() 
+    import pdb; pdb.set_trace()
     # Render the prompt using the new message structure.
     rendered_text = template.render(
         bos_token=tokenizer.bos_token,
@@ -181,10 +183,10 @@ def main():
     print("\n===== FORMATTED PROMPT =====")
     print(rendered_text)
     print("===========================\n")
-    
+
     # Evaluate the prompt to obtain a reward score
     reward = evaluate_single_prompt(model, tokenizer, rendered_text)
-    
+
     print("\n===== REWARD SCORE =====")
     print(f"Score: {reward:.6f}")
     print("=======================\n")
