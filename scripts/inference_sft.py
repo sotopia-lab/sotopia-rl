@@ -74,21 +74,34 @@ def load_template(template_path):
 
 def generate_response(model, tokenizer, template, conversation, args):
     # Render the template with the conversation
-    prompt = template.render(conversation=conversation)
+    system_content = ""
+    if conversation.get("scenario"):
+        system_content += f"Scenario: {conversation['scenario']}\n"
+    if conversation.get("user_persona"):
+        system_content += f"User Persona: {conversation['user_persona']}\n"
+    if conversation.get("agent_persona"):
+        system_content += f"Agent Persona: {conversation['agent_persona']}\n"
+    if conversation.get("goal"):
+        system_content += f"Goal: {conversation['goal']}\n"
     
-    # Add special tokens if needed (based on your template)
-    if "<|im_start|>" in prompt:
-        # If your template already includes special tokens, leave as is
-        input_text = prompt
-    else:
-        input_text = prompt
+    if not system_content:
+        system_content = "You are Qwen, created by Alibaba Cloud. You are a helpful assistant."
+    
+    messages = [{"role": "system", "content": system_content}]
+    
+    if "history" in conversation:
+        messages.extend(conversation["history"])
+    
+    messages.append({"role": "user", "content": conversation["current_message"]})
+    
+    prompt = template.render(messages=messages)
     
     print("\n===== INPUT =====")
-    print(input_text)
+    print(prompt)
     print("=================\n")
     
-    # Tokenize the input
-    inputs = tokenizer(input_text, return_tensors="pt").to(model.device)
+    inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
+    
     
     # Generate the response
     with torch.no_grad():
@@ -111,7 +124,7 @@ def generate_response(model, tokenizer, template, conversation, args):
         response = response.strip()
     else:
         # Fallback if special tokens aren't properly generated
-        response = generated_text[len(input_text):].strip()
+        response = generated_text[len(prompt):].strip()
     
     print("\n===== GENERATED RESPONSE =====")
     print(response)
