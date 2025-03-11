@@ -170,7 +170,6 @@ def main():
         )
         template = create_template_from_string(default_template)
 
-    import pdb; pdb.set_trace()
     # Render the prompt using the new message structure.
     rendered_text = template.render(
         bos_token=tokenizer.bos_token,
