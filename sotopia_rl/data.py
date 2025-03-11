@@ -21,7 +21,6 @@ class SFTDataset(Dataset):
     def __getitem__(self, idx: int) -> Dict[str, Any]:
         item = self.data[idx]
         rendered_text = self.template.render(
-            bos_token=self.tokenizer.bos_token,
             messages=[
                 {"role": "user", "content": item["instruction"]},
                 {"role": "assistant", "content": item["output"]}
@@ -41,7 +40,6 @@ class SFTDataset(Dataset):
         attention_mask = tokens["attention_mask"]
 
         instruction_text = self.template.render(
-            bos_token=self.tokenizer.bos_token,
             messages=[{"role": "user", "content": item["instruction"]}],
             add_generation_prompt=False
         )
@@ -100,7 +98,6 @@ class RMDataset(Dataset):
 
         # Render the conversation using the Jinja template
         input_text = self.template.render(
-            bos_token=self.tokenizer.bos_token,
             messages=[
                 {"role": "user", "content": item["instruction"]},
                 {"role": "assistant", "content": item["output"]}
@@ -144,12 +141,11 @@ class PPODataset(Dataset):
 
         # Render the conversation using the Jinja template
         input_text = self.template.render(
-            bos_token=self.tokenizer.bos_token,
             messages=[
                 {"role": "user", "content": item["instruction"]},
                 {"role": "assistant", "content": item["output"]}
             ],
-            add_generation_prompt=False  # Set to True if generation prompt is required
+            add_generation_prompt=True,
         )
 
         # Tokenize with max_length and truncation

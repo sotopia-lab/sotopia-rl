@@ -96,7 +96,7 @@ def generate_response(model, tokenizer, template, conversation, args):
 
     messages.append({"role": "user", "content": conversation["current_message"]})
 
-    prompt = template.render(messages=messages)
+    prompt = template.render(messages=messages, add_generation_prompt=True)
 
     print("\n===== INPUT =====")
     print(prompt)

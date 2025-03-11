@@ -172,7 +172,6 @@ def main():
 
     # Render the prompt using the new message structure.
     rendered_text = template.render(
-        bos_token=tokenizer.bos_token,
         messages=[
             {"role": "user", "content": item["instruction"], "tool_calls": None},
             {"role": "assistant", "content": item["output"], "tool_calls": None}

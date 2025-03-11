@@ -1,4 +1,4 @@
-CUDA_VISIBLE_DEVICES=3 poetry run python /data/haofeiy2/sotopia-rl/scripts/train_ppo.py \
+CUDA_VISIBLE_DEVICES=9 poetry run python /data/haofeiy2/sotopia-rl/scripts/train_ppo.py \
   --model_name /data/haofeiy2/sotopia-rl/saves_qwen/sft/checkpoint-500 \
   --reward_model_name /data/haofeiy2/sotopia-rl/saves_qwen/rm_baseline/checkpoint-5391 \
   --batch_size 1 \
