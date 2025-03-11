@@ -80,10 +80,10 @@ def load_model_and_tokenizer(args):
 def load_template(template_path):
     template_dir = os.path.dirname(template_path)
     template_file = os.path.basename(template_path)
-    
+
     if not template_dir:
         template_dir = "."
-        
+
     env = Environment(loader=FileSystemLoader(template_dir))
     env.filters['tojson'] = lambda obj: json.dumps(obj)
     return env.get_template(template_file)
@@ -111,17 +111,17 @@ def evaluate_prompt(model, tokenizer, prompt):
 
 def main():
     args = parse_args()
-    
+
     # Load model and tokenizer
     model, tokenizer = load_model_and_tokenizer(args)
-    
+
     # Load example data
     with open(args.example_path, 'r') as f:
         example_data = json.load(f)
-    
+
     # Load template
     template = load_template(args.template_path)
-    
+
     # Render the prompt
     rendered_prompt = template.render(
         messages=[
@@ -130,17 +130,17 @@ def main():
         ],
         add_generation_prompt=False
     )
-    
+
     print("\n===== FORMATTED PROMPT =====")
     print(rendered_prompt)
     print("===========================\n")
-    
+
     # Evaluate prompt to get reward score
     reward = evaluate_prompt(model, tokenizer, rendered_prompt)
-    
+
     print("\n===== REWARD SCORE =====")
     print(f"Score: {reward:.6f}")
     print("=======================\n")
-    
+
 if __name__ == "__main__":
     main()

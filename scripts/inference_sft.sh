@@ -7,5 +7,4 @@ CUDA_VISIBLE_DEVICES=8 python inference_sft.py \
   --template_path "/data/haofeiy2/sotopia-rl/evals/qwen2.5-7b.jinja" \
   --example_path "/data/haofeiy2/sotopia-rl/data/sotopia_pi_gpt4_sft_example.json" \
   --max_length 4096 \
-  --use_qlora 
-
+  --use_qlora
