@@ -28,7 +28,6 @@ class SFTDataset(Dataset):
             ],
             add_generation_prompt=True
         )
-        import pdb; pdb.set_trace()
 
         tokens = self.tokenizer(
             rendered_text,
