@@ -43,7 +43,7 @@ class SotopiaRMTrainer(Trainer):
             lora_dropout=args.lora_dropout,
             target_modules=args.target_modules.split(",")
         )
-        tokenizer = AutoTokenizer.from_pretrained(args.model_name)
+        tokenizer = AutoTokenizer.from_pretrained(args.model_name, padding_side="left")
         tokenizer.pad_token_id = tokenizer.eos_token_id
         
         if args.use_qlora:

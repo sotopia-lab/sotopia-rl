@@ -1,128 +1,239 @@
 import os
-
 import torch
 from jinja2 import Environment, FileSystemLoader
-from peft import LoraConfig
-from torch.utils.data import DataLoader
-from tqdm import tqdm
-from transformers import AutoTokenizer
-from trl import AutoModelForCausalLMWithValueHead, PPOConfig, PPOTrainer
+from peft import PeftModelForCausalLM, PeftModelForSequenceClassification, get_peft_model, LoraConfig
+from torch.utils.data import random_split
+from transformers import (
+    AutoModelForCausalLM, 
+    AutoModelForSequenceClassification,
+    AutoTokenizer, 
+    BitsAndBytesConfig,
+    GenerationConfig
+)
+from trl import PPOv2Config, PPOv2Trainer
 
 import wandb
 from sotopia_rl.data import PPODataset
 
-
-class SotopiaPPOTrainer(object):
+class SotopiaPPOTrainer:
     def __init__(self, args):
         self.args = args
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
+        self.device = f"cuda:0" if torch.cuda.is_available() else "cpu"
+        
+        # Initialize the training environment
+        self._init_wandb()
+        self._setup_tokenizer()
+        self._setup_dataset()
+        
+        # Initialize quantization config for all models
+        self.quant_config = self._create_quantization_config()
+        
+        # Load models - organized by type
+        self._setup_generation_models()    # Policy and reference policy
+        self._setup_classification_models() # Reward and value models
+        
+        # Setup the PPO trainer
+        self._setup_ppo_trainer()
+    
+    def _init_wandb(self):
+        """Initialize Weights & Biases logging"""
         wandb.init(
-            project=args.wandb_project,
-            name=args.wandb_run_name,
-            config={k: v for k, v in vars(args).items() if isinstance(v, (int, float, str))}
+            project=self.args.wandb_project,
+            name=self.args.wandb_run_name,
+            config={k: v for k, v in vars(self.args).items() if isinstance(v, (int, float, str))}
         )
-
-        # Initialize tokenizer and reward model (reward model remains frozen)
-        self.tokenizer = AutoTokenizer.from_pretrained(args.model_name)
-        # self.reward_model = AutoModelForCausalLMWithValueHead.from_pretrained(args.model_name)
-        self.reward_model = AutoModelForCausalLMWithValueHead.from_pretrained(args.reward_model_name)
-        self.reward_model.eval()  # Freeze the reward model
-        self.reward_model.to(self.device)
-
-        # Configure and initialize the PPO policy model with LoRA
-        peft_config = LoraConfig(
-            r=args.lora_r,
-            lora_alpha=args.lora_alpha,
-            lora_dropout=args.lora_dropout,
-            target_modules=args.target_modules.split(",")  # Specify modules for LoRA
+    
+    def _setup_tokenizer(self):
+        """Load and configure tokenizer"""
+        self.tokenizer = AutoTokenizer.from_pretrained(self.args.model_name, padding_side="left")
+        if self.tokenizer.pad_token is None:
+            self.tokenizer.pad_token = self.tokenizer.eos_token
+    
+    def _setup_dataset(self):
+        """Prepare training and validation datasets"""
+        # Load template for formatting prompts
+        template_dir = "/".join(self.args.template_path.split("/")[:-1])
+        template_file = self.args.template_path.split("/")[-1]
+        env = Environment(loader=FileSystemLoader(template_dir))
+        template = env.get_template(template_file)
+        
+        # Create and split dataset
+        dataset = PPODataset(
+            self.args.ppo_data_path, 
+            self.tokenizer, 
+            template, 
+            max_length=self.args.max_length
         )
-        self.policy_model = AutoModelForCausalLMWithValueHead.from_pretrained(args.model_name, peft_config=peft_config)
-        self.policy_model.to(self.device)
-
-        self.ref_model = AutoModelForCausalLMWithValueHead.from_pretrained(args.model_name)
-        self.ref_model.eval()
-        self.ref_model.to(self.device)
-
-        # Set up PPO configuration and trainer
-        ppo_config = PPOConfig(
-            batch_size=args.batch_size,
-            ppo_epochs=args.ppo_epochs,
-            gamma=args.gamma,
-            lam=args.lam,
-            mini_batch_size=1,
-            gradient_accumulation_steps=1,
-            seed=42  # Set the seed value here
+        
+        val_ratio = getattr(self.args, 'val_ratio', 0.05)
+        train_size = min(int(len(dataset) * (1 - val_ratio)), len(dataset) - 2)
+        val_size = len(dataset) - train_size
+        self.train_dataset, self.val_dataset = random_split(dataset, [train_size, val_size])
+        print(f"Dataset split: {len(self.train_dataset)} train, {len(self.val_dataset)} validation")
+    
+    def _create_quantization_config(self):
+        """Create 4-bit quantization config for memory efficiency"""
+        return BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_compute_dtype=torch.bfloat16,
+            bnb_4bit_use_double_quant=True,
+            bnb_4bit_quant_type="nf4"
         )
+    
+    def _setup_generation_models(self):
+        base_gen_model = AutoModelForCausalLM.from_pretrained(
+            self.args.model_name,
+            torch_dtype=torch.float16,
+            device_map=self.device,
+            quantization_config=self.quant_config,
+            return_dict=True,
+        )
+        base_gen_model.config.pad_token_id = self.tokenizer.eos_token_id
+        
+        # Create generation config
+        generation_config = GenerationConfig(
+            pad_token_id=self.tokenizer.pad_token_id,
+            eos_token_id=self.tokenizer.eos_token_id,
+            bos_token_id=self.tokenizer.eos_token_id,
+            max_length=self.args.max_length,
+            do_sample=getattr(self.args, 'do_sample', True),
+            temperature=getattr(self.args, 'temperature', 0.7),
+            top_p=getattr(self.args, 'top_p', 0.9),
+            repetition_penalty=getattr(self.args, 'repetition_penalty', 1.0),
+            no_repeat_ngram_size=getattr(self.args, 'no_repeat_ngram_size', 0)
+        )
+        
+        # Default LoRA config for generation models
+        gen_lora_config = LoraConfig(
+            r=8,
+            lora_alpha=16,
+            lora_dropout=0.05,
+            target_modules=["q_proj", "k_proj", "v_proj", "o_proj"],
+            bias="none",
+            task_type="CAUSAL_LM"
+        )
+        
+        self.policy = PeftModelForCausalLM.from_pretrained(
+            base_gen_model, 
+            self.args.policy_adapter_path,
+            generation_config=generation_config
+        )
+        print("Policy model loaded/created")
 
-        # Load dataset and set up template
-        env = Environment(loader=FileSystemLoader("/".join(args.template_path.split("/")[:-1])))
-        self.template = env.get_template(args.template_path.split("/")[-1])
-        self.dataset = PPODataset(args.ppo_data_path, self.tokenizer, self.template, max_length=args.max_length)
+        self.ref_policy = PeftModelForCausalLM.from_pretrained(
+            base_gen_model, 
+            self.args.ref_adapter_path,
+            generation_config=generation_config
+        )
+        self.ref_policy.eval()
+        print("Reference policy model loaded/created")
+    
 
-        # Initialize the PPOTrainer with model, ref_model (copy of policy_model), and config
-        self.ppo_trainer = PPOTrainer(
-            model=self.policy_model,
-            ref_model=self.ref_model,  # Reference model to stabilize updates
+    def _setup_classification_models(self):
+        base_cls_model = AutoModelForSequenceClassification.from_pretrained(
+            self.args.model_name,
+            torch_dtype=torch.float16,
+            device_map=self.device,
+            quantization_config=self.quant_config,
+            num_labels=1,
+            return_dict=True
+        )
+        base_cls_model.config.pad_token_id = self.tokenizer.eos_token_id
+        
+        # Default LoRA config for classification models
+        cls_lora_config = LoraConfig(
+            r=8,
+            lora_alpha=16,
+            lora_dropout=0.05,
+            target_modules=["q_proj", "k_proj", "v_proj", "o_proj"],
+            bias="none",
+            task_type="SEQ_CLS"
+        )
+        
+        self.reward_model = PeftModelForSequenceClassification.from_pretrained(
+            base_cls_model,
+            self.args.reward_adapter_path,
+            num_labels=1
+        )
+        self.reward_model.eval()
+        print("Reward model loaded/created")
+
+        self.value_model = PeftModelForSequenceClassification.from_pretrained(
+            base_cls_model,
+            self.args.value_adapter_path,
+            num_labels=1
+        )
+        print("Value model loaded/created")
+
+    def _setup_ppo_trainer(self):
+        """Configure the PPO trainer"""
+        # Get data collator if available
+        
+        # Configure PPO settings
+        ppo_config = PPOv2Config(
+            per_device_train_batch_size=self.args.batch_size,
+            per_device_eval_batch_size=self.args.batch_size,
+            num_train_epochs=self.args.num_epochs,
+            num_ppo_epochs=self.args.ppo_epochs,
+            learning_rate=getattr(self.args, 'learning_rate', 1e-5),
+            output_dir=self.args.checkpoint_dir,
+            gamma=self.args.gamma,
+            lam=self.args.lam,
+            mini_batch_size=getattr(self.args, 'mini_batch_size', 1),
+            gradient_accumulation_steps=getattr(self.args, 'gradient_accumulation_steps', 1),
+            seed=getattr(self.args, 'seed', 42),
+            temperature=getattr(self.args, 'temperature', 0.7),
+        )
+        
+        # Create the TRL PPO trainer
+        self.ppo_trainer = PPOv2Trainer(
+            policy=self.policy,
+            ref_policy=self.ref_policy,
+            reward_model=self.reward_model,
+            value_model=self.value_model,
             config=ppo_config,
             tokenizer=self.tokenizer,
-            data_collator=self.dataset.collate_fn
+            train_dataset=self.train_dataset,
+            eval_dataset=self.val_dataset,
         )
-
+        
+        print("PPO trainer setup complete")
+    
     def train(self):
-        train_loader = DataLoader(self.dataset, batch_size=self.args.batch_size, shuffle=True,
-                                  collate_fn=self.dataset.collate_fn)
-
-        for epoch in range(self.args.num_epochs):
-            epoch_loss = 0
-            for batch in tqdm(train_loader, desc=f"Epoch {epoch + 1}/{self.args.num_epochs}"):
-                input_ids, attention_mask = batch["input_ids"], batch["attention_mask"]
-                input_ids, attention_mask = input_ids.to(self.device), attention_mask.to(self.device)
-
-                # Generate actions (outputs) and compute rewards
-                generated_output = self.policy_model.generate(input_ids=input_ids, attention_mask=attention_mask,
-                                                              max_length=4096)
-
-                # Obtain rewards by evaluating generated outputs with the reward model
-                batch_rewards = self.compute_rewards(generated_output, attention_mask)
-
-                # Perform PPO update
-                if isinstance(input_ids, torch.Tensor):
-                    input_ids = list(input_ids.unbind(0))
-                if isinstance(generated_output, torch.Tensor):
-                    generated_output = list(generated_output.unbind(0))
-                if isinstance(batch_rewards, torch.Tensor):
-                    if batch_rewards.dim() == 0:
-                        batch_rewards = [batch_rewards]
-                    else:
-                        batch_rewards = list(batch_rewards.unbind(0))
-
-                loss = self.ppo_trainer.step(input_ids, generated_output, batch_rewards)
-                epoch_loss += loss["ppo/loss/total"]
-            print(f"Epoch {epoch + 1} - PPO Loss: {epoch_loss / len(train_loader):.4f}")
-
-            checkpoint_dir = os.path.join(self.args.checkpoint_dir, f"checkpoint-epoch-{epoch + 1}")
-            os.makedirs(checkpoint_dir, exist_ok=True)
-            self.policy_model.save_pretrained(checkpoint_dir)
-
-        final_checkpoint_dir = os.path.join(self.args.checkpoint_dir, "final_checkpoint")
-        os.makedirs(final_checkpoint_dir, exist_ok=True)
-        self.policy_model.save_pretrained(final_checkpoint_dir)
-        print(f"Final checkpoint saved at {final_checkpoint_dir}")
-
-    def compute_rewards(self, generated_output, attention_mask):
-        """Compute rewards using the frozen reward model."""
-        with torch.no_grad():
-            _, _, output_values = self.reward_model(generated_output, attention_mask=attention_mask)
-        rewards = output_values.mean(dim=-1)
-        if rewards.dim() > 1:
-            rewards = rewards.mean(dim=-1)
-        if rewards.dim() == 0:
-            rewards = rewards.unsqueeze(0)
-        return rewards
-
+        """Run PPO training loop and save checkpoints"""
+        try:
+            print("Starting PPO training...")
+            train_stats = self.ppo_trainer.train()
+            
+            # Save final checkpoint
+            final_checkpoint_dir = os.path.join(self.args.checkpoint_dir, "final_checkpoint")
+            self.save_checkpoint(final_checkpoint_dir)
+            
+            return train_stats
+        except Exception as e:
+            print(f"Training error: {str(e)}")
+            raise
+    
     def save_checkpoint(self, checkpoint_path):
+        """Save all model adapters"""
         os.makedirs(checkpoint_path, exist_ok=True)
-        self.policy_model.save_pretrained(checkpoint_path)
+        
+        # Save policy adapter
+        policy_dir = os.path.join(checkpoint_path, "policy")
+        os.makedirs(policy_dir, exist_ok=True)
+        self.policy.save_pretrained(policy_dir)
+        
+        # Save value model adapter
+        value_dir = os.path.join(checkpoint_path, "value")
+        os.makedirs(value_dir, exist_ok=True)
+        self.value_model.save_pretrained(value_dir)
+        
+        # Save reward model adapter if it was trained
+        reward_dir = os.path.join(checkpoint_path, "reward")
+        os.makedirs(reward_dir, exist_ok=True)
+        self.reward_model.save_pretrained(reward_dir)
+        
+        # Save tokenizer
         self.tokenizer.save_pretrained(checkpoint_path)
-        print(f"Checkpoint saved to {checkpoint_path}")
+        
+        print(f"Saved checkpoint to {checkpoint_path}")

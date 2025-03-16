@@ -32,7 +32,7 @@ class SotopiaSFTTrainer:
         config.use_cache = False
 
         # Load the tokenizer and model
-        self.tokenizer = AutoTokenizer.from_pretrained(args.model_name)
+        self.tokenizer = AutoTokenizer.from_pretrained(args.model_name, padding_side="left")
         self.tokenizer.model_max_length = args.max_length
 
         quantization_config = BitsAndBytesConfig(
