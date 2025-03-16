@@ -185,7 +185,7 @@ class SotopiaPPOTrainer:
             temperature=getattr(self.args, 'temperature', 0.7),
             max_grad_norm=1.0,
             response_length=512, #important
-            stop_token=self.tokenizer.eos_token_id,
+            stop_token=self.tokenizer.eos_token_id, #important
         )
         
         # Create the TRL PPO trainer
