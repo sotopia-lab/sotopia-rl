@@ -1,6 +1,7 @@
 import argparse
 import json
 import os
+import difflib
 
 import torch
 from jinja2 import Environment, FileSystemLoader
@@ -63,7 +64,6 @@ def load_model_and_tokenizer(args):
     else:
         model = base_model
 
-    # Ensure model is in evaluation mode
     model.eval()
 
     return model, tokenizer
@@ -84,46 +84,61 @@ def generate_response(model, tokenizer, prompt, max_length=512):
 
     with torch.no_grad():
         output = model.generate(
-            inputs.input_ids,
+            input_ids=inputs.input_ids,
+            attention_mask=inputs.attention_mask,
             max_length=max_length,
             do_sample=True,
             temperature=0.7,
         )
 
-    response = tokenizer.decode(output[0], skip_special_tokens=True)
+    response = tokenizer.decode(output[0], skip_special_tokens=False)
     return response
+
+def extract_generated_content(full_response, prompt):
+    """Extract only the newly generated content by removing the prompt prefix."""
+    if prompt in full_response:
+        return full_response[len(prompt):].strip()
+    
+    return full_response
+
+def compare_with_groundtruth(generated, groundtruth):
+    """Compare generated text with groundtruth and show differences."""
+    diff = difflib.unified_diff(
+        generated.splitlines(),
+        groundtruth.splitlines(),
+        lineterm='',
+        fromfile='Generated',
+        tofile='Expected'
+    )
+    return '\n'.join(diff)
 
 def main():
     args = parse_args()
 
-    # Load model and tokenizer
     model, tokenizer = load_model_and_tokenizer(args)
 
-    # Load example data
     with open(args.example_path, 'r') as f:
         example_data = json.load(f)
 
-    # Load template
     template = load_template(args.template_path)
+    
+    for i, example in enumerate(example_data):
+        print(f"\n===== EXAMPLE {i+1}/{len(example_data)} =====")
+        
+        rendered_prompt = template.render(
+            messages=[{"role": "user", "content": example["input"]}],
+            add_generation_prompt=True, # important for inference
+        )
 
-    # Render the prompt
-    rendered_prompt = template.render(
-        messages=[
-            {"role": "user", "content": example_data["input"]},
-        ],
-        add_generation_prompt=True
-    )
+        full_response = generate_response(model, tokenizer, rendered_prompt, args.max_length)
+        
+        generated_content = extract_generated_content(full_response, rendered_prompt)
 
-    print("\n===== FORMATTED PROMPT =====")
-    print(rendered_prompt)
-    print("===========================\n")
+        print("\nMODEL OUTPUT:")
+        print(generated_content)
 
-    # Generate response
-    response = generate_response(model, tokenizer, rendered_prompt, args.max_length)
-
-    print("\n===== MODEL RESPONSE =====")
-    print(response)
-    print("=========================\n")
+        print("\nGROUNDTRUTH:")
+        print(example['output'])
 
 
 if __name__ == "__main__":

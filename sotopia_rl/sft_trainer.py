@@ -137,7 +137,6 @@ class SotopiaSFTTrainer:
 
         # Evaluate one last time to log final metrics
         eval_results = self.trainer.evaluate()
-        wandb.log({"final_eval_loss": eval_results["eval_loss"]})
 
         # Save the final model
         self.save_lora_checkpoint()

@@ -8,12 +8,15 @@ from transformers import PreTrainedTokenizer
 
 class SFTDataset(Dataset):
     def __init__(self, data_path: str, tokenizer: PreTrainedTokenizer, max_length: int, template):
-        with open(data_path, "r") as f:
-            self.data = json.load(f)
-
+        self.data = self.load_sft_data(data_path)
         self.tokenizer = tokenizer
         self.max_length = max_length
         self.template = template
+
+    def load_sft_data(self, file_path):
+        with open(file_path, "r") as f:
+            data = json.load(f)
+        return data
 
     def __len__(self):
         return len(self.data)
@@ -22,16 +25,15 @@ class SFTDataset(Dataset):
         item = self.data[idx]
         rendered_text = self.template.render(
             messages=[
-                {"role": "user", "content": item["instruction"]},
+                {"role": "user", "content": item["input"]},
                 {"role": "assistant", "content": item["output"]}
             ],
-            add_generation_prompt=True
+            add_generation_prompt=False
         )
 
         tokens = self.tokenizer(
             rendered_text,
             max_length=self.max_length,
-            padding=True,  # Ensures each sample is padded to max_length
             truncation=True,
             return_tensors="pt"
         )
@@ -40,8 +42,8 @@ class SFTDataset(Dataset):
         attention_mask = tokens["attention_mask"]
 
         instruction_text = self.template.render(
-            messages=[{"role": "user", "content": item["instruction"]}],
-            add_generation_prompt=False
+            messages=[{"role": "user", "content": item["input"]}],
+            add_generation_prompt=True, # important
         )
         instruction_tokens = self.tokenizer(
             instruction_text,
@@ -96,29 +98,25 @@ class RMDataset(Dataset):
         item = self.data[idx]
         reward_value = item["value"]
 
-        # Render the conversation using the Jinja template
-        input_text = self.template.render(
+        rendered_text = self.template.render(
             messages=[
-                {"role": "user", "content": item["instruction"]},
+                {"role": "user", "content": item["input"]},
                 {"role": "assistant", "content": item["output"]}
             ],
-            add_generation_prompt=False  # Set to True if generation prompt is required
+            add_generation_prompt=False
         )
 
-        # Tokenize with max_length and truncation
         tokenized_input = self.tokenizer(
-            input_text,
+            rendered_text,
             return_tensors="pt",
-            padding=True,
             max_length=self.max_length,
             truncation=True
         )
 
-        # Return a dictionary as expected by the Trainer
         return {
             "input_ids": tokenized_input["input_ids"].squeeze(),
             "attention_mask": tokenized_input["attention_mask"].squeeze(),
-            "labels": torch.tensor(reward_value)  # `labels` key with reward value
+            "labels": torch.tensor(reward_value)
         }
 
 class PPODataset(Dataset):
@@ -145,7 +143,7 @@ class PPODataset(Dataset):
                 {"role": "user", "content": item["instruction"]},
                 {"role": "assistant", "content": item["output"]}
             ],
-            add_generation_prompt=True,
+            add_generation_prompt=False,
         )
 
         # Tokenize with max_length and truncation

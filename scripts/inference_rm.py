@@ -23,11 +23,9 @@ def parse_args():
 def load_model_and_tokenizer(args):
     print(f"Loading base model: {args.model_path}")
 
-    # Set up tokenizer
     tokenizer = AutoTokenizer.from_pretrained(args.model_path)
     tokenizer.pad_token = tokenizer.eos_token
 
-    # Set up model with potential quantization
     if args.use_qlora:
         print("Using QLoRA with 4-bit quantization")
         quantization_config = BitsAndBytesConfig(
@@ -51,7 +49,6 @@ def load_model_and_tokenizer(args):
             device_map="auto"
         )
 
-    # Load PEFT adapter
     adapter_path = os.path.join(args.adapter_path, 'adapter_model')
     if os.path.exists(adapter_path + '.safetensors') or os.path.exists(adapter_path + '.bin'):
         print(f"Loading adapter from: {args.adapter_path}")
@@ -60,19 +57,16 @@ def load_model_and_tokenizer(args):
         print(f"No adapter found at {adapter_path}, using base model")
         peft_model = base_model
 
-    # Convert to value head model
     model = AutoModelForCausalLMWithValueHead.from_pretrained(peft_model)
 
-    # Load value head weights
     value_head_path = os.path.join(args.adapter_path, 'value_head.pt')
     if os.path.exists(value_head_path):
         print(f"Loading value head from: {value_head_path}")
-        value_head_state_dict = torch.load(value_head_path, map_location="cuda" if torch.cuda.is_available() else "cpu")
+        value_head_state_dict = torch.load(value_head_path, weights_only=True, map_location="cuda" if torch.cuda.is_available() else "cpu")
         model.v_head.load_state_dict(value_head_state_dict)
     else:
         print(f"WARNING: No value head weights found at {value_head_path}")
 
-    # Ensure model is in evaluation mode
     model.eval()
 
     return model, tokenizer
@@ -89,58 +83,44 @@ def load_template(template_path):
     return env.get_template(template_file)
 
 def evaluate_prompt(model, tokenizer, prompt):
-    # Tokenize the input
     inputs = tokenizer(prompt, return_tensors="pt", truncation=True)
 
-    # Get the device from the model
     device = next(model.parameters()).device
 
-    # Move inputs to the device
     inputs = {k: v.to(device) for k, v in inputs.items()}
 
-    # Generate reward score
     with torch.no_grad():
-        # Assumes the model returns logits, hidden states, and a value tensor
         _, _, values = model(**inputs)
 
-    # Extract reward score from the last token's value
     last_index = inputs['attention_mask'].sum(dim=1) - 1
     reward = values[0, last_index].cpu().item()
-
     return reward
 
 def main():
     args = parse_args()
 
-    # Load model and tokenizer
     model, tokenizer = load_model_and_tokenizer(args)
 
-    # Load example data
     with open(args.example_path, 'r') as f:
         example_data = json.load(f)
-
-    # Load template
+    
     template = load_template(args.template_path)
+    for i, example in enumerate(example_data):
+        print(f"\n===== EXAMPLE {i+1}/{len(example_data)} =====")
+        
+        rendered_prompt = template.render(
+            messages=[
+                {"role": "user", "content": example['input']},
+                {"role": "assistant", "content": example['output']},
+            ],
+            add_generation_prompt=False
+        )
+        
+        reward = evaluate_prompt(model, tokenizer, rendered_prompt)
+        gth_reward = example.get('value')
 
-    # Render the prompt
-    rendered_prompt = template.render(
-        messages=[
-            {"role": "user", "content": example_data.get("instruction", example_data.get("input", "")), "tool_calls": None},
-            {"role": "assistant", "content": example_data.get("output", ""), "tool_calls": None}
-        ],
-        add_generation_prompt=False
-    )
-
-    print("\n===== FORMATTED PROMPT =====")
-    print(rendered_prompt)
-    print("===========================\n")
-
-    # Evaluate prompt to get reward score
-    reward = evaluate_prompt(model, tokenizer, rendered_prompt)
-
-    print("\n===== REWARD SCORE =====")
-    print(f"Score: {reward:.6f}")
-    print("=======================\n")
+        print(f"REWARD SCORE: {reward:.6f}")
+        print(f"GTH REWARD: {gth_reward:.6f}")
 
 if __name__ == "__main__":
     main()
