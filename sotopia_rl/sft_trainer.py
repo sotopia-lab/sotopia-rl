@@ -38,7 +38,8 @@ class SotopiaSFTTrainer:
         quantization_config = BitsAndBytesConfig(
             load_in_4bit=True,
             bnb_4bit_compute_dtype=torch.bfloat16,
-            bnb_4bit_use_double_quant=True, bnb_4bit_quant_type="nf4",
+            bnb_4bit_use_double_quant=True, 
+            bnb_4bit_quant_type="nf4",
         )
 
         if args.use_qlora:
@@ -73,7 +74,7 @@ class SotopiaSFTTrainer:
         self.template = env.get_template(self.args.template_path.split("/")[-1])
 
         # Set up dataset and data loaders
-        self.setup_dataloaders()
+        self.setup_dataset()
 
         # Set up the SFT Trainer with appropriate arguments
         training_args = TrainingArguments(
@@ -94,6 +95,8 @@ class SotopiaSFTTrainer:
             fp16=True,
         )
 
+        self.collate_fn = self.train_dataset.dataset.collate_fn if hasattr(self.train_dataset, 'dataset') else None
+
         # Initialize SFTTrainer
         self.trainer = SFTTrainer(
             model=self.model,
@@ -104,24 +107,7 @@ class SotopiaSFTTrainer:
             data_collator=self.collate_fn,
         )
 
-    def collate_fn(self, batch):
-        input_ids = torch.nn.utils.rnn.pad_sequence(
-            [item["input_ids"] for item in batch], batch_first=True, padding_value=self.tokenizer.pad_token_id
-        )
-        attention_masks = torch.nn.utils.rnn.pad_sequence(
-            [item["attention_mask"] for item in batch], batch_first=True, padding_value=0
-        )
-        labels = torch.nn.utils.rnn.pad_sequence(
-            [item["labels"] for item in batch], batch_first=True, padding_value=-100
-        )
-
-        return {
-            "input_ids": input_ids,
-            "attention_mask": attention_masks,
-            "labels": labels,
-        }
-
-    def setup_dataloaders(self):
+    def setup_dataset(self):
         # Load dataset and create train/val split
         dataset = SFTDataset(self.args.sft_data_path, self.tokenizer, max_length=self.args.max_length,
                              template=self.template)

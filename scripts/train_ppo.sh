@@ -1,11 +1,11 @@
-CUDA_VISIBLE_DEVICES=9 poetry run python /data/haofeiy2/sotopia-rl/scripts/train_ppo.py \
-  --model_name /data/haofeiy2/sotopia-rl/saves_qwen/sft/checkpoint-500 \
-  --reward_model_name /data/haofeiy2/sotopia-rl/saves_qwen/rm_baseline/checkpoint-5391 \
+CUDA_VISIBLE_DEVICES=0,1,2,3 poetry run python /data/haofeiy2/sotopia-rl/scripts/train_ppo.py \
+  --model_name /mnt/data_from_server1/models/Qwen2.5-7B-Instruct \
+  --reward_model_name /data/haofeiy2/sotopia-rl/rm_direct_overfit/checkpoint-100 \
   --batch_size 1 \
   --num_epochs 1 \
-  --ppo_data_path /data/haofeiy2/sotopia-rl/data/sotopia_pi_bc_episodes_annotated_ppo.json \
+  --ppo_data_path /data/haofeiy2/sotopia-rl/data/sotopia_pi_gpt4_sft_overfit.json \
   --template_path /data/haofeiy2/sotopia-rl/evals/qwen2.5-7b.jinja\
   --ppo_epochs 4 \
   --gamma 0.99 \
   --lam 0.95 \
-  --checkpoint_dir /data/haofeiy2/sotopia-rl/saves_qwen/ppo
+  --checkpoint_dir /data/haofeiy2/sotopia-rl/ppo_qwen25_7b
