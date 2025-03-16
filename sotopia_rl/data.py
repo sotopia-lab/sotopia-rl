@@ -132,6 +132,7 @@ class RMDataset(Dataset):
 
         return {
             "input_ids": input_ids,
+            "labels": labels,
             "attention_mask": attention_masks,
             "labels": labels
         }
