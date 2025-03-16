@@ -186,7 +186,7 @@ class SotopiaPPOTrainer:
             max_grad_norm=1.0,
             response_length=60, #important
             stop_token_id=self.tokenizer.eos_token_id, #important
-            stop_token='eos', #important
+            stop_token='eos', #important, just fill with pad after eos
         )
         
         # Create the TRL PPO trainer
