@@ -4,9 +4,8 @@ import os
 
 import torch
 from jinja2 import Environment, FileSystemLoader
-from peft import PeftModelForCausalLM
-from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
-from trl import AutoModelForCausalLMWithValueHead
+from peft import PeftModelForSequenceClassification
+from transformers import AutoModelForSequenceClassification, AutoTokenizer, BitsAndBytesConfig
 
 
 def parse_args():
@@ -35,37 +34,29 @@ def load_model_and_tokenizer(args):
             bnb_4bit_quant_type="nf4"
         )
 
-        base_model = AutoModelForCausalLM.from_pretrained(
+        base_model = AutoModelForSequenceClassification.from_pretrained(
             args.model_path,
             torch_dtype=torch.float16,
             device_map="auto",
-            quantization_config=quantization_config
+            quantization_config=quantization_config,
+            num_labels=1  # For regression task
         )
     else:
         print("Using full precision model")
-        base_model = AutoModelForCausalLM.from_pretrained(
+        base_model = AutoModelForSequenceClassification.from_pretrained(
             args.model_path,
             torch_dtype=torch.float16,
-            device_map="auto"
+            device_map="auto",
+            num_labels=1  # For regression task
         )
 
     adapter_path = os.path.join(args.adapter_path, 'adapter_model')
     if os.path.exists(adapter_path + '.safetensors') or os.path.exists(adapter_path + '.bin'):
         print(f"Loading adapter from: {args.adapter_path}")
-        peft_model = PeftModelForCausalLM.from_pretrained(base_model, args.adapter_path)
+        model = PeftModelForSequenceClassification.from_pretrained(base_model, args.adapter_path)
     else:
         print(f"No adapter found at {adapter_path}, using base model")
-        peft_model = base_model
-
-    model = AutoModelForCausalLMWithValueHead.from_pretrained(peft_model)
-
-    value_head_path = os.path.join(args.adapter_path, 'value_head.pt')
-    if os.path.exists(value_head_path):
-        print(f"Loading value head from: {value_head_path}")
-        value_head_state_dict = torch.load(value_head_path, weights_only=True, map_location="cuda" if torch.cuda.is_available() else "cpu")
-        model.v_head.load_state_dict(value_head_state_dict)
-    else:
-        print(f"WARNING: No value head weights found at {value_head_path}")
+        model = base_model
 
     model.eval()
 
@@ -90,10 +81,10 @@ def evaluate_prompt(model, tokenizer, prompt):
     inputs = {k: v.to(device) for k, v in inputs.items()}
 
     with torch.no_grad():
-        _, _, values = model(**inputs)
-
-    last_index = inputs['attention_mask'].sum(dim=1) - 1
-    reward = values[0, last_index].cpu().item()
+        outputs = model(**inputs)
+    
+    # Get reward score directly from the logits
+    reward = outputs.logits.squeeze().cpu().item()
     return reward
 
 def main():
@@ -120,7 +111,10 @@ def main():
         gth_reward = example.get('value')
 
         print(f"REWARD SCORE: {reward:.6f}")
-        print(f"GTH REWARD: {gth_reward:.6f}")
+        if gth_reward is not None:
+            print(f"GTH REWARD: {gth_reward:.6f}")
+        else:
+            print("GTH REWARD: Not available")
 
 if __name__ == "__main__":
     main()
