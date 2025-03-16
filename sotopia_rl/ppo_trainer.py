@@ -184,8 +184,9 @@ class SotopiaPPOTrainer:
             seed=getattr(self.args, 'seed', 42),
             temperature=getattr(self.args, 'temperature', 0.7),
             max_grad_norm=1.0,
-            response_length=512, #important
-            stop_token=self.tokenizer.eos_token_id, #important
+            response_length=60, #important
+            stop_token_id=self.tokenizer.eos_token_id, #important
+            stop_token='eos', #important, just fill with pad after eos
         )
         
         # Create the TRL PPO trainer
