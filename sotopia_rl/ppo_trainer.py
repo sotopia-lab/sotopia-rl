@@ -83,7 +83,7 @@ class SotopiaPPOTrainer:
     def _setup_generation_models(self):
         base_gen_model = AutoModelForCausalLM.from_pretrained(
             self.args.model_name,
-            torch_dtype=torch.float16,
+            torch_dtype=torch.float32, # very important, otherwise NaN for RM
             device_map=self.device,
             quantization_config=self.quant_config,
             return_dict=True,
@@ -132,7 +132,7 @@ class SotopiaPPOTrainer:
     def _setup_classification_models(self):
         base_cls_model = AutoModelForSequenceClassification.from_pretrained(
             self.args.model_name,
-            torch_dtype=torch.float16,
+            torch_dtype=torch.float32, # very important, otherwise NaN
             device_map=self.device,
             quantization_config=self.quant_config,
             num_labels=1,
@@ -183,6 +183,7 @@ class SotopiaPPOTrainer:
             gradient_accumulation_steps=getattr(self.args, 'gradient_accumulation_steps', 1),
             seed=getattr(self.args, 'seed', 42),
             temperature=getattr(self.args, 'temperature', 0.7),
+            max_grad_norm=1.0,
         )
         
         # Create the TRL PPO trainer
