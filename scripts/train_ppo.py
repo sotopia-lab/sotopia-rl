@@ -37,7 +37,7 @@ if __name__ == '__main__':
                         help="Ratio of validation data")
     parser.add_argument("--response_length", type=int, default=128,
                         help="Maximum length of generated responses")
-    parser.add_argument("--local_rollout_forward_batch_size", type=int, default=4,
+    parser.add_argument("--local_rollout_forward_batch_size", type=int, default=16,
                         help="Batch size for local rollout forward pass")
     
     # LoRA parameters
