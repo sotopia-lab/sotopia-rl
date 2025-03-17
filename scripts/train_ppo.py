@@ -13,8 +13,10 @@ if __name__ == '__main__':
                         help="Path to the value model (defaults to model_name if not specified)")
     
     # Training parameters
-    parser.add_argument("--batch_size", type=int, default=1, 
-                        help="Batch size for training")
+    parser.add_argument("--per_device_train_batch_size", type=int, default=1, 
+                        help="Batch size per device for training")
+    parser.add_argument("--per_device_eval_batch_size", type=int, default=1, 
+                        help="Batch size per device for evaluation")
     parser.add_argument("--num_epochs", type=int, default=3, 
                         help="Number of training epochs")
     parser.add_argument("--ppo_epochs", type=int, default=4, 
@@ -33,6 +35,10 @@ if __name__ == '__main__':
                         help="Number of steps to accumulate gradients before performing an update")
     parser.add_argument("--val_ratio", type=float, default=0.05, 
                         help="Ratio of validation data")
+    parser.add_argument("--response_length", type=int, default=128,
+                        help="Maximum length of generated responses")
+    parser.add_argument("--local_rollout_forward_batch_size", type=int, default=4,
+                        help="Batch size for local rollout forward pass")
     
     # LoRA parameters
     parser.add_argument("--use_lora", action="store_true", 
@@ -101,6 +107,8 @@ if __name__ == '__main__':
                         help="Path to the Jinja template file")
     parser.add_argument("--checkpoint_dir", type=str, default="checkpoints", 
                         help="Directory to save the best LoRA checkpoint")
+    parser.add_argument("--save_steps", type=int, default=50,
+                        help="Number of steps between saving checkpoints")
     
     # Logging parameters
     parser.add_argument("--wandb_project", type=str, default="ppo-model-training", 

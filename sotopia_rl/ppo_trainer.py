@@ -18,7 +18,7 @@ from sotopia_rl.data import PPODataset
 class SotopiaPPOTrainer:
     def __init__(self, args):
         self.args = args
-        self.device = f"cuda:0" if torch.cuda.is_available() else "cpu"
+        self.device = f"cuda" if torch.cuda.is_available() else "cpu"
         
         # Initialize the training environment
         self._init_wandb()
@@ -171,22 +171,24 @@ class SotopiaPPOTrainer:
         
         # Configure PPO settings
         ppo_config = PPOv2Config(
-            per_device_train_batch_size=self.args.batch_size,
-            per_device_eval_batch_size=self.args.batch_size,
+            per_device_train_batch_size=self.args.per_device_train_batch_size,
+            per_device_eval_batch_size=self.args.per_device_eval_batch_size,
             num_train_epochs=self.args.num_epochs,
             num_ppo_epochs=self.args.ppo_epochs,
-            learning_rate=getattr(self.args, 'learning_rate', 1e-5),
+            learning_rate=self.args.learning_rate,
             output_dir=self.args.checkpoint_dir,
             gamma=self.args.gamma,
             lam=self.args.lam,
-            mini_batch_size=getattr(self.args, 'mini_batch_size', 1),
-            gradient_accumulation_steps=getattr(self.args, 'gradient_accumulation_steps', 1),
-            seed=getattr(self.args, 'seed', 42),
-            temperature=getattr(self.args, 'temperature', 0.7),
-            max_grad_norm=1.0,
-            response_length=60, #important
+            mini_batch_size=self.args.mini_batch_size,
+            gradient_accumulation_steps=self.gradient_accumulation_steps,
+            seed=self.args.seed,
+            temperature=self.args.temperature,
+            save_steps=self.args.save_steps,
+            response_length=self.args.response_length, #important
             stop_token_id=self.tokenizer.eos_token_id, #important
             stop_token='eos', #important, just fill with pad after eos
+            missing_eos_penalty=1.0,
+            local_rollout_forward_batch_size=self.args.local_rollout_forward_batch_size,
         )
         
         # Create the TRL PPO trainer

@@ -9,9 +9,9 @@ CUDA_VISIBLE_DEVICES=0,2,6,9 poetry run python /data/haofeiy2/sotopia-rl/scripts
   --policy_use_qlora \
   --reward_use_qlora \
   --value_use_qlora \
-  --batch_size 2 \
-  --num_epochs 100 \
-  --ppo_data_path /data/haofeiy2/sotopia-rl/data/sotopia_pi_gpt4_sft_overfit.json \
+  --batch_size 4 \
+  --num_epochs 1 \
+  --ppo_data_path /data/haofeiy2/sotopia-rl/data/sotopia_pi_bc_episodes_sft.json \
   --template_path /data/haofeiy2/sotopia-rl/evals/qwen2.5-7b.jinja\
   --ppo_epochs 4 \
   --gamma 0.99 \
