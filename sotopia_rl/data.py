@@ -134,7 +134,6 @@ class RMDataset(Dataset):
             "input_ids": input_ids,
             "labels": labels,
             "attention_mask": attention_masks,
-            "labels": labels
         }
 
 
@@ -167,7 +166,6 @@ class PPODataset(Dataset):
             return_tensors="pt"
         )
         input_ids = instruction_tokens["input_ids"]
-        attention_mask = instruction_tokens["attention_mask"]
         return {"input_ids": input_ids.squeeze()}
 
     def collate_fn(self, batch):

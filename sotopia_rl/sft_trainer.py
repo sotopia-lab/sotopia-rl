@@ -38,7 +38,7 @@ class SotopiaSFTTrainer:
         quantization_config = BitsAndBytesConfig(
             load_in_4bit=True,
             bnb_4bit_compute_dtype=torch.bfloat16,
-            bnb_4bit_use_double_quant=True, 
+            bnb_4bit_use_double_quant=True,
             bnb_4bit_quant_type="nf4",
         )
 
@@ -120,9 +120,6 @@ class SotopiaSFTTrainer:
     def train(self):
         # Begin training with SFTTrainer
         self.trainer.train()
-
-        # Evaluate one last time to log final metrics
-        eval_results = self.trainer.evaluate()
 
         # Save the final model
         self.save_lora_checkpoint()
