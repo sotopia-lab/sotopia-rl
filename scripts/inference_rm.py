@@ -5,7 +5,11 @@ import os
 import torch
 from jinja2 import Environment, FileSystemLoader
 from peft import PeftModelForSequenceClassification
-from transformers import AutoModelForSequenceClassification, AutoTokenizer, BitsAndBytesConfig
+from transformers import (
+    AutoModelForSequenceClassification,
+    AutoTokenizer,
+    BitsAndBytesConfig,
+)
 
 
 def parse_args():
@@ -82,7 +86,7 @@ def evaluate_prompt(model, tokenizer, prompt):
 
     with torch.no_grad():
         outputs = model(**inputs)
-    
+
     # Get reward score directly from the logits
     reward = outputs.logits.squeeze().cpu().item()
     return reward
@@ -94,11 +98,11 @@ def main():
 
     with open(args.example_path, 'r') as f:
         example_data = json.load(f)
-    
+
     template = load_template(args.template_path)
     for i, example in enumerate(example_data):
         print(f"\n===== EXAMPLE {i+1}/{len(example_data)} =====")
-        
+
         rendered_prompt = template.render(
             messages=[
                 {"role": "user", "content": example['input']},
@@ -106,7 +110,7 @@ def main():
             ],
             add_generation_prompt=False
         )
-        
+
         reward = evaluate_prompt(model, tokenizer, rendered_prompt)
         gth_reward = example.get('value')
 

@@ -1,7 +1,7 @@
 import argparse
+import difflib
 import json
 import os
-import difflib
 
 import torch
 from jinja2 import Environment, FileSystemLoader
@@ -98,7 +98,7 @@ def extract_generated_content(full_response, prompt):
     """Extract only the newly generated content by removing the prompt prefix."""
     if prompt in full_response:
         return full_response[len(prompt):].strip()
-    
+
     return full_response
 
 def compare_with_groundtruth(generated, groundtruth):
@@ -121,17 +121,17 @@ def main():
         example_data = json.load(f)
 
     template = load_template(args.template_path)
-    
+
     for i, example in enumerate(example_data):
         print(f"\n===== EXAMPLE {i+1}/{len(example_data)} =====")
-        
+
         rendered_prompt = template.render(
             messages=[{"role": "user", "content": example["input"]}],
             add_generation_prompt=True, # important for inference
         )
 
         full_response = generate_response(model, tokenizer, rendered_prompt, args.max_length)
-        
+
         generated_content = extract_generated_content(full_response, rendered_prompt)
 
         print("\nMODEL OUTPUT:")

@@ -33,7 +33,7 @@ class SotopiaRMTrainer(Trainer):
         quantization_config = BitsAndBytesConfig(
             load_in_4bit=True,
             bnb_4bit_compute_dtype=torch.bfloat16,
-            bnb_4bit_use_double_quant=True, 
+            bnb_4bit_use_double_quant=True,
             bnb_4bit_quant_type="nf4"
         )
 
@@ -45,7 +45,7 @@ class SotopiaRMTrainer(Trainer):
         )
         tokenizer = AutoTokenizer.from_pretrained(args.model_name, padding_side="left")
         tokenizer.pad_token_id = tokenizer.eos_token_id
-        
+
         if args.use_qlora:
             print(f"Using QLoRA (4bit) to load model: {args.model_name}")
             base_model = AutoModelForSequenceClassification.from_pretrained(
@@ -58,11 +58,11 @@ class SotopiaRMTrainer(Trainer):
             )
         else:
             base_model = AutoModelForSequenceClassification.from_pretrained(
-                args.model_name, 
+                args.model_name,
                 num_labels=1,  # For regression task (reward modeling)
                 pad_token_id=tokenizer.eos_token_id
             ).to(self.device)
-            
+
         model = PeftModelForSequenceClassification(base_model, peft_config)
 
 
