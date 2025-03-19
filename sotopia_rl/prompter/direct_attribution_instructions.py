@@ -31,6 +31,10 @@ Reward Attribution Instructions for LLMs
    - If an utterance has a moderate impact on the final goal achievement, assign it a reward of 1 or 2 (depending on the degree of impact).
    - If an utterance has a significant impact on the final goal achievement (aside from the key critical utterance already identified), assign it a reward of 3.
    - If an utterance is redundant or unnecessary, assign it a reward of -1.
+
+   Note:
+   - Please provide a score for each utterance in the conversation.
+   - Please only assign a score between -1 and 3.
 """
 
 DIRECT_5_SCALE_INSTRUCTIONS = """
@@ -60,6 +64,6 @@ Reward Attribution Instructions for LLMs
 """
 
 ATTRIBUTION_INSTRUCTIONS_DICT = {
-    "default": DEFAULT_DIRECT_INSTRUCTIONS,
-    "5-scale": DIRECT_5_SCALE_INSTRUCTIONS,
+   "default": DEFAULT_DIRECT_INSTRUCTIONS,
+   "5-scale": DIRECT_5_SCALE_INSTRUCTIONS,
 }
