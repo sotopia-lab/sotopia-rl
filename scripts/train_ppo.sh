@@ -1,4 +1,4 @@
-CUDA_VISIBLE_DEVICES=0,2,6,9 poetry run python /data/haofeiy2/sotopia-rl/scripts/train_ppo.py \
+CUDA_VISIBLE_DEVICES=2,6,9 poetry run python /data/haofeiy2/sotopia-rl/scripts/train_ppo.py \
   --model_name /mnt/data_from_server1/models/Qwen2.5-7B-Instruct \
   --value_model_name /mnt/data_from_server1/models/Qwen2.5-7B-Instruct \
   --reward_model_name /mnt/data_from_server1/models/Qwen2.5-7B-Instruct \
@@ -9,8 +9,9 @@ CUDA_VISIBLE_DEVICES=0,2,6,9 poetry run python /data/haofeiy2/sotopia-rl/scripts
   --policy_use_qlora \
   --reward_use_qlora \
   --value_use_qlora \
-  --batch_size 4 \
-  --num_epochs 1 \
+  --per_device_train_batch_size 4 \
+  --per_device_eval_batch_size 4 \
+  --mini_batch_size 4 \
   --ppo_data_path /data/haofeiy2/sotopia-rl/data/sotopia_pi_bc_episodes_sft.json \
   --template_path /data/haofeiy2/sotopia-rl/evals/qwen2.5-7b.jinja\
   --ppo_epochs 4 \

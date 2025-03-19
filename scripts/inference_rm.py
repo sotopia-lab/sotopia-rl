@@ -40,7 +40,7 @@ def load_model_and_tokenizer(args):
 
         base_model = AutoModelForSequenceClassification.from_pretrained(
             args.model_path,
-            torch_dtype=torch.float16,
+            torch_dtype=torch.float16, #important
             device_map="auto",
             quantization_config=quantization_config,
             num_labels=1  # For regression task
@@ -49,7 +49,7 @@ def load_model_and_tokenizer(args):
         print("Using full precision model")
         base_model = AutoModelForSequenceClassification.from_pretrained(
             args.model_path,
-            torch_dtype=torch.float16,
+            torch_dtype=torch.float16, #important
             device_map="auto",
             num_labels=1  # For regression task
         )
