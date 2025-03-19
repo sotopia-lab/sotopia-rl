@@ -1,23 +1,32 @@
 import sys
-
+import asyncio
 sys.path.append("../../")
 import argparse
-
-from sotopia_rl.prompter.attribution_prompting import generate_reward_attribution
+from sotopia_rl.prompter.attribution_prompting import generate_reward_attribution, parallel_generate_reward_attribution
 from sotopia_rl.utils.preprocess import add_score
 
+def main(data_dir: str, 
+        llm_name: str, 
+        input_file: str, 
+        output_file: str, 
+        attribution_method_name: str,
+        attribution_instruction_name: str,
+        max_concurrency: int = 1
+    ) -> None:
 
-def main(data_dir: str, llm_name: str, input_file: str, output_file: str) -> None:
     add_score(
         data_dir,
         input_file,
         "sotopia_pi_episodes_with_scores.jsonl",
     )
-    generate_reward_attribution(
+    parallel_generate_reward_attribution(
         data_dir,
         llm_name=llm_name,
         input_file="sotopia_pi_episodes_with_scores.jsonl",
         output_file=output_file,
+        attribution_method_name=attribution_method_name,
+        attribution_instruction_name=attribution_instruction_name,
+        max_concurrency=max_concurrency
     )
 
 
@@ -36,6 +45,18 @@ if __name__ == "__main__":
         help="Name of the language model",
     )
     parser.add_argument(
+        "--attribution_method_name",
+        type=str,
+        required=False,
+        help="Type of attribution method",
+    )
+    parser.add_argument(
+        "--attribution_instruction_name",
+        type=str,
+        required=False,
+        help="Type of attribution instruction",
+    )
+    parser.add_argument(
         "--input_file",
         type=str,
         required=True,
@@ -47,8 +68,22 @@ if __name__ == "__main__":
         required=True,
         help="Output file containing episodes with reward attribution",
     )
-
+    parser.add_argument(
+        "--max_concurrency",
+        type=int,
+        required=False,
+        default=1,
+        help="Maximum number of concurrent episodes",
+    )
+    
 
     args = parser.parse_args()
 
-    main(args.data_dir, args.llm_name, args.input_file, args.output_file)
+    main(args.data_dir, 
+        args.llm_name, 
+        args.input_file, 
+        args.output_file, 
+        args.attribution_method_name,
+        args.attribution_instruction_name,
+        args.max_concurrency
+        )
