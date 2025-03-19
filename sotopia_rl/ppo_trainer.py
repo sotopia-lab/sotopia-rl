@@ -162,7 +162,7 @@ class SotopiaPPOTrainer:
             gamma=self.args.gamma,
             lam=self.args.lam,
             mini_batch_size=self.args.mini_batch_size,
-            gradient_accumulation_steps=self.gradient_accumulation_steps,
+            gradient_accumulation_steps=self.args.gradient_accumulation_steps,
             seed=self.args.seed,
             temperature=self.args.temperature,
             save_steps=self.args.save_steps,

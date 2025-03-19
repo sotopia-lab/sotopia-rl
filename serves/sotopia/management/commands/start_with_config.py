@@ -18,6 +18,7 @@ class Command(BaseCommand):
         parser.add_argument('--port', type=int, default=8000, help='Port number for the Django server')
         parser.add_argument('--sft_batch_size', type=int, default=1, help='SFT batch size for the model')
         parser.add_argument('--rm_batch_size', type=int, default=1, help='Reward model batch size for the model')
+        parser.add_argument('--use_qlora', action='store_true', help='Use QLoRA for model loading')
 
     def handle(self, *args, **options):
         # Set up the rejection sampler with the provided config
@@ -30,6 +31,7 @@ class Command(BaseCommand):
             "max_length": options['max_length'],
             "sft_batch_size": options['sft_batch_size'],
             "rm_batch_size": options['rm_batch_size'],
+            "use_qlora": options['use_qlora'],
         }
 
         # # Initialize the rejection_sampler directly
