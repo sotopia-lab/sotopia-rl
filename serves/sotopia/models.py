@@ -3,8 +3,13 @@ import os
 import numpy as np
 import torch
 from jinja2 import Environment, FileSystemLoader
-from peft import PeftConfig, PeftModelForCausalLM, PeftModelForSequenceClassification, get_peft_model
-from transformers import AutoModelForCausalLM, AutoModelForSequenceClassification, AutoTokenizer, BitsAndBytesConfig
+from peft import PeftConfig, PeftModelForSequenceClassification, get_peft_model
+from transformers import (
+    AutoModelForCausalLM,
+    AutoModelForSequenceClassification,
+    AutoTokenizer,
+    BitsAndBytesConfig,
+)
 
 
 class RejectionSampler:
@@ -70,21 +75,21 @@ class RejectionSampler:
     def load_sft_model(self, model_path):
         """Load SFT model with optional QLoRA quantization."""
         print(f"Loading SFT model: {model_path}")
-        
+
         quantization_config = self.get_quantization_config()
         model_kwargs = {
             "torch_dtype": torch.float16,
             "device_map": "auto",
         }
-        
+
         if quantization_config:
             model_kwargs["quantization_config"] = quantization_config
-            
+
         base_model = AutoModelForCausalLM.from_pretrained(
             model_path,
             **model_kwargs
         )
-            
+
         adapter_path = os.path.join(model_path, 'adapter_model')
         if os.path.exists(adapter_path + '.safetensors') or os.path.exists(adapter_path + '.bin'):
             print(f"Loading adapter from: {model_path}")
@@ -97,29 +102,29 @@ class RejectionSampler:
         else:
             print(f"No adapter found at {adapter_path}, using base model")
             model = base_model
-        
+
         model.eval()  # Set to evaluation mode
         return model.to(self.sft_device)
 
     def load_reward_model(self, reward_model_path):
         """Load reward model with optional QLoRA quantization."""
         print(f"Loading reward model: {reward_model_path}")
-        
+
         quantization_config = self.get_quantization_config()
         model_kwargs = {
             "torch_dtype": torch.float16,
             "device_map": "auto",
             "num_labels": 1  # For regression task
         }
-        
+
         if quantization_config:
             model_kwargs["quantization_config"] = quantization_config
-            
+
         base_model = AutoModelForSequenceClassification.from_pretrained(
             reward_model_path,
             **model_kwargs
         )
-        
+
         # Check and load the adapter if it exists
         adapter_path = os.path.join(reward_model_path, 'adapter_model')
         if os.path.exists(adapter_path + '.safetensors') or os.path.exists(adapter_path + '.bin'):
@@ -206,7 +211,7 @@ class RejectionSampler:
 
             # Extract reward values from the logits
             batch_rewards = outputs.logits.squeeze().detach().cpu().numpy()
-            
+
             # Handle different shapes (single item vs batch)
             if batch_rewards.ndim == 0:
                 batch_rewards = [batch_rewards.item()]
