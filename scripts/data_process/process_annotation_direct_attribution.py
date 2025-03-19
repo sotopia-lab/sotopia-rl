@@ -3,9 +3,11 @@ import os
 import re
 from copy import deepcopy
 from typing import Any, Dict, List
+
 import click
-from tqdm import tqdm
 from db_free_reverse_engineering import run_reverse_by_pk_agent
+from tqdm import tqdm
+
 
 def get_attributed_data(data: List[Dict[str, Any]], utterance_pattern: str) -> List[Dict[str, Any]]:
     attributed_data = []
@@ -24,7 +26,7 @@ def get_attributed_data(data: List[Dict[str, Any]], utterance_pattern: str) -> L
             utterance_path = f"../../data/episode_utterances/{d['episode_id']}-{d['agent']}-{turn_number}.json"
             if not os.path.exists(utterance_path):
                 raise Exception(f"Utterance not found: {utterance_path}")
-            
+
             with open(f"../../data/episode_utterances/{d['episode_id']}-{d['agent']}-{turn_number}.json", 'r') as f:
                 sotopia_utterance = json.load(f)
 
@@ -45,7 +47,7 @@ def get_attributed_data(data: List[Dict[str, Any]], utterance_pattern: str) -> L
 def main(data_dir: str, input_file: str, reward_output_file: str, sft_output_file: str) -> None:
     with open(os.path.join(data_dir, input_file), 'r') as f:
         data: List[Dict[str, Any]] = [json.loads(d) for d in f.readlines()]
-    
+
     cache_dir = os.path.join(data_dir, "episode_utterances")
     if not os.path.exists(cache_dir):
         os.makedirs(cache_dir)

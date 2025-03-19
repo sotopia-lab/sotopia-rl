@@ -22,15 +22,20 @@ trl = ">=0.9.6"
 peft = ">=0.11.1"
 datasets = "2.20.0"
 sentencepiece = "*"
+bitsandbytes = "*"
+wandb = "*"
 
 ruff = {version = "*", optional = true}
 vllm = {version = "=0.6.2", optional = true}
 
+djangorestframework = {version = "*", optional = true}
+django = {version = "*", optional = true}
 
 [tool.poetry.extras]
 metrics = ["nltk"]
 quality = ["ruff"]
 eval = ["gin-config"]
+server = ["djangorestframework", "django"]
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "*"

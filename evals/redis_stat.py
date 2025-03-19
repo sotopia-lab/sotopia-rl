@@ -21,7 +21,6 @@ for episode in Episodes:
     #if len(conversation) <=2 :
     #    EpisodeLog.delete(episode.pk)
 '''
-import pdb; pdb.set_trace()
 
 tot_rewards1 = {'believability': 0.0, 'relationship': 0.0, 'knowledge': 0.0, 'secret': 0.0, 'social_rules': 0.0, 'financial_and_material_benefits': 0.0, 'goal': 0.0, 'overall_score': 0.0}
 tot_rewards2 = {'believability': 0.0, 'relationship': 0.0, 'knowledge': 0.0, 'secret': 0.0, 'social_rules': 0.0, 'financial_and_material_benefits': 0.0, 'goal': 0.0, 'overall_score': 0.0}

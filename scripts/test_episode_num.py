@@ -9,6 +9,6 @@ for data in dataset:
     # part[8] is scenario, part[9] is agent combo
     setting = parts[8] + parts[9]
     if setting not in settings:
-        settings.append(setting) 
+        settings.append(setting)
 print('Total utterances:', len(dataset))
 print('Total AgentEnvCombos:', len(settings))

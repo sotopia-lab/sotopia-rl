@@ -14,11 +14,9 @@ if __name__ == '__main__':
     parser.add_argument("--template_path", type=str, required=True, help="Path to the Jinja template file")
 
     # Tokenizer max length and gradient accumulation
-    parser.add_argument("--max_length", type=int, default=1024, help="Maximum length for tokenized inputs")
+    parser.add_argument("--max_length", type=int, default=4096, help="Maximum length for tokenized inputs")
     parser.add_argument("--accumulation_steps", type=int, default=4, help="Number of gradient accumulation steps")
     parser.add_argument("--evaluation_steps", type=int, default=100, help="Number of steps between evaluations")
-
-    parser.add_argument("--use_qlora", action="store_true", help="Use QLoRA (4-bit) for model loading.")
 
     # Learning rate scheduler arguments
     parser.add_argument("--warmup_epochs", type=float, default=0.1, help="Number of warmup epochs (as a fraction)")

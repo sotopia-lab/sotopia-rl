@@ -1,16 +1,20 @@
 import os
 
 import torch
-import wandb
 from jinja2 import Environment, FileSystemLoader
 from peft import LoraConfig, get_peft_model
 from torch.utils.data import random_split
-from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments, BitsAndBytesConfig
+from transformers import (
+    AutoConfig,
+    AutoModelForCausalLM,
+    AutoTokenizer,
+    BitsAndBytesConfig,
+    TrainingArguments,
+)
 from trl import SFTTrainer
 
+import wandb
 from sotopia_rl.data import SFTDataset
-
-from transformers import AutoConfig
 
 
 class SotopiaSFTTrainer:
@@ -28,11 +32,15 @@ class SotopiaSFTTrainer:
         config.use_cache = False
 
         # Load the tokenizer and model
-        self.tokenizer = AutoTokenizer.from_pretrained(args.model_name)
+        self.tokenizer = AutoTokenizer.from_pretrained(args.model_name, padding_side="left")
         self.tokenizer.model_max_length = args.max_length
 
-        quantization_config = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_compute_dtype=torch.bfloat16,
-                                                 bnb_4bit_use_double_quant=True, bnb_4bit_quant_type="nf4", )
+        quantization_config = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_compute_dtype=torch.bfloat16,
+            bnb_4bit_use_double_quant=True,
+            bnb_4bit_quant_type="nf4",
+        )
 
         if args.use_qlora:
             print(f"Using QLoRA (4bit) to load model: {args.model_name}")
@@ -66,7 +74,7 @@ class SotopiaSFTTrainer:
         self.template = env.get_template(self.args.template_path.split("/")[-1])
 
         # Set up dataset and data loaders
-        self.setup_dataloaders()
+        self.setup_dataset()
 
         # Set up the SFT Trainer with appropriate arguments
         training_args = TrainingArguments(
@@ -81,11 +89,13 @@ class SotopiaSFTTrainer:
             eval_steps=args.evaluation_steps,
             save_steps=args.evaluation_steps,
             logging_dir="./logs",
-            report_to="wandb",  # Log to wandb
+            report_to="wandb",
             gradient_checkpointing=False,
             optim="paged_adamw_8bit" if args.use_qlora else "adamw_torch",
-            fp16=True
+            fp16=True,
         )
+
+        self.collate_fn = self.train_dataset.dataset.collate_fn if hasattr(self.train_dataset, 'dataset') else None
 
         # Initialize SFTTrainer
         self.trainer = SFTTrainer(
@@ -97,24 +107,7 @@ class SotopiaSFTTrainer:
             data_collator=self.collate_fn,
         )
 
-    def collate_fn(self, batch):
-        input_ids = torch.nn.utils.rnn.pad_sequence(
-            [item["input_ids"] for item in batch], batch_first=True, padding_value=self.tokenizer.pad_token_id
-        )
-        attention_masks = torch.nn.utils.rnn.pad_sequence(
-            [item["attention_mask"] for item in batch], batch_first=True, padding_value=0
-        )
-        labels = torch.nn.utils.rnn.pad_sequence(
-            [item["labels"] for item in batch], batch_first=True, padding_value=-100
-        )
-
-        return {
-            "input_ids": input_ids,
-            "attention_mask": attention_masks,
-            "labels": labels,
-        }
-
-    def setup_dataloaders(self):
+    def setup_dataset(self):
         # Load dataset and create train/val split
         dataset = SFTDataset(self.args.sft_data_path, self.tokenizer, max_length=self.args.max_length,
                              template=self.template)
@@ -127,6 +120,7 @@ class SotopiaSFTTrainer:
     def train(self):
         # Begin training with SFTTrainer
         self.trainer.train()
+
         # Save the final model
         self.save_lora_checkpoint()
 
