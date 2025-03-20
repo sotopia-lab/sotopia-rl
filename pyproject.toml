@@ -27,6 +27,7 @@ wandb = "*"
 
 ruff = {version = "*", optional = true}
 vllm = {version = "=0.6.2", optional = true}
+sotopia = {version = "*", optional = true}
 
 djangorestframework = {version = "*", optional = true}
 django = {version = "*", optional = true}
@@ -34,7 +35,7 @@ django = {version = "*", optional = true}
 [tool.poetry.extras]
 metrics = ["nltk"]
 quality = ["ruff"]
-eval = ["gin-config"]
+eval = ["gin-config", "vllm", "sotopia"]
 server = ["djangorestframework", "django"]
 
 [tool.poetry.group.dev.dependencies]

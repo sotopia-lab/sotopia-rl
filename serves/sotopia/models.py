@@ -79,7 +79,7 @@ class RejectionSampler:
         quantization_config = self.get_quantization_config()
         model_kwargs = {
             "torch_dtype": torch.float16,
-            "device_map": "auto",
+            "device_map": "auto" if torch.cuda.device_count() == 1 else "cuda:0",
         }
 
         if quantization_config:
@@ -113,7 +113,7 @@ class RejectionSampler:
         quantization_config = self.get_quantization_config()
         model_kwargs = {
             "torch_dtype": torch.float16,
-            "device_map": "auto",
+            "device_map": "auto" if torch.cuda.device_count() == 1 else "cuda:1",
             "num_labels": 1  # For regression task
         }
 
