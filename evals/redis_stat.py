@@ -1,55 +1,129 @@
 from sotopia.database.logs import EpisodeLog
+from collections import defaultdict
 
-# find episode log by tag
-#Episodes = EpisodeLog.find(EpisodeLog.tag == "sotopia_rejection-sampling-rm-baseline-and-sft_vs_sotopia_gemma-2-2b-it-sft-1108_sample_5").all()
-Episodes = EpisodeLog.find(EpisodeLog.tag == "test").all()
-#Episodes = EpisodeLog.find(EpisodeLog.tag == "sotopia_rejection-sampling-rm-key-utterance-and-sft_vs_sotopia_gemma-2-2b-it-sft-1109_sample_1").all()
+def analyze_episodes_with_positions(tag):
+    # Find episodes with the specified tag
+    episodes = EpisodeLog.find(EpisodeLog.tag == tag).all()
+    print(f"Total episodes found: {len(episodes)}")
+    
+    # Track rewards by model name
+    model_rewards = defaultdict(lambda: defaultdict(float))
+    model_counts = defaultdict(int)
+    
+    # Track position counts (how many times a model appears as agent1 vs agent2)
+    position_counts = defaultdict(lambda: {'agent1': 0, 'agent2': 0})
+    
+    # Track rewards by position
+    position_rewards = defaultdict(lambda: {
+        'agent1': defaultdict(float),
+        'agent2': defaultdict(float)
+    })
+    
+    # Process each episode
+    for episode in episodes:
+        try:
+            # Skip if no models or rewards
+            if not hasattr(episode, 'models') or len(episode.models) < 3:
+                continue
+            if not hasattr(episode, 'rewards') or len(episode.rewards) < 2:
+                continue
+            
+            # Get model names
+            model1_name = episode.models[1]  # agent1's model
+            model2_name = episode.models[2]  # agent2's model
+            
+            # Get rewards (handle both list and direct formats)
+            try:
+                reward1 = episode.rewards[0][-1]
+                reward2 = episode.rewards[1][-1]
+            except (IndexError, TypeError):
+                continue
+            
+            # Skip if rewards are not dictionaries
+            if not isinstance(reward1, dict) or not isinstance(reward2, dict):
+                continue
+            
+            # Add rewards to model accumulators
+            for key, value in reward1.items():
+                model_rewards[model1_name][key] += value
+                position_rewards[model1_name]['agent1'][key] += value
+                
+            for key, value in reward2.items():
+                model_rewards[model2_name][key] += value
+                position_rewards[model2_name]['agent2'][key] += value
+            
+            # Count model appearances
+            model_counts[model1_name] += 1
+            model_counts[model2_name] += 1
+            
+            # Count position appearances
+            position_counts[model1_name]['agent1'] += 1
+            position_counts[model2_name]['agent2'] += 1
+            
+        except Exception as e:
+            print(f"Error: {e}")
+    
+    # Calculate overall averages
+    print("\n===== OVERALL MODEL PERFORMANCE =====")
+    for model, rewards in model_rewards.items():
+        print(f"\nModel: {model} (appeared in {model_counts[model]} episodes)")
+        print(f"  As agent1: {position_counts[model]['agent1']} times")
+        print(f"  As agent2: {position_counts[model]['agent2']} times")
+        
+        for key, value in rewards.items():
+            avg = value / model_counts[model]
+            print(f"  {key}: {avg:.4f}")
+            # Update the dict with average value
+            model_rewards[model][key] = avg
+            
+    # Calculate position-specific averages
+    print("\n===== PERFORMANCE BY POSITION =====")
+    for model in position_rewards:
+        print(f"\nModel: {model}")
+        
+        # Agent1 position
+        if position_counts[model]['agent1'] > 0:
+            print(f"  As agent1 ({position_counts[model]['agent1']} episodes):")
+            for key, value in position_rewards[model]['agent1'].items():
+                avg = value / position_counts[model]['agent1']
+                print(f"    {key}: {avg:.4f}")
+                position_rewards[model]['agent1'][key] = avg
+        else:
+            print(f"  Never appeared as agent1")
+                
+        # Agent2 position
+        if position_counts[model]['agent2'] > 0:
+            print(f"  As agent2 ({position_counts[model]['agent2']} episodes):")
+            for key, value in position_rewards[model]['agent2'].items():
+                avg = value / position_counts[model]['agent2']
+                print(f"    {key}: {avg:.4f}")
+                position_rewards[model]['agent2'][key] = avg
+        else:
+            print(f"  Never appeared as agent2")
+    
+    # Count model pairs
+    print("\n===== MODEL PAIRINGS =====")
+    model_pairs = defaultdict(int)
+    for episode in episodes:
+        try:
+            if not hasattr(episode, 'models') or len(episode.models) < 3:
+                continue
+                
+            model1 = episode.models[1]
+            model2 = episode.models[2]
+            pair_key = f"{model1} vs {model2}"
+            model_pairs[pair_key] += 1
+        except Exception:
+            continue
+    
+    for pair, count in model_pairs.items():
+        print(f"{pair}: {count} episodes")
+    
+    return {
+        'model_rewards': dict(model_rewards),
+        'position_counts': dict(position_counts),
+        'position_rewards': dict(position_rewards)
+    }
 
-#Episodes = EpisodeLog.find(EpisodeLog.tag == "sotopia_gemma-2-2b-it-sft-ppo-rm-key_vs_sotopia_gemma-2-2b-it-sft-1010_v2").all()
-#Episodes = EpisodeLog.find(EpisodeLog.tag == "sotopia_gemma-2-2b-it-sft-ppo-rm-direct_vs_sotopia_gemma-2-2b-it-sft-1010").all()
-#Episodes = EpisodeLog.find(EpisodeLog.tag == "sotopia_gemma-2-2b-it-sft-ppo-rm-key_vs_sotopia_gemma-2-2b-it-sft-1010").all()
-
-print(len(Episodes))  ## Episode Log
-
-'''
-for episode in Episodes:
-    conversation = episode.messages[1:]
-    rewards = episode.rewards
-    if rewards == [0, 0]:
-        EpisodeLog.delete(episode.pk)
-    print(len(conversation))
-    #if len(conversation) <=2 :
-    #    EpisodeLog.delete(episode.pk)
-'''
-
-tot_rewards1 = {'believability': 0.0, 'relationship': 0.0, 'knowledge': 0.0, 'secret': 0.0, 'social_rules': 0.0, 'financial_and_material_benefits': 0.0, 'goal': 0.0, 'overall_score': 0.0}
-tot_rewards2 = {'believability': 0.0, 'relationship': 0.0, 'knowledge': 0.0, 'secret': 0.0, 'social_rules': 0.0, 'financial_and_material_benefits': 0.0, 'goal': 0.0, 'overall_score': 0.0}
-episode_num = 0
-Episodes = Episodes[-20:]
-print(len(Episodes))
-for episode in Episodes:
-    rewards = episode.rewards
-    print(rewards)
-    conversation = episode.messages[1:]
-    print(len(conversation))
-    #if len(conversation) < 5:
-    #    import pdb; pdb.set_trace()
-    try:
-        reward1, reward2 = rewards[0][-1], rewards[1][-1]
-        for key, value in reward1.items():
-            tot_rewards1[key] += value
-        for key, value in reward2.items():
-            tot_rewards2[key] += value
-        episode_num += 1
-    except Exception as e:
-        print(e, episode.pk)
-        pass
-
-for key in tot_rewards1:
-    tot_rewards1[key] /= episode_num
-
-for key in tot_rewards2:
-    tot_rewards2[key] /= episode_num
-
-print(tot_rewards1)
-print(tot_rewards2)
+# Run the analysis
+results = analyze_episodes_with_positions("test")
