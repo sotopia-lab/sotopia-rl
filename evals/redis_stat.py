@@ -2,7 +2,7 @@ from sotopia.database.logs import EpisodeLog
 
 # find episode log by tag
 #Episodes = EpisodeLog.find(EpisodeLog.tag == "sotopia_rejection-sampling-rm-baseline-and-sft_vs_sotopia_gemma-2-2b-it-sft-1108_sample_5").all()
-Episodes = EpisodeLog.find(EpisodeLog.tag == "sotopia_rejection-sampling-rm-direct-prompt-and-sft_vs_sotopia_gemma-2-2b-it-sft-1204_sample_40").all()
+Episodes = EpisodeLog.find(EpisodeLog.tag == "test").all()
 #Episodes = EpisodeLog.find(EpisodeLog.tag == "sotopia_rejection-sampling-rm-key-utterance-and-sft_vs_sotopia_gemma-2-2b-it-sft-1109_sample_1").all()
 
 #Episodes = EpisodeLog.find(EpisodeLog.tag == "sotopia_gemma-2-2b-it-sft-ppo-rm-key_vs_sotopia_gemma-2-2b-it-sft-1010_v2").all()
