@@ -3,7 +3,7 @@ import os
 import numpy as np
 import torch
 from jinja2 import Environment, FileSystemLoader
-from peft import PeftConfig, PeftModelForSequenceClassification, get_peft_model
+from peft import PeftConfig, PeftModelForSequenceClassification, PeftModelForCausalLM 
 from transformers import (
     AutoModelForCausalLM,
     AutoModelForSequenceClassification,
@@ -62,22 +62,13 @@ class RejectionSampler:
             )
         return None
 
-    def load_peft_config(self, checkpoint_path):
-        """Load PEFT configuration from checkpoint path."""
-        try:
-            peft_config = PeftConfig.from_pretrained(checkpoint_path)
-            return peft_config
-        except FileNotFoundError:
-            print(f"No PEFT configuration file found in {checkpoint_path}")
-            return None
-
     def load_sft_model(self, model_path):
         """Load SFT model with optional QLoRA quantization."""
         print(f"Loading SFT model: {model_path}")
 
         quantization_config = self.get_quantization_config()
         model_kwargs = {
-            "torch_dtype": torch.float16,
+            "torch_dtype": torch.float32, # very important
             "device_map": "auto" if torch.cuda.device_count() == 1 else "cuda:0",
         }
 
@@ -92,12 +83,7 @@ class RejectionSampler:
         adapter_path = os.path.join(model_path, 'adapter_model')
         if os.path.exists(adapter_path + '.safetensors') or os.path.exists(adapter_path + '.bin'):
             print(f"Loading adapter from: {model_path}")
-            peft_config = self.load_peft_config(model_path)
-            if peft_config:
-                model = get_peft_model(base_model, peft_config)
-                model.load_adapter(model_path, adapter_name="default")
-            else:
-                model = base_model
+            model = PeftModelForCausalLM.from_pretrained(base_model, model_path)
         else:
             print(f"No adapter found at {adapter_path}, using base model")
             model = base_model
@@ -111,7 +97,7 @@ class RejectionSampler:
 
         quantization_config = self.get_quantization_config()
         model_kwargs = {
-            "torch_dtype": torch.float16,
+            "torch_dtype": torch.float32, # very important
             "device_map": "auto" if torch.cuda.device_count() == 1 else "cuda:1",
             "num_labels": 1  # For regression task
         }
@@ -173,6 +159,9 @@ class RejectionSampler:
                 response = self.tokenizer.decode(generated_tokens, skip_special_tokens=True)
                 total_responses.append(response)
 
+            for response in total_responses:
+                print(response)
+
             total_responses_generated += current_batch_size
 
         # Prepare messages with generated responses
@@ -183,6 +172,8 @@ class RejectionSampler:
 
         # Evaluate responses with reward model in batches
         rewards = self.inference_rm(messages_list)
+
+        print(rewards)
 
         # Find the best response
         top_index = np.argmax(rewards)
