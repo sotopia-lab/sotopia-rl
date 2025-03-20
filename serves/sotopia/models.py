@@ -11,6 +11,7 @@ from transformers import (
     BitsAndBytesConfig,
 )
 
+
 class RejectionSampler:
     def __init__(
         self,

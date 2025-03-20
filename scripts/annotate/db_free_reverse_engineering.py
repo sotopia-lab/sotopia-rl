@@ -4,6 +4,7 @@ from typing import Any, Dict, List
 
 import transformers
 from episode_utils import FakeEpisodeLog, jsonl_to_episodes
+
 # PROMPT_PREFIX = "Prompt after formatting:\n"
 MAX_TOKEN = 2048  # 5000
 

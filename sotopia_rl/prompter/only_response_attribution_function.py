@@ -1,7 +1,9 @@
-from typing import Any, Dict, List, Tuple, Optional, Type, Union, TypeVar
-from pydantic import BaseModel, Field
-from openai import OpenAI
 import json
+from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar, Union
+
+from openai import OpenAI
+from pydantic import BaseModel, Field
+
 T = TypeVar("T", bound=BaseModel)
 
 DEFAULT_PROMPT = """
@@ -35,8 +37,8 @@ def openai_call(prompt: str, model: str = "gpt-3.5-turbo") -> str | None:
     return response.choices[0].message.content
 
 def openai_call_with_response_model(
-    prompt: str, 
-    model: str = "gpt-3.5-turbo", 
+    prompt: str,
+    model: str = "gpt-3.5-turbo",
     response_model: Optional[Type[T]] = None
 ) -> Union[T, str, None]:
     client = OpenAI()
@@ -50,7 +52,7 @@ def openai_call_with_response_model(
                 response_format={"type": "json_object"}
             )
             content = json.loads(response.choices[0].message.content)
-            
+
             if response_model:
                 # Assuming the content is already a dict; if it's a JSON string, you might need to load it first.
                 return response_model.model_validate(content)
@@ -59,7 +61,7 @@ def openai_call_with_response_model(
                 print("Error in openai_call_with_response_model, trying again")
             else:
                 print("Error in openai_call_with_response_model, tried 3 times and failed")
-    
+
     return content
 
 def assign_attributions_for_conversation(
