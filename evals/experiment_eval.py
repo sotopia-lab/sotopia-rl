@@ -146,7 +146,7 @@ def _iterate_env_agent_combo_not_in_db(
     print(f"Number of env agent combos to run: {len(all_env_agent_combo_storage_list)}")
     
     for env_agent_combo_storage in all_env_agent_combo_storage_list:
-        env_profile = EnvironmentProfile.get(env_id)
+        env_profile = EnvironmentProfile.get(env_agent_combo_storage.env_id)
         env = ParallelSotopiaEnv(
             env_profile=env_profile,
             model_name=model_names["env"],
@@ -161,7 +161,7 @@ def _iterate_env_agent_combo_not_in_db(
                 ),
             ],
         )
-        agent_profiles = [AgentProfile.get(id) for id in agent_ids]
+        agent_profiles = [AgentProfile.get(id) for id in env_agent_combo_storage.agent_ids]
 
         agents = [
             LLMAgent(agent_profile=agent_profile, model_name=agent_model)
@@ -197,7 +197,7 @@ def run_async_server_in_batch(
 
     env_agent_combo_iter = _iterate_env_agent_combo_not_in_db(model_names=model_names, tag=tag)
     env_agent_combo_batch: list[EnvAgentCombo[Observation, AgentAction]] = []
-
+    
     while True:
         for env_agent_combo in tqdm(
             env_agent_combo_iter,
