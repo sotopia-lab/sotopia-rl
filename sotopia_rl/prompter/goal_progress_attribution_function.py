@@ -1,11 +1,13 @@
-from typing import Any, Dict, List, Tuple, Optional, Type, Union, TypeVar
-from pydantic import BaseModel, Field
-from openai import OpenAI
 import json
+from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar, Union
+
+from openai import OpenAI
+from pydantic import BaseModel, Field
+
 T = TypeVar("T", bound=BaseModel)
 
 DEFAULT_PROMPT = """
-You are given a conversation history between two agents. For now, you are the judge of the utterance of one of the agent, and your task is to judge how much of your agent's goal is achieved at certain point of the conversation. You will also be provided with the agent's final goal achieving score, which would help you in making the decision better. Note, the goal achieving score is between 0 and 10, where 0 means the goal is not achieved at all, and 10 means that the goal is fully achieved. 
+You are given a conversation history between two agents. For now, you are the judge of the utterance of one of the agent, and your task is to judge how much of your agent's goal is achieved at certain point of the conversation. You will also be provided with the agent's final goal achieving score, which would help you in making the decision better. Note, the goal achieving score is between 0 and 10, where 0 means the goal is not achieved at all, and 10 means that the goal is fully achieved.
 
 ### Your Agent's Name:
 {agent}
@@ -31,8 +33,8 @@ def openai_call(prompt: str, model: str = "gpt-3.5-turbo") -> str | None:
     return response.choices[0].message.content
 
 def openai_call_with_response_model(
-    prompt: str, 
-    model: str = "gpt-3.5-turbo", 
+    prompt: str,
+    model: str = "gpt-3.5-turbo",
     response_model: Optional[Type[T]] = None
 ) -> Union[T, str, None]:
     client = OpenAI()
@@ -46,7 +48,7 @@ def openai_call_with_response_model(
                 response_format={"type": "json_object"}
             )
             content = json.loads(response.choices[0].message.content)
-            
+
             if response_model:
                 # Assuming the content is already a dict; if it's a JSON string, you might need to load it first.
                 return response_model.model_validate(content)
@@ -55,7 +57,7 @@ def openai_call_with_response_model(
                 print("Error in openai_call_with_response_model, trying again")
             else:
                 print("Error in openai_call_with_response_model, tried 3 times and failed")
-    
+
     return content
 
 def assign_attributions_for_conversation(
@@ -81,7 +83,7 @@ def assign_attributions_for_conversation(
             score = response.score if response else prev_score
             attribution_dict[f"Utterance {i//2} by {speaker}"] = score - prev_score
             prev_score = score
-        
+
         curr_conv.append(f"Utterance {i//2} by {speaker}: {utterance}")
     return attribution_dict
 

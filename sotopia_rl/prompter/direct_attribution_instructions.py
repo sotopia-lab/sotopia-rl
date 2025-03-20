@@ -7,7 +7,7 @@ Following the same logic, if you believe an utterance had no impact on the final
 """
 
 
-DEFAULT_DIRECT_INSTRUCTIONS = """ 
+DEFAULT_DIRECT_INSTRUCTIONS = """
 Reward Attribution Instructions for LLMs
 
 1. Input Context:

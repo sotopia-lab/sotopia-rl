@@ -1,5 +1,7 @@
 import json
+
 from sotopia.database.logs import BaseEpisodeLog
+
 
 class FakeEpisodeLog(BaseEpisodeLog):
     pk: str

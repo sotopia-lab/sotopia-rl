@@ -1,9 +1,14 @@
 import json
-from typing import Any, Dict, List, Tuple
-from openai import OpenAI
 import re
+from typing import Any, Dict, List, Tuple
+
+from openai import OpenAI
 from tqdm import tqdm
-from sotopia_rl.prompter.direct_attribution_instructions import ATTRIBUTION_INSTRUCTIONS_DICT
+
+from sotopia_rl.prompter.direct_attribution_instructions import (
+    ATTRIBUTION_INSTRUCTIONS_DICT,
+)
+
 
 def openai_call(prompt: str, model: str = "gpt-3.5-turbo") -> str | None:
     client = OpenAI()
@@ -74,7 +79,7 @@ def assign_attributions_for_conversation(
                 return {}
             result = json.loads(formatted_response)
         return result
-    
+
 def calc_reward(utter_attrib: float, attribution_instruction_name: str, goal_score: float, total_attributions: float) -> float:
     if total_attributions == 0:
         return 0.0

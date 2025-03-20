@@ -1,7 +1,5 @@
-from typing import Any, Dict, List, Tuple, Optional, Type, Union, TypeVar
-from pydantic import BaseModel, Field
-from openai import OpenAI
-import json
+from typing import Any, Dict, List, Tuple
+
 
 def assign_attributions_for_conversation(
     agent: str,
@@ -12,7 +10,7 @@ def assign_attributions_for_conversation(
     for i, (speaker, _) in enumerate(conversation):
         if speaker == agent:
             count_utterances += 1
-    
+
     attribution_dict = {}
     for i, (speaker, _) in enumerate(conversation):
         if speaker == agent:

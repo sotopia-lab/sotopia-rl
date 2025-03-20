@@ -66,7 +66,7 @@ def main(data_dir: str, input_file: str, reward_output_file: str, sft_output_fil
         else:
             reward = utter_attrib / 3 * goal_score
         return reward
-    
+
     sotopia_pi_utterance_reward = []
     for d in tqdm(attributed_data):
         sotopia_pi_utterance_reward.append(
