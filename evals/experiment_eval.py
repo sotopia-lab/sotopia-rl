@@ -154,7 +154,6 @@ def _iterate_env_agent_combo_not_in_db(
                 continue
             else:
                 all_env_agent_combo_storage_list.append(env_agent_combo_storage)
-    breakpoint()
     print(f"Number of env agent combos to run: {len(all_env_agent_combo_storage_list)}")
     for env_agent_combo_storage in all_env_agent_combo_storage_list:
         env_profile = EnvironmentProfile.get(env_id)
