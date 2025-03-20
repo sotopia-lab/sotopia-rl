@@ -10,6 +10,7 @@ from rest_framework.decorators import api_view
 def chat_completions(request):
     messages = request.data.get("messages")
     temperature = request.data.get("temperature", 1.0)
+    max_new_tokens = request.data.get("max_new_tokens", 200)
     stream = request.data.get("stream", False)
     n = request.data.get("n", 1)
     if not messages:
@@ -17,7 +18,7 @@ def chat_completions(request):
 
     # Access the globally loaded RejectionSampler instance
     sampler = apps.get_app_config("sotopia").rejection_sampler
-    top_response = sampler.inference(messages, temperature, stream, n)
+    top_response = sampler.inference(messages, temperature, max_new_tokens, stream, n)
 
     if top_response is not None:
         # Format the response to mimic OpenAI's chat completion response

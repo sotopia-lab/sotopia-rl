@@ -98,7 +98,7 @@ class RMDataset(Dataset):
 
     def __getitem__(self, idx):
         item = self.data[idx]
-        reward_value = item["value"]
+        reward_value = float(item["value"])
 
         rendered_text = self.template.render(
             messages=[
