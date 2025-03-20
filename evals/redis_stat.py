@@ -5,7 +5,7 @@ def analyze_episodes_with_positions(tag):
     # Find episodes with the specified tag
     episodes = EpisodeLog.find(EpisodeLog.tag == tag).all()
     print(f"Total episodes found: {len(episodes)}")
-    
+
     # Track rewards by model name
     model_rewards = defaultdict(lambda: defaultdict(float))
     model_counts = defaultdict(int)
@@ -127,4 +127,4 @@ def analyze_episodes_with_positions(tag):
     }
 
 # Run the analysis
-results = analyze_episodes_with_positions("SFT_RM_o3mini_rejection_sampling_num1_vs_qwen25-7b-instruct-sft-0320")
+results = analyze_episodes_with_positions("SFT_RM_o3mini_rejection_sampling_num5_vs_qwen25-7b-instruct-sft-0320-v4")
