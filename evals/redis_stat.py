@@ -127,8 +127,4 @@ def analyze_episodes_with_positions(tag):
     }
 
 # Run the analysis
-<<<<<<< HEAD
 results = analyze_episodes_with_positions("SFT_RM_o3mini_rejection_sampling_num1_vs_qwen25-7b-instruct-sft-0320")
-=======
-results = analyze_episodes_with_positions("test")
->>>>>>> 80b71a1b5c909a2f051bfcbd115f84cec5398749
