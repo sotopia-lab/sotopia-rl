@@ -129,19 +129,8 @@ def _iterate_env_agent_combo_not_in_db(
         env_agent_combo_storage_list = sorted(
             env_agent_combo_storage_list, key=lambda x: x.pk
         )[:1]
-
-        # switch position for agent1 and agent2 in every env agent combo
-        switched_env_agent_combo_storage_list = []
-        for env_agent_combo_storage in env_agent_combo_storage_list:
-            new_env_agent_combo_storage = EnvAgentComboStorage(
-                env_id=env_agent_combo_storage.env_id,
-                agent_ids=[env_agent_combo_storage.agent_ids[1], env_agent_combo_storage.agent_ids[0]],
-            )
-            switched_env_agent_combo_storage_list.append(new_env_agent_combo_storage)
         
-        double_side_env_agent_combo_storage_list = env_agent_combo_storage_list + switched_env_agent_combo_storage_list
-            
-        for env_agent_combo_storage in double_side_env_agent_combo_storage_list:
+        for env_agent_combo_storage in env_agent_combo_storage_list:
             env_agent_combo_storage = cast(
                 EnvAgentComboStorage, env_agent_combo_storage
             )
@@ -155,6 +144,7 @@ def _iterate_env_agent_combo_not_in_db(
             else:
                 all_env_agent_combo_storage_list.append(env_agent_combo_storage)
     print(f"Number of env agent combos to run: {len(all_env_agent_combo_storage_list)}")
+    
     for env_agent_combo_storage in all_env_agent_combo_storage_list:
         env_profile = EnvironmentProfile.get(env_id)
         env = ParallelSotopiaEnv(
@@ -200,7 +190,7 @@ def run_async_server_in_batch(
         logger.setLevel(logging.CRITICAL)
         rich_handler = logger.handlers[0]
         logger.removeHandler(rich_handler)
-
+    
     # we cannot get the exact length of the generator, we just give an estimate of the length
     env_agent_combo_iter = _iterate_env_agent_combo_not_in_db(model_names=model_names, tag=tag)
     env_agent_combo_iter_length = sum(1 for _ in env_agent_combo_iter)
