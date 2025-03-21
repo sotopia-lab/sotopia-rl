@@ -92,11 +92,11 @@ CUDA_VISIBLE_DEVICES=1 python /data/haofeiy2/sotopia-rl/scripts/train_rm.py \
 
 CUDA_VISIBLE_DEVICES=9 python /data/haofeiy2/sotopia-rl/scripts/train_rm.py \
 --model_name /mnt/data_from_server1/models/Qwen2.5-7B-Instruct \
---learning_rate 1e-3 \
+--learning_rate 5e-5 \
 --max_length 4096 \
 --train_batch_size 1 \
 --val_batch_size 1 \
---accumulation_steps 1 \
+--accumulation_steps 8 \
 --num_epochs 1000 \
 --evaluation_steps 100 \
 --reward_data_path /data/haofeiy2/sotopia-rl/data/sotopia_pi_gpt4_rm_overfit.json \
