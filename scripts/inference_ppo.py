@@ -24,7 +24,6 @@ def load_model_and_tokenizer(args):
 
     # Set up tokenizer
     tokenizer = AutoTokenizer.from_pretrained(args.model_path)
-    tokenizer.pad_token = tokenizer.eos_token
 
     # With QLoRA, we automatically use 4-bit quantization as per the training logic
     if args.use_qlora:
