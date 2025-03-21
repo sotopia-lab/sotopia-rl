@@ -24,10 +24,10 @@ if __name__ == '__main__':
     parser.add_argument("--weight_decay", type=float, default=0.01, help="Weight decay for AdamW optimizer")
 
     # LoRA-specific arguments
-    parser.add_argument("--lora_r", type=int, default=8, help="Low-rank dimension for LoRA")
+    parser.add_argument("--lora_r", type=int, default=16, help="Low-rank dimension for LoRA")
     parser.add_argument("--lora_alpha", type=int, default=32, help="LoRA scaling factor")
     parser.add_argument("--lora_dropout", type=float, default=0.1, help="LoRA dropout rate")
-    parser.add_argument("--target_modules", type=str, default="c_attn,q_proj,v_proj",
+    parser.add_argument("--target_modules", type=str, default="q_proj,v_proj,k_proj,o_proj,gate_proj,up_proj,down_proj",
                         help="Comma-separated list of target modules for LoRA")
 
     # Checkpoint arguments
@@ -38,8 +38,6 @@ if __name__ == '__main__':
     # Wandb arguments
     parser.add_argument("--wandb_project", type=str, default="reward-model-training", help="Wandb project name")
     parser.add_argument("--wandb_run_name", type=str, default=None, help="Wandb run name")
-
-    parser.add_argument("--use_qlora", action="store_true", help="Use QLoRA (4-bit) for model loading.")
 
     args = parser.parse_args()
     trainer = SotopiaRMTrainer(args)
