@@ -36,13 +36,13 @@ class SotopiaRMTrainer(Trainer):
             target_modules=args.target_modules.split(",")
         )
         tokenizer = AutoTokenizer.from_pretrained(args.model_name)
-        tokenizer.pad_token_id = tokenizer.eos_token_id
+        #tokenizer.pad_token_id = tokenizer.eos_token_id
         
 
         base_model = AutoModelForSequenceClassification.from_pretrained(
             args.model_name, 
-            num_labels=1,  # For regression task (reward modeling)
-            pad_token_id=tokenizer.eos_token_id
+            num_labels=1,
+            #pad_token_id=tokenizer.eos_token_id # do not add, very important
         ).to(self.device)
             
         model = PeftModelForSequenceClassification(base_model, peft_config)

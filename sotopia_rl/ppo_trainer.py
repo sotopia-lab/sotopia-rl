@@ -90,7 +90,6 @@ class SotopiaPPOTrainer:
             quantization_config=self.quant_config,
             return_dict=True,
         )
-        base_gen_model.config.pad_token_id = self.tokenizer.eos_token_id
 
         # Create generation config
         generation_config = GenerationConfig(
@@ -130,7 +129,6 @@ class SotopiaPPOTrainer:
             num_labels=1,
             return_dict=True
         )
-        base_cls_model.config.pad_token_id = self.tokenizer.eos_token_id
 
         self.reward_model = PeftModelForSequenceClassification.from_pretrained(
             base_cls_model,
