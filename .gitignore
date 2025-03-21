@@ -20,3 +20,4 @@ data/episode_utterances/
 **/data/models
 **/.vscode/**
 **/saves_qwen/*
+!**/*_overfit.json
