@@ -12,7 +12,6 @@ class SFTDataset(Dataset):
         self.tokenizer = tokenizer
         self.max_length = max_length
         self.template = template
-        self.tokenizer.pad_token_id = self.tokenizer.eos_token_id
 
     def load_sft_data(self, file_path):
         with open(file_path, "r") as f:
@@ -86,7 +85,6 @@ class RMDataset(Dataset):
         self.tokenizer = tokenizer
         self.template = template
         self.max_length = max_length
-        self.tokenizer.pad_token_id = self.tokenizer.eos_token_id
 
     def load_reward_data(self, file_path):
         with open(file_path, "r") as f:
@@ -143,7 +141,6 @@ class PPODataset(Dataset):
         self.tokenizer = tokenizer
         self.max_length = max_length
         self.template = template
-        self.tokenizer.pad_token_id = self.tokenizer.eos_token_id
 
     def load_sft_data(self, file_path):
         with open(file_path, "r") as f:

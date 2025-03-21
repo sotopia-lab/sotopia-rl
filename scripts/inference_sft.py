@@ -87,8 +87,8 @@ def generate_response(model, tokenizer, prompt, max_length=512):
             input_ids=inputs.input_ids,
             attention_mask=inputs.attention_mask,
             max_length=max_length,
-            do_sample=True,
-            temperature=0.7,
+            do_sample=False,
+            temperature=0.0,
         )
 
     response = tokenizer.decode(output[0], skip_special_tokens=False)

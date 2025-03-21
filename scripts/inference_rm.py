@@ -5,11 +5,7 @@ import os
 import torch
 from jinja2 import Environment, FileSystemLoader
 from peft import PeftModelForSequenceClassification
-from transformers import (
-    AutoModelForSequenceClassification,
-    AutoTokenizer,
-    BitsAndBytesConfig,
-)
+from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
 
 def parse_args():
@@ -20,7 +16,6 @@ def parse_args():
     parser.add_argument("--adapter_path", type=str, required=True, help="Path to saved checkpoint directory")
     parser.add_argument("--template_path", type=str, required=True, help="Path to Jinja template file")
     parser.add_argument("--example_path", type=str, required=True, help="Path to example data JSON")
-    parser.add_argument("--use_qlora", action="store_true", help="Whether to use QLoRA (automatically enables 4-bit)")
     return parser.parse_args()
 
 def load_model_and_tokenizer(args):
@@ -29,30 +24,14 @@ def load_model_and_tokenizer(args):
     tokenizer = AutoTokenizer.from_pretrained(args.model_path)
     tokenizer.pad_token = tokenizer.eos_token
 
-    if args.use_qlora:
-        print("Using QLoRA with 4-bit quantization")
-        quantization_config = BitsAndBytesConfig(
-            load_in_4bit=True,
-            bnb_4bit_compute_dtype=torch.bfloat16,
-            bnb_4bit_use_double_quant=True,
-            bnb_4bit_quant_type="nf4"
-        )
-
-        base_model = AutoModelForSequenceClassification.from_pretrained(
-            args.model_path,
-            torch_dtype=torch.float32, #important
-            device_map="auto",
-            quantization_config=quantization_config,
-            num_labels=1  # For regression task
-        )
-    else:
-        print("Using full precision model")
-        base_model = AutoModelForSequenceClassification.from_pretrained(
-            args.model_path,
-            torch_dtype=torch.float32, #important
-            device_map="auto",
-            num_labels=1  # For regression task
-        )
+    print("Using full precision model")
+    base_model = AutoModelForSequenceClassification.from_pretrained(
+        args.model_path,
+        torch_dtype=torch.float32, #important
+        device_map="auto",
+        num_labels=1,  # For regression task
+        #pad_token_id=tokenizer.eos_token_id # very important
+    )
 
     adapter_path = os.path.join(args.adapter_path, 'adapter_model')
     if os.path.exists(adapter_path + '.safetensors') or os.path.exists(adapter_path + '.bin'):

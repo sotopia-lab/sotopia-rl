@@ -8,13 +8,13 @@ from torch.utils.data import random_split
 from transformers import (
     AutoModelForSequenceClassification,
     AutoTokenizer,
-    BitsAndBytesConfig,
     Trainer,
     TrainingArguments,
 )
 
 import wandb
 from sotopia_rl.data import RMDataset
+
 
 class SotopiaRMTrainer(Trainer):
     def __init__(self, args, **kwargs):
@@ -36,15 +36,15 @@ class SotopiaRMTrainer(Trainer):
             target_modules=args.target_modules.split(",")
         )
         tokenizer = AutoTokenizer.from_pretrained(args.model_name)
-        tokenizer.pad_token_id = tokenizer.eos_token_id
-        
+        #tokenizer.pad_token_id = tokenizer.eos_token_id
+
 
         base_model = AutoModelForSequenceClassification.from_pretrained(
-            args.model_name, 
-            num_labels=1,  # For regression task (reward modeling)
-            pad_token_id=tokenizer.eos_token_id
+            args.model_name,
+            num_labels=1,
+            #pad_token_id=tokenizer.eos_token_id # do not add, very important
         ).to(self.device)
-            
+
         model = PeftModelForSequenceClassification(base_model, peft_config)
 
         training_args = TrainingArguments(
@@ -114,4 +114,3 @@ class SotopiaRMTrainer(Trainer):
             self.model.load_adapter(checkpoint_path, adapter_name='lora', peft_config=peft_config)
         else:
             print(f"No adapter model found at {adapter_model_path}.")
-            
