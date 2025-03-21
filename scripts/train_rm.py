@@ -21,12 +21,12 @@ if __name__ == '__main__':
     # Learning rate scheduler arguments
     parser.add_argument("--warmup_epochs", type=float, default=0.1, help="Number of warmup epochs (as a fraction)")
     parser.add_argument("--min_lr", type=float, default=1e-6, help="Minimum learning rate for cosine decay")
-    parser.add_argument("--weight_decay", type=float, default=0, help="Weight decay for AdamW optimizer")
+    parser.add_argument("--weight_decay", type=float, default=0.01, help="Weight decay for AdamW optimizer")
 
     # LoRA-specific arguments
     parser.add_argument("--lora_r", type=int, default=16, help="Low-rank dimension for LoRA")
     parser.add_argument("--lora_alpha", type=int, default=32, help="LoRA scaling factor")
-    parser.add_argument("--lora_dropout", type=float, default=0.0, help="LoRA dropout rate")
+    parser.add_argument("--lora_dropout", type=float, default=0.1, help="LoRA dropout rate")
     parser.add_argument("--target_modules", type=str, default="q_proj,v_proj,k_proj,o_proj,gate_proj,up_proj,down_proj",
                         help="Comma-separated list of target modules for LoRA")
 

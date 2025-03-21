@@ -170,7 +170,6 @@ class RejectionSampler:
             messages_with_response = messages + [{'role': 'assistant', 'content': response}]
             messages_list.append(messages_with_response)
 
-        import pdb; pdb.set_trace()
         # Evaluate responses with reward model in batches
         rewards = self.inference_rm(messages_list)
 

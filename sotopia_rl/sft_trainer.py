@@ -65,7 +65,7 @@ class SotopiaSFTTrainer:
                 lora_dropout=args.lora_dropout,
                 target_modules=args.target_modules.split(",")
             )
-            base_model.enable_input_require_grads()
+            base_model.enable_input_require_grads() # very important
             self.model = get_peft_model(base_model, peft_config)
             if not args.use_qlora:
                 self.model = self.model.to(self.device)
