@@ -7,7 +7,7 @@ python examples/experiment_eval.py \
 '--gin.AGENT2_MODEL="custom/qwen25-7b-instruct-sft-gpu5@http://localhost:8006/v1"' \
 '--gin.BATCH_SIZE=1' \
 '--gin.PUSH_TO_DB=True' \
-'--gin.TAG="SFT_RM_o3mini_rejection_sampling_num1_vs_qwen25-7b-instruct-sft-0320-v4"' \
+'--gin.TAG="SFT_RM_o3mini_rejection_sampling_num1_vs_qwen25-7b-instruct-sft-0321-v1"' \
 && \
 python examples/experiment_eval.py \
 --gin_file sotopia_conf/generation_utils_conf/generate.gin \

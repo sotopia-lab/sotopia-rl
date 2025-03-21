@@ -3,13 +3,14 @@ import os
 import numpy as np
 import torch
 from jinja2 import Environment, FileSystemLoader
-from peft import PeftConfig, PeftModelForSequenceClassification, PeftModelForCausalLM 
+from peft import PeftModelForCausalLM, PeftModelForSequenceClassification
 from transformers import (
     AutoModelForCausalLM,
     AutoModelForSequenceClassification,
     AutoTokenizer,
     BitsAndBytesConfig,
 )
+
 
 class RejectionSampler:
     def __init__(
