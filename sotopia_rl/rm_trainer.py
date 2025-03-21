@@ -16,7 +16,6 @@ from transformers import (
 import wandb
 from sotopia_rl.data import RMDataset
 
-
 class SotopiaRMTrainer(Trainer):
     def __init__(self, args, **kwargs):
         self.args = args
@@ -30,41 +29,23 @@ class SotopiaRMTrainer(Trainer):
             config={k: v for k, v in vars(args).items() if isinstance(v, (int, float, str))}
         )
 
-        quantization_config = BitsAndBytesConfig(
-            load_in_4bit=True,
-            bnb_4bit_compute_dtype=torch.bfloat16,
-            bnb_4bit_use_double_quant=True,
-            bnb_4bit_quant_type="nf4"
-        )
-
         peft_config = LoraConfig(
             r=args.lora_r,
             lora_alpha=args.lora_alpha,
             lora_dropout=args.lora_dropout,
             target_modules=args.target_modules.split(",")
         )
-        tokenizer = AutoTokenizer.from_pretrained(args.model_name, padding_side="left")
+        tokenizer = AutoTokenizer.from_pretrained(args.model_name)
         tokenizer.pad_token_id = tokenizer.eos_token_id
+        
 
-        if args.use_qlora:
-            print(f"Using QLoRA (4bit) to load model: {args.model_name}")
-            base_model = AutoModelForSequenceClassification.from_pretrained(
-                args.model_name,
-                torch_dtype=torch.float16,
-                device_map="auto",
-                quantization_config=quantization_config,
-                num_labels=1,  # For regression task (reward modeling)
-                pad_token_id=tokenizer.eos_token_id
-            )
-        else:
-            base_model = AutoModelForSequenceClassification.from_pretrained(
-                args.model_name,
-                num_labels=1,  # For regression task (reward modeling)
-                pad_token_id=tokenizer.eos_token_id
-            ).to(self.device)
-
+        base_model = AutoModelForSequenceClassification.from_pretrained(
+            args.model_name, 
+            num_labels=1,  # For regression task (reward modeling)
+            pad_token_id=tokenizer.eos_token_id
+        ).to(self.device)
+            
         model = PeftModelForSequenceClassification(base_model, peft_config)
-
 
         training_args = TrainingArguments(
             output_dir=args.checkpoint_dir,
@@ -72,15 +53,15 @@ class SotopiaRMTrainer(Trainer):
             per_device_eval_batch_size=args.val_batch_size,
             num_train_epochs=args.num_epochs,
             evaluation_strategy="steps",
-            logging_steps=50,
+            logging_steps=1,
             save_steps=args.evaluation_steps,
             eval_steps=args.evaluation_steps,
             logging_dir="./logs",
             gradient_accumulation_steps=args.accumulation_steps,
             warmup_steps=int(len(train_dataset) * args.warmup_epochs),
-            optim="paged_adamw_8bit" if args.use_qlora else "adamw_torch",
-            fp16=not args.use_qlora,
-            bf16=args.use_qlora,
+            optim="adamw_torch",
+            fp16=False,
+            bf16=False,
             remove_unused_columns=False,
         )
         collate_fn = train_dataset.dataset.collate_fn if hasattr(train_dataset, 'dataset') else None
@@ -97,7 +78,7 @@ class SotopiaRMTrainer(Trainer):
         self.loss_fn = MSELoss()
 
         if args.checkpoint_path:
-            self.load_checkpoint(args.checkpoint_path)
+            self.load_lora_checkpoint(args.checkpoint_path)
 
     def setup_dataset(self):
         env = Environment(loader=FileSystemLoader("/".join(self.args.template_path.split("/")[:-1])))
@@ -125,7 +106,9 @@ class SotopiaRMTrainer(Trainer):
 
     def load_lora_checkpoint(self, checkpoint_path):
         adapter_model_path = os.path.join(checkpoint_path, 'adapter_model.safetensors')
+        peft_config = LoraConfig.from_pretrained(checkpoint_path)
         if os.path.exists(adapter_model_path):
-            self.model.load_adapter(checkpoint_path, adapter_name='lora')
+            self.model.load_adapter(checkpoint_path, adapter_name='lora', peft_config=peft_config)
         else:
             print(f"No adapter model found at {adapter_model_path}.")
+            
