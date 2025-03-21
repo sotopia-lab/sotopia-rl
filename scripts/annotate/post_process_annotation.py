@@ -63,7 +63,7 @@ def main(data_dir: str, input_file: str, reward_output_file: str, sft_output_fil
     for d in tqdm(attributed_data):
         sotopia_pi_utterance_reward.append(
             {
-                "instruction": d['prompt'],
+                "input": d['prompt'],
                 "output": d['result'],
                 "value": d['attributed_reward'],
             }
@@ -72,18 +72,17 @@ def main(data_dir: str, input_file: str, reward_output_file: str, sft_output_fil
     with open(os.path.join(data_dir, reward_output_file), 'w') as f:
         json.dump(sotopia_pi_utterance_reward, f, indent=4)
 
-    sotopia_pi_utterance_sft = []
-    for d in tqdm(attributed_data):
-        sotopia_pi_utterance_sft.append(
-            {
-                "instruction": d['prompt'],
-                "input": "",
-                "output": d["result"],
-            }
-        )
+    # sotopia_pi_utterance_sft = []
+    # for d in tqdm(attributed_data):
+    #     sotopia_pi_utterance_sft.append(
+    #         {
+    #             "input": d['prompt'],
+    #             "output": d["result"],
+    #         }
+    #     )
 
-    with open(os.path.join(data_dir, sft_output_file), 'w') as f:
-        json.dump(sotopia_pi_utterance_sft, f, indent=4)
+    # with open(os.path.join(data_dir, sft_output_file), 'w') as f:
+    #     json.dump(sotopia_pi_utterance_sft, f, indent=4)
 
 if __name__ == "__main__":
     main()
