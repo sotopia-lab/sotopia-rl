@@ -99,6 +99,9 @@ class SotopiaRMTrainer(Trainer):
         outputs = model(input_ids, attention_mask=attention_masks)
         predicted_rewards = outputs.logits.squeeze(-1)  # Shape: (batch_size,)
         loss = self.loss_fn(predicted_rewards, true_rewards)
+        print(self.model.training)
+        print("predicted_rewards", predicted_rewards)
+        print("true_rewards", true_rewards)
         return (loss, outputs) if return_outputs else loss
 
     def save_lora_checkpoint(self, output_dir=None, **kwargs):
