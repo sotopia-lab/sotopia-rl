@@ -1,4 +1,5 @@
 import os
+
 import torch
 import torch.distributed as dist
 from jinja2 import Environment, FileSystemLoader
@@ -20,10 +21,10 @@ from sotopia_rl.data import SFTDataset
 class SotopiaSFTTrainer:
     def __init__(self, args):
         self.args = args
-        
+
         # Setup distributed training
         self.setup_distributed()
-        
+
         # Initialize wandb only on the main process
         if self.is_main_process:
             wandb.init(
@@ -31,7 +32,7 @@ class SotopiaSFTTrainer:
                 name=args.wandb_run_name,
                 config={k: v for k, v in vars(args).items() if isinstance(v, (int, float, str))}
             )
-            
+
         config = AutoConfig.from_pretrained(args.model_name)
         config.use_cache = False
 
@@ -123,25 +124,25 @@ class SotopiaSFTTrainer:
     def setup_distributed(self):
         """Set up distributed training environment"""
         self.args.multi_gpu = torch.cuda.device_count() > 1 and self.args.use_distributed
-        
+
         if self.args.multi_gpu:
             # Initialize the distributed environment
             if 'LOCAL_RANK' in os.environ:
                 self.local_rank = int(os.environ['LOCAL_RANK'])
             else:
                 self.local_rank = self.args.local_rank if hasattr(self.args, 'local_rank') else 0
-            
+
             # Initialize the process group
             if not dist.is_initialized():
                 dist.init_process_group(backend='nccl')
-                
+
             self.world_size = dist.get_world_size()
             self.is_main_process = self.local_rank == 0
             self.device = torch.device(f"cuda:{self.local_rank}")
-            
+
             # Set the device for this process
             torch.cuda.set_device(self.local_rank)
-            
+
             if self.is_main_process:
                 print(f"Distributed training enabled with {self.world_size} GPUs")
         else:
@@ -157,11 +158,11 @@ class SotopiaSFTTrainer:
                              template=self.template)
         train_size = int(0.95 * len(dataset))
         val_size = len(dataset) - train_size
-        
+
         # Use deterministic splitter with seed to ensure same split across processes
         generator = torch.Generator().manual_seed(42)
         self.train_dataset, self.val_dataset = random_split(dataset, [train_size, val_size], generator=generator)
-        
+
         if self.is_main_process:
             print(f"Training dataset size: {len(self.train_dataset)}")
             print(f"Validation dataset size: {len(self.val_dataset)}")

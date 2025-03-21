@@ -4,12 +4,8 @@ import os
 
 import torch
 from jinja2 import Environment, FileSystemLoader
-from peft import PeftModelForSequenceClassification, LoraConfig
-from transformers import (
-    AutoModelForSequenceClassification,
-    AutoTokenizer,
-    BitsAndBytesConfig,
-)
+from peft import PeftModelForSequenceClassification
+from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
 
 def parse_args():
@@ -37,7 +33,6 @@ def load_model_and_tokenizer(args):
         #pad_token_id=tokenizer.eos_token_id # very important
     )
 
-    peft_config = LoraConfig.from_pretrained(args.adapter_path)
     adapter_path = os.path.join(args.adapter_path, 'adapter_model')
     if os.path.exists(adapter_path + '.safetensors') or os.path.exists(adapter_path + '.bin'):
         print(f"Loading adapter from: {args.adapter_path}")
