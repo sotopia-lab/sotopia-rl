@@ -34,99 +34,14 @@ if __name__ == "__main__":
     parser.add_argument("--deepspeed", action="store_true", help="Enable DeepSpeed")
     parser.add_argument("--deepspeed_config", type=str, default=None, 
                         help="Path to DeepSpeed config file")
-    parser.add_argument("--zero_stage", type=int, default=2, 
-                        help="ZeRO optimization stage (0, 1, 2, 3)")
-    parser.add_argument("--offload_optimizer", action="store_true", 
-                        help="Offload optimizer states to CPU")
-    parser.add_argument("--offload_param", action="store_true", 
-                        help="Offload parameters to CPU")
-    parser.add_argument("--gradient_checkpointing", action="store_true", 
-                        help="Enable gradient checkpointing")
     
     args = parser.parse_args()
     
-    # Auto-setup distributed training if using DeepSpeed
     if args.deepspeed:
         args.use_distributed = True
+    else:
+        raise ValueError("DeepSpeed Config is required for this script.")
         
-        # Create DeepSpeed config if not provided
-        if args.deepspeed_config is None:
-            import json
-            
-            ds_config_path = os.path.join(args.checkpoint_dir, "ds_config.json")
-            os.makedirs(args.checkpoint_dir, exist_ok=True)
-            
-            # Create a dynamic DeepSpeed config based on args
-            ds_config = {
-                "train_batch_size": "auto",
-                "train_micro_batch_size_per_gpu": args.train_batch_size,
-                "gradient_accumulation_steps": args.accumulation_steps,
-                
-                "optimizer": {
-                    "type": "AdamW",
-                    "params": {
-                        "lr": args.learning_rate,
-                        "betas": [0.9, 0.999],
-                        "eps": 1e-8,
-                        "weight_decay": args.weight_decay
-                    }
-                },
-                
-                "scheduler": {
-                    "type": "WarmupLR",
-                    "params": {
-                        "warmup_min_lr": "auto",
-                        "warmup_max_lr": args.learning_rate,
-                        "warmup_num_steps": "auto"
-                    }
-                },
-                
-                "fp16": {
-                    "enabled": True,
-                    "auto_cast": True,
-                    "loss_scale": 0,
-                    "initial_scale_power": 16,
-                    "loss_scale_window": 1000,
-                    "hysteresis": 2,
-                    "min_loss_scale": 1
-                },
-                
-                "zero_optimization": {
-                    "stage": args.zero_stage,
-                    "allgather_partitions": True,
-                    "allgather_bucket_size": 5e8,
-                    "overlap_comm": True,
-                    "reduce_scatter": True,
-                    "reduce_bucket_size": 5e8,
-                    "contiguous_gradients": True
-                },
-                
-                "gradient_clipping": 1.0,
-                "steps_per_print": 100,
-                "wall_clock_breakdown": False
-            }
-            
-            # Add optimizer offloading if requested
-            if args.offload_optimizer:
-                ds_config["zero_optimization"]["offload_optimizer"] = {
-                    "device": "cpu",
-                    "pin_memory": True
-                }
-            
-            # Add parameter offloading if requested
-            if args.offload_param:
-                ds_config["zero_optimization"]["offload_param"] = {
-                    "device": "cpu",
-                    "pin_memory": True
-                }
-            
-            # Write the config to a file
-            with open(ds_config_path, 'w') as f:
-                json.dump(ds_config, f, indent=4)
-            
-            args.deepspeed_config = ds_config_path
-            print(f"Created DeepSpeed config at {ds_config_path}")
-    
     # Configure local_rank automatically if needed
     if args.use_distributed and args.local_rank == -1:
         if 'LOCAL_RANK' in os.environ:
