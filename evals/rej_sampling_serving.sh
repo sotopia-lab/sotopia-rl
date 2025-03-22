@@ -11,6 +11,7 @@ export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-1
 export RM_MODEL_PATH="${REPO_FOLDER_NAME}/${RM_FOLDER_NAME}/checkpoint-4000"
 
 
+<<<<<<< HEAD
 export VLLM_GPU=2
 export DJANGO_GPU=3
 export VLLM_PORT=8003
@@ -21,6 +22,17 @@ export RM_FOLDER_NAME="rm_reward_goal_progress_gpt-4o"
 export REPO_FOLDER_NAME="/data/haofeiy2/sotopia-rl"
 export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-1000/"
 export RM_MODEL_PATH="${REPO_FOLDER_NAME}/${RM_FOLDER_NAME}/checkpoint-2240"
+=======
+CUDA_VISIBLE_DEVICES=1 python manage.py start_with_config \
+    --sft_model_path "/data/haofeiy2/sotopia-rl/sft_qwen25_7b/checkpoint-4000/" \
+    --reward_model_path "/data/haofeiy2/sotopia-rl/rm_reward_direct_default_o3-mini/checkpoint-3500" \
+    --model_name "/mnt/data_from_server1/models/Qwen2.5-7B-Instruct" \
+    --template_path "/data/haofeiy2/sotopia-rl/evals/qwen2.5-7b.jinja" \
+    --max_responses 5 \
+    --max_length 4096 \
+    --use_qlora \
+    --port 8002
+>>>>>>> 9d7e7487588bf98c1cc9a5769cb004dbe3b508c2
 
 
 export VLLM_GPU=4
