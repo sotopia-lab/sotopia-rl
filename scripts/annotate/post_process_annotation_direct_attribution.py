@@ -64,7 +64,7 @@ def main(data_dir: str, input_file: str, reward_output_file: str, sft_output_fil
         if utter_attrib == -1:
             reward = -1.0
         else:
-            reward = utter_attrib / 3 * ( goal_score - 5 ) * 2
+            reward = utter_attrib / 3 * goal_score
         return reward
 
     sotopia_pi_utterance_reward = []
