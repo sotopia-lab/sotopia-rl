@@ -1,3 +1,28 @@
+CUDA_VISIBLE_DEVICES=7,8,9 python -m torch.distributed.run --nproc_per_node=3 --master_port=29501 \
+/data/haofeiy2/sotopia-rl/scripts/train_ppo.py \
+  --model_name /data/models/Qwen2.5-7B-Instruct \
+  --value_model_name /data/models/Qwen2.5-7B-Instruct \
+  --reward_model_name /data/models/Qwen2.5-7B-Instruct \
+  --policy_adapter_path /data/haofeiy2/sotopia-rl/sft_qwen25_7b/checkpoint-5397 \
+  --ref_adapter_path /data/haofeiy2/sotopia-rl/sft_qwen25_7b/checkpoint-5397 \
+  --reward_adapter_path /data/haofeiy2/sotopia-rl/rm_direct_4o/checkpoint-5391 \
+  --value_adapter_path /data/haofeiy2/sotopia-rl/rm_direct_4o/checkpoint-5391 \
+  --policy_use_qlora \
+  --reward_use_qlora \
+  --value_use_qlora \
+  --per_device_train_batch_size 4 \
+  --per_device_eval_batch_size 4 \
+  --mini_batch_size 4 \
+  --ppo_data_path /data/haofeiy2/sotopia-rl/data/sotopia_pi_bc_episodes_sft.json \
+  --template_path /data/haofeiy2/sotopia-rl/evals/qwen2.5-7b.jinja\
+  --ppo_epochs 4 \
+  --gamma 0.99 \
+  --lam 0.95 \
+  --use_lora \
+  --checkpoint_dir /data/haofeiy2/sotopia-rl/ppo_qwen25_7b \
+  --deepspeed \
+  --deepspeed_config /data/haofeiy2/sotopia-rl/scripts/ds_config_ppo.json
+
 CUDA_VISIBLE_DEVICES=2,6,9 poetry run python /data/haofeiy2/sotopia-rl/scripts/train_ppo.py \
   --model_name /mnt/data_from_server1/models/Qwen2.5-7B-Instruct \
   --value_model_name /mnt/data_from_server1/models/Qwen2.5-7B-Instruct \
