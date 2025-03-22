@@ -1,7 +1,6 @@
 import os
 
 import torch
-import torch.distributed as dist
 from jinja2 import Environment, FileSystemLoader
 from peft import PeftModelForCausalLM, PeftModelForSequenceClassification
 from torch.utils.data import random_split
@@ -22,11 +21,9 @@ os.environ['NCCL_P2P_DISABLE'] = '1'
 class SotopiaPPOTrainer:
     def __init__(self, args):
         self.args = args
-        self.setup_distributed()
 
         # Initialize the training environment
-        if self.is_main_process:
-            self._init_wandb()
+        self._init_wandb()
         self._setup_tokenizer()
         self._setup_dataset()
 
@@ -68,8 +65,7 @@ class SotopiaPPOTrainer:
             max_length=self.args.max_length
         )
 
-        if self.is_main_process:
-            print(f"dataset: {len(dataset)}")
+        print(f"dataset: {len(dataset)}")
         
         generator = torch.Generator().manual_seed(42)
         val_ratio = getattr(self.args, 'val_ratio', 0.05)
@@ -93,7 +89,7 @@ class SotopiaPPOTrainer:
             torch_dtype=torch.float32, # very important, otherwise NaN for RM
             quantization_config=self.quant_config,
             return_dict=True,
-        ).to(self.device)
+        )
 
         # Create generation config
         generation_config = GenerationConfig(
@@ -113,19 +109,15 @@ class SotopiaPPOTrainer:
             self.args.policy_adapter_path,
             generation_config=generation_config
         )
-        if self.is_main_process:
-            print("Policy model loaded/created")
+        print("Policy model loaded/created")
 
         self.ref_policy = PeftModelForCausalLM.from_pretrained(
             base_gen_model,
             self.args.ref_adapter_path,
             generation_config=generation_config
         )
-        self.policy.to(self.device)
-        self.ref_policy.to(self.device)
         self.ref_policy.eval()
-        if self.is_main_process:
-            print("Reference policy model loaded/created")
+        print("Reference policy model loaded/created")
 
 
     def _setup_classification_models(self):
@@ -143,22 +135,19 @@ class SotopiaPPOTrainer:
             num_labels=1
         )
         self.reward_model.eval()
-        self.reward_model.to(self.device)
-        if self.is_main_process:
-            print("Reward model loaded/created")
+        print("Reward model loaded/created")
 
         self.value_model = PeftModelForSequenceClassification.from_pretrained(
             base_cls_model,
             self.args.value_adapter_path,
             num_labels=1
         )
-        self.value_model.to(self.device)
-        if self.is_main_process:
-            print("Value model loaded/created")
+        print("Value model loaded/created")
 
     def _setup_ppo_trainer(self):
         """Configure the PPO trainer"""
         # Get data collator if available
+
 
         # Configure PPO settings
         ppo_config = PPOv2Config(
@@ -180,14 +169,6 @@ class SotopiaPPOTrainer:
             stop_token='eos', #important, just fill with pad after eos
             missing_eos_penalty=1.0,
             local_rollout_forward_batch_size=self.args.local_rollout_forward_batch_size,
-            fp16=True,
-            remove_unused_columns=False,
-            dataloader_num_workers=4,
-            # Distributed training settings
-            local_rank=self.local_rank,
-            # DeepSpeed integration
-            deepspeed=self.args.deepspeed_config if hasattr(self.args, 'deepspeed_config') and self.args.deepspeed_config else None,
-            ddp_find_unused_parameters=False,
         )
 
         # Create the TRL PPO trainer
@@ -207,52 +188,59 @@ class SotopiaPPOTrainer:
     def train(self):
         """Run PPO training loop and save checkpoints"""
         try:
-            if self.is_main_process:
-                print("Starting PPO training...")
+            print("Starting PPO training...")
             train_stats = self.ppo_trainer.train()
 
             # Save final checkpoint
-            if self.is_main_process:
-                final_checkpoint_dir = os.path.join(self.args.checkpoint_dir, "final_checkpoint")
-                self.save_checkpoint(final_checkpoint_dir)
+            final_checkpoint_dir = os.path.join(self.args.checkpoint_dir, "final_checkpoint")
+            self.save_checkpoint(final_checkpoint_dir)
 
             return train_stats
         except Exception as e:
             print(f"Training error: {str(e)}")
             raise
 
-    def setup_distributed(self):
-        """Set up distributed training environment"""
-        # Check if DeepSpeed or distributed training is enabled
-        self.args.multi_gpu = torch.cuda.device_count() > 1 and (
-            (hasattr(self.args, 'deepspeed_config') and self.args.deepspeed_config is not None) or 
-            (hasattr(self.args, 'use_distributed') and self.args.use_distributed)
-        )
+    # def setup_distributed(self):
+    
+    #     self.local_rank = int(os.environ.get("LOCAL_RANK", 0))
+    #     self.device = torch.device(f"cuda:{self.local_rank}")
+        
+    #     self.is_main_process = (self.local_rank == 0)
+        
+    #     print(f"setup_distributed: local_rank={self.local_rank}, is_main={self.is_main_process}")
 
-        if self.args.multi_gpu:
-            if 'LOCAL_RANK' in os.environ:
-                self.local_rank = int(os.environ['LOCAL_RANK'])
-            else:
-                self.local_rank = self.args.local_rank if hasattr(self.args, 'local_rank') else 0
+    # def setup_distributed(self):
+    #     """Set up distributed training environment"""
+    #     # Check if DeepSpeed or distributed training is enabled
+    #     self.args.multi_gpu = torch.cuda.device_count() > 1 and (
+    #         (hasattr(self.args, 'deepspeed_config') and self.args.deepspeed_config is not None) or 
+    #         (hasattr(self.args, 'use_distributed') and self.args.use_distributed)
+    #     )
 
-            if not dist.is_initialized():
-                dist.init_process_group(backend='nccl')
+    #     if self.args.multi_gpu:
+    #         if 'LOCAL_RANK' in os.environ:
+    #             self.local_rank = int(os.environ['LOCAL_RANK'])
+    #         else:
+    #             self.local_rank = self.args.local_rank if hasattr(self.args, 'local_rank') else 0
 
-            self.world_size = dist.get_world_size()
-            self.is_main_process = (self.local_rank == 0)
-            self.device = torch.device(f"cuda:{self.local_rank}")
+    #         if not dist.is_initialized():
+    #             dist.init_process_group(backend='nccl')
 
-            torch.cuda.set_device(self.local_rank)
+    #         self.world_size = dist.get_world_size()
+    #         self.is_main_process = (self.local_rank == 0)
+    #         self.device = torch.device(f"cuda:{self.local_rank}")
+
+    #         torch.cuda.set_device(self.local_rank)
             
 
-            if self.is_main_process:
-                print(f"[INFO] Distributed training enabled with {self.world_size} GPUs.")
-        else:
-            self.local_rank = 0
-            self.is_main_process = True
-            self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-            self.world_size = 1
-            print(f"Training on single {'GPU' if torch.cuda.is_available() else 'CPU'}")
+    #         if self.is_main_process:
+    #             print(f"[INFO] Distributed training enabled with {self.world_size} GPUs.")
+    #     else:
+    #         self.local_rank = 0
+    #         self.is_main_process = True
+    #         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    #         self.world_size = 1
+    #         print(f"Training on single {'GPU' if torch.cuda.is_available() else 'CPU'}")
 
     def save_checkpoint(self, checkpoint_path):
         """Save all model adapters"""
