@@ -24,7 +24,7 @@ datasets = "2.20.0"
 sentencepiece = "*"
 bitsandbytes = "*"
 wandb = "*"
-deepspeed = "*"
+deepspeed = "0.15.4"
 
 ruff = {version = "*", optional = true}
 vllm = {version = "=0.6.2", optional = true}
