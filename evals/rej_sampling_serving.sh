@@ -57,7 +57,7 @@ CUDA_VISIBLE_DEVICES=2 python -m vllm.entrypoints.openai.api_server \
     --chat-template /data/haofeiy2/sotopia-rl/evals/qwen2.5-7b.jinja  \
     --served-model-name qwen25-7b-instruct \
     --enable-lora \
-    --lora-modules qwen25-7b-instruct-sft-gpu2=/data/haofeiy2/sotopia-rl/sft_qwen25_7b/checkpoint-4500/
+    --lora-modules qwen25-7b-instruct-sft-gpu2=/data/haofeiy2/sotopia-rl/sft_qwen25_7b/checkpoint-4000/
 
 
 # with sotopia env, launch the evaluation
