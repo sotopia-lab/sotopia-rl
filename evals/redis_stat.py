@@ -1,4 +1,5 @@
 from collections import defaultdict
+
 from sotopia.database.logs import EpisodeLog
 
 
