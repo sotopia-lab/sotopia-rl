@@ -53,6 +53,18 @@ class SotopiaPPOTrainer:
         # Setup the PPO trainer
         self._setup_ppo_trainer()
 
+        def save_model(self, output_dir: str, _internal_call: bool = False):
+            if hasattr(self.model, "policy"):
+                model_to_save = self.model.policy
+            elif hasattr(self.model, "module") and hasattr(self.model.module, "policy"):
+                model_to_save = self.model.module.policy
+            else:
+                model_to_save = self.model
+            model_to_save.save_pretrained(output_dir)
+            print(f"Model saved to {output_dir}")
+
+        self.ppo_trainer.save_model = save_model.__get__(self.ppo_trainer, type(self.ppo_trainer))
+
     def _init_wandb(self):
         """Initialize Weights & Biases logging"""
         wandb.init(
