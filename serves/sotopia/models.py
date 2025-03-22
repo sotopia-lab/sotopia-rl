@@ -1,16 +1,14 @@
 import os
-
+import requests
+import json
 import numpy as np
 import torch
 from jinja2 import Environment, FileSystemLoader
-from peft import PeftModelForCausalLM, PeftModelForSequenceClassification
+from peft import PeftModelForSequenceClassification
 from transformers import (
-    AutoModelForCausalLM,
     AutoModelForSequenceClassification,
     AutoTokenizer,
-    BitsAndBytesConfig,
 )
-
 
 class RejectionSampler:
     def __init__(
@@ -20,9 +18,10 @@ class RejectionSampler:
         model_name,
         template_path,
         max_responses,
+        vllm_api_url='http://localhost:8005/v1/completions',  # New parameter for vLLM API endpoint
         max_length=4096,
-        sft_batch_size=1,
-        rm_batch_size=1,
+        sft_batch_size=5,
+        rm_batch_size=5,
         use_qlora=False,
     ):
         self.max_responses = max_responses
@@ -30,85 +29,39 @@ class RejectionSampler:
         self.rm_batch_size = rm_batch_size
         self.max_length = max_length
         self.use_qlora = use_qlora
-
-        # Set up devices: Assign different devices if multiple GPUs are available
-        if torch.cuda.device_count() > 1:
-            self.sft_device = torch.device("cuda:0")
-            self.reward_device = torch.device("cuda:1")
-        else:
-            self.sft_device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-            self.reward_device = self.sft_device
+        self.vllm_api_url = vllm_api_url  # Store vLLM API URL
+        
+        # Set up reward model device
+        self.reward_device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         # Load the tokenizer
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
 
-        # Load models
-        self.sft_model = self.load_sft_model(sft_model_path)
+        # For vLLM, we don't need to load the SFT model locally
+        # We'll just make API calls
+
+        # Load reward model (still local)
         self.reward_model = self.load_reward_model(reward_model_path)
 
         # Load Jinja template from file
         env = Environment(loader=FileSystemLoader("/".join(template_path.split("/")[:-1])))
         self.template = env.get_template(template_path.split("/")[-1])
 
-    def get_quantization_config(self):
-        """Create and return QLoRA quantization configuration if enabled."""
-        if self.use_qlora:
-            print("Using QLoRA with 4-bit quantization")
-            return BitsAndBytesConfig(
-                load_in_4bit=True,
-                bnb_4bit_compute_dtype=torch.bfloat16,
-                bnb_4bit_use_double_quant=True,
-                bnb_4bit_quant_type="nf4"
-            )
-        return None
-
-    def load_sft_model(self, model_path):
-        """Load SFT model with optional QLoRA quantization."""
-        print(f"Loading SFT model: {model_path}")
-
-        quantization_config = self.get_quantization_config()
-        model_kwargs = {
-            "torch_dtype": torch.float32, # very important
-            "device_map": "auto" if torch.cuda.device_count() == 1 else "cuda:0",
-        }
-
-        if quantization_config:
-            model_kwargs["quantization_config"] = quantization_config
-
-        base_model = AutoModelForCausalLM.from_pretrained(
-            model_path,
-            **model_kwargs
-        )
-
-        adapter_path = os.path.join(model_path, 'adapter_model')
-        if os.path.exists(adapter_path + '.safetensors') or os.path.exists(adapter_path + '.bin'):
-            print(f"Loading adapter from: {model_path}")
-            model = PeftModelForCausalLM.from_pretrained(base_model, model_path)
-        else:
-            print(f"No adapter found at {adapter_path}, using base model")
-            model = base_model
-
-        model.eval()  # Set to evaluation mode
-        return model.to(self.sft_device)
-
     def load_reward_model(self, reward_model_path):
         """Load reward model with optional QLoRA quantization."""
         print(f"Loading reward model: {reward_model_path}")
 
-        quantization_config = self.get_quantization_config()
         model_kwargs = {
             "torch_dtype": torch.float32, # very important
-            "device_map": "auto" if torch.cuda.device_count() == 1 else "cuda:1",
+            "device_map": "auto",
             "num_labels": 1  # For regression task
         }
-
-        if quantization_config:
-            model_kwargs["quantization_config"] = quantization_config
 
         base_model = AutoModelForSequenceClassification.from_pretrained(
             reward_model_path,
             **model_kwargs
         )
+        base_model.config.pad_token_id = self.tokenizer.pad_token_id
 
         # Check and load the adapter if it exists
         adapter_path = os.path.join(reward_model_path, 'adapter_model')
@@ -130,39 +83,49 @@ class RejectionSampler:
         )
 
     def inference(self, messages, temperature=1.0, max_new_tokens=200, stream=False, n=1):
-        """Generate responses and select the best one based on reward model scores."""
+        """Generate responses using vLLM API and select the best one based on reward model scores."""
         prompt = self.format_prompt(messages, add_generation_prompt=True)
-        inputs = self.tokenizer(prompt, return_tensors="pt").to(self.sft_device)
-        prompt_length = inputs['input_ids'].size(1)
-
+        
         total_responses = []
         total_responses_generated = 0
 
         while total_responses_generated < self.max_responses:
             current_batch_size = min(self.sft_batch_size, self.max_responses - total_responses_generated)
+            
+            # Generate responses using vLLM API
+            payload = {
+                "prompt": prompt,
+                "model": "qwen25-7b-instruct-sft-gpu2",
+                "temperature": temperature,
+                "max_tokens": max_new_tokens,
+                "n": current_batch_size,  # Number of completions to generate
+                "stop": [self.tokenizer.eos_token] if self.tokenizer.eos_token else None
+            }
+            
+            try:
+                response = requests.post(self.vllm_api_url, json=payload)
+                response.raise_for_status()  # Raise exception for error status codes
+                
+                # Extract generated responses from the API response
+                api_responses = response.json()
+                
+                # Process API response based on vLLM API format
+                # Adjust this based on the exact response format from your vLLM server
+                for completion in api_responses.get("choices", []):
+                    if "text" in completion:
+                        total_responses.append(completion["text"])
+                
+                for response in total_responses[total_responses_generated:]:
+                    print(response)
+                
+                total_responses_generated += current_batch_size
+                
+            except Exception as e:
+                print(f"Error calling vLLM API: {e}")
+                break
 
-            # Generate current batch of responses
-            with torch.no_grad():
-                outputs = self.sft_model.generate(
-                    input_ids=inputs['input_ids'].repeat(current_batch_size, 1),
-                    attention_mask=inputs['attention_mask'].repeat(current_batch_size, 1),
-                    max_new_tokens=max_new_tokens,
-                    temperature=temperature,
-                    num_return_sequences=1,
-                    do_sample=True,
-                    pad_token_id=self.tokenizer.pad_token_id
-                )
-
-            # Process generated responses
-            for i in range(outputs.size(0)):
-                generated_tokens = outputs[i, prompt_length:]  # Slice to keep only new tokens
-                response = self.tokenizer.decode(generated_tokens, skip_special_tokens=True)
-                total_responses.append(response)
-
-            for response in total_responses:
-                print(response)
-
-            total_responses_generated += current_batch_size
+        if not total_responses:
+            return "Failed to generate responses from vLLM API."
 
         # Prepare messages with generated responses
         messages_list = []

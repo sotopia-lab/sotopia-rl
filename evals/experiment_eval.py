@@ -123,7 +123,7 @@ def _iterate_env_agent_combo_not_in_db(
         # TODO (haofeiyu): we always choose the first env-agent combo to run
         env_agent_combo_storage_list = sorted(
             env_agent_combo_storage_list, key=lambda x: x.pk
-        )[:5]
+        )[:1]
 
         for env_agent_combo_storage in env_agent_combo_storage_list:
             env_agent_combo_storage = cast(

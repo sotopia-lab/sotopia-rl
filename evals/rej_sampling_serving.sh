@@ -15,7 +15,7 @@ CUDA_VISIBLE_DEVICES=0 python manage.py start_with_config \
 
 CUDA_VISIBLE_DEVICES=1 python manage.py start_with_config \
     --sft_model_path "/data/haofeiy2/sotopia-rl/sft_qwen25_7b/checkpoint-4000/" \
-    --reward_model_path "/data/haofeiy2/sotopia-rl/rm_direct_o3_mini/checkpoint-4000" \
+    --reward_model_path "/data/haofeiy2/sotopia-rl/rm_reward_direct_default_o3-mini/checkpoint-3500" \
     --model_name "/mnt/data_from_server1/models/Qwen2.5-7B-Instruct" \
     --template_path "/data/haofeiy2/sotopia-rl/evals/qwen2.5-7b.jinja" \
     --max_responses 5 \
@@ -49,15 +49,15 @@ CUDA_VISIBLE_DEVICES=4 python -m vllm.entrypoints.openai.api_server \
     --chat-template /data/haofeiy2/sotopia-rl/evals/qwen2.5-7b.jinja  \
     --served-model-name qwen25-7b-instruct \
     --enable-lora \
-    --lora-modules qwen25-7b-instruct-sft-gpu4=/data/haofeiy2/sotopia-rl/sft_qwen25_7b/checkpoint-4000/
+    --lora-modules qwen25-7b-instruct-sft-gpu2=/data/haofeiy2/sotopia-rl/sft_qwen25_7b/checkpoint-4000/
 
-CUDA_VISIBLE_DEVICES=5 python -m vllm.entrypoints.openai.api_server \
+CUDA_VISIBLE_DEVICES=2 python -m vllm.entrypoints.openai.api_server \
     --model /mnt/data_from_server1/models/Qwen2.5-7B-Instruct \
     --port 8006 \
     --chat-template /data/haofeiy2/sotopia-rl/evals/qwen2.5-7b.jinja  \
     --served-model-name qwen25-7b-instruct \
     --enable-lora \
-    --lora-modules qwen25-7b-instruct-sft-gpu5=/data/haofeiy2/sotopia-rl/sft_qwen25_7b/checkpoint-4000/
+    --lora-modules qwen25-7b-instruct-sft-gpu2=/data/haofeiy2/sotopia-rl/sft_qwen25_7b/checkpoint-4500/
 
 
 # with sotopia env, launch the evaluation
