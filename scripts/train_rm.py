@@ -1,7 +1,7 @@
 import argparse
-from sotopia_rl import SotopiaRMTrainer
 import os
-import json
+
+from sotopia_rl import SotopiaRMTrainer
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Train a reward model with value head using LoRA.")
@@ -34,18 +34,18 @@ if __name__ == '__main__':
     # Wandb arguments
     parser.add_argument("--wandb_project", type=str, default="reward-model-training", help="Wandb project name")
     parser.add_argument("--wandb_run_name", type=str, default=None, help="Wandb run name")
-    
+
     # DeepSpeed arguments
     parser.add_argument("--deepspeed", action="store_true", help="Enable DeepSpeed")
-    parser.add_argument("--deepspeed_config", type=str, default=None, 
+    parser.add_argument("--deepspeed_config", type=str, default=None,
                         help="Path to DeepSpeed configuration file")
     parser.add_argument("--local_rank", type=int, default=-1,
                         help="Local rank for distributed training (set by DeepSpeed)")
     parser.add_argument("--use_distributed", action="store_true", help="Enable distributed training")
 
-    
+
     args = parser.parse_args()
-    
+
     if args.deepspeed:
         args.use_distributed = True
     else:
@@ -59,6 +59,6 @@ if __name__ == '__main__':
             print("Warning: --use_distributed is set but no local_rank detected. Setting to 0.")
             args.local_rank = 0
 
-    
+
     trainer = SotopiaRMTrainer(args)
     trainer.train()

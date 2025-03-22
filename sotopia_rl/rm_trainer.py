@@ -1,4 +1,5 @@
 import os
+
 import torch
 import torch.distributed as dist
 from jinja2 import Environment, FileSystemLoader
@@ -14,7 +15,6 @@ from transformers import (
 
 import wandb
 from sotopia_rl.data import RMDataset
-import os
 
 os.environ['NCCL_P2P_DISABLE'] = '1'
 
@@ -22,10 +22,10 @@ os.environ['NCCL_P2P_DISABLE'] = '1'
 class SotopiaRMTrainer(Trainer):
     def __init__(self, args, **kwargs):
         self.args = args
-        
+
         # Setup distributed training
         self.setup_distributed()
-        
+
         train_dataset, eval_dataset = self.setup_dataset()
 
         # Initialize wandb only on the main process
@@ -49,7 +49,7 @@ class SotopiaRMTrainer(Trainer):
             num_labels=1,
         )
         base_model.enable_input_require_grads() # very important
-        
+
         if self.args.multi_gpu:
             # Use device_map="auto" only when not in distributed training
             base_model = base_model.to(self.device)
@@ -82,7 +82,7 @@ class SotopiaRMTrainer(Trainer):
             deepspeed=args.deepspeed_config if hasattr(args, 'deepspeed_config') and args.deepspeed_config else None,
             ddp_find_unused_parameters=False,
         )
-        
+
         collate_fn = train_dataset.dataset.collate_fn if hasattr(train_dataset, 'dataset') else None
 
         super().__init__(
@@ -98,13 +98,13 @@ class SotopiaRMTrainer(Trainer):
 
         if args.checkpoint_path:
             self.load_lora_checkpoint(args.checkpoint_path)
-        
+
 
     def setup_distributed(self):
         """Set up distributed training environment"""
         # Check if DeepSpeed or distributed training is enabled
         self.args.multi_gpu = torch.cuda.device_count() > 1 and (
-            (hasattr(self.args, 'deepspeed_config') and self.args.deepspeed_config is not None) or 
+            (hasattr(self.args, 'deepspeed_config') and self.args.deepspeed_config is not None) or
             (hasattr(self.args, 'use_distributed') and self.args.use_distributed)
         )
 
@@ -140,13 +140,13 @@ class SotopiaRMTrainer(Trainer):
         template = env.get_template(self.args.template_path.split("/")[-1])
         tokenizer = AutoTokenizer.from_pretrained(self.args.model_name)
         dataset = RMDataset(self.args.reward_data_path, tokenizer, template, self.args.max_length)
-        
+
         if self.is_main_process:
             print(f"dataset: {len(dataset)}")
-            
+
         train_size = int(len(dataset) * 0.95)
         val_size = len(dataset) - train_size
-        
+
         # Use deterministic splitter with seed to ensure same split across processes
         generator = torch.Generator().manual_seed(42)
         train_dataset, val_dataset = random_split(dataset, [train_size, val_size], generator=generator)
@@ -160,13 +160,13 @@ class SotopiaRMTrainer(Trainer):
         outputs = model(input_ids, attention_mask=attention_masks)
         predicted_rewards = outputs.logits.squeeze(-1)  # Shape: (batch_size,)
         loss = self.loss_fn(predicted_rewards, true_rewards)
-        
+
         # Only print from the main process to avoid log flooding
         #if self.is_main_process:
         #    print(self.model.training)
         #    print("predicted_rewards", predicted_rewards)
         #    print("true_rewards", true_rewards)
-            
+
         return (loss, outputs) if return_outputs else loss
 
     def save_lora_checkpoint(self, output_dir=None, **kwargs):
@@ -178,14 +178,14 @@ class SotopiaRMTrainer(Trainer):
     def load_lora_checkpoint(self, checkpoint_path):
         adapter_model_path = os.path.join(checkpoint_path, 'adapter_model.safetensors')
         peft_config = LoraConfig.from_pretrained(checkpoint_path)
-        
+
         # For DeepSpeed resuming, check if this is a DeepSpeed checkpoint
         if os.path.exists(os.path.join(checkpoint_path, 'zero_pp_rank_0_mp_rank_00_model_states.pt')):
             # DeepSpeed checkpoint will be loaded by Trainer automatically
             if self.is_main_process:
                 print(f"DeepSpeed checkpoint detected at {checkpoint_path}")
             return
-                
+
         if os.path.exists(adapter_model_path):
             self.model.load_adapter(checkpoint_path, adapter_name='lora', peft_config=peft_config)
         else:

@@ -1,14 +1,12 @@
 import os
-import requests
-import json
+
 import numpy as np
+import requests
 import torch
 from jinja2 import Environment, FileSystemLoader
 from peft import PeftModelForSequenceClassification
-from transformers import (
-    AutoModelForSequenceClassification,
-    AutoTokenizer,
-)
+from transformers import AutoModelForSequenceClassification, AutoTokenizer
+
 
 class RejectionSampler:
     def __init__(
@@ -29,7 +27,7 @@ class RejectionSampler:
         self.sft_model_name = sft_model_name
         self.max_length = max_length
         self.sft_model_vllm_api_url = sft_model_vllm_api_url  # Store vLLM API URL
-        
+
         self.reward_device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         self.tokenizer = AutoTokenizer.from_pretrained(reward_model_name)
@@ -76,13 +74,13 @@ class RejectionSampler:
     def inference(self, messages, temperature, top_p, max_new_tokens):
         """Generate responses using vLLM API and select the best one based on reward model scores."""
         prompt = self.format_prompt(messages, add_generation_prompt=True)
-        
+
         total_responses = []
         total_responses_generated = 0
 
         while total_responses_generated < self.max_responses:
             current_batch_size = min(self.sft_batch_size, self.max_responses - total_responses_generated)
-            
+
             # Generate responses using vLLM API
             payload = {
                 "prompt": prompt,
@@ -93,21 +91,21 @@ class RejectionSampler:
                 "n": current_batch_size,  # Number of completions to generate
                 "stop": [self.tokenizer.eos_token] if self.tokenizer.eos_token else None
             }
-            
+
             try:
                 response = requests.post(self.sft_model_vllm_api_url, json=payload)
                 response.raise_for_status()
-                
+
                 api_responses = response.json()
                 for completion in api_responses.get("choices", []):
                     if "text" in completion:
                         total_responses.append(completion["text"])
-                
+
                 for response in total_responses[total_responses_generated:]:
                     print(response)
-                
+
                 total_responses_generated += current_batch_size
-                
+
             except Exception as e:
                 print(f"Error calling vLLM API: {e}")
                 break
