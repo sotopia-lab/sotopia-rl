@@ -12,6 +12,7 @@ from transformers import (
     GenerationConfig,
 )
 from trl import PPOv2Config, PPOv2Trainer
+from accelerate import Accelerator
 
 import wandb
 from sotopia_rl.data import PPODataset
@@ -19,8 +20,10 @@ os.environ['NCCL_P2P_DISABLE'] = '1'
 
 
 class SotopiaPPOTrainer:
-    def __init__(self, args):
+    def __init__(self, args, accelerator):
         self.args = args
+        self.accelerator = accelerator
+        self.device = accelerator.device
 
         # Initialize the training environment
         self._init_wandb()
@@ -33,6 +36,19 @@ class SotopiaPPOTrainer:
         # Load models - organized by type
         self._setup_generation_models()    # Policy and reference policy
         self._setup_classification_models() # Reward and value models
+
+        self.policy, self.ref_policy, self.reward_model, self.value_model = self.accelerator.prepare(
+            self.policy, self.ref_policy, self.reward_model, self.value_model
+        )
+        self.policy = self.accelerator.unwrap_model(self.policy)
+        self.ref_policy = self.accelerator.unwrap_model(self.ref_policy)
+        self.reward_model = self.accelerator.unwrap_model(self.reward_model)
+        self.value_model = self.accelerator.unwrap_model(self.value_model)
+
+        self.policy.to(self.device)
+        self.ref_policy.to(self.device)
+        self.reward_model.to(self.device)
+        self.value_model.to(self.device)
 
         # Setup the PPO trainer
         self._setup_ppo_trainer()
@@ -47,7 +63,15 @@ class SotopiaPPOTrainer:
 
     def _setup_tokenizer(self):
         """Load and configure tokenizer"""
-        self.tokenizer = AutoTokenizer.from_pretrained(self.args.model_name, padding_side="left")
+        self.tokenizer = AutoTokenizer.from_pretrained(self.args.model_name, padding_side="left", pad_token="<pad>")
+        if self.tokenizer.pad_token is None:
+            if self.tokenizer.eos_token is not None:
+                self.tokenizer.pad_token = self.tokenizer.eos_token
+            else:
+                self.tokenizer.add_special_tokens({'pad_token': '[PAD]'})
+    
+        print(f"Pad token set to: {self.tokenizer.pad_token} (ID: {self.tokenizer.pad_token_id})")
+
 
     def _setup_dataset(self):
         """Prepare training and validation datasets"""
@@ -89,7 +113,11 @@ class SotopiaPPOTrainer:
             torch_dtype=torch.float32, # very important, otherwise NaN for RM
             quantization_config=self.quant_config,
             return_dict=True,
+            device_map=None
         )
+
+        if base_gen_model.config.pad_token_id is None:
+            base_gen_model.config.pad_token_id = self.tokenizer.pad_token_id
 
         # Create generation config
         generation_config = GenerationConfig(
@@ -126,8 +154,12 @@ class SotopiaPPOTrainer:
             torch_dtype=torch.float32, # very important, otherwise NaN
             quantization_config=self.quant_config,
             num_labels=1,
-            return_dict=True
+            return_dict=True,
+            device_map=None
         )
+
+        if base_cls_model.config.pad_token_id is None:
+            base_cls_model.config.pad_token_id = self.tokenizer.pad_token_id
 
         self.reward_model = PeftModelForSequenceClassification.from_pretrained(
             base_cls_model,
@@ -199,7 +231,7 @@ class SotopiaPPOTrainer:
         except Exception as e:
             print(f"Training error: {str(e)}")
             raise
-        
+
     def save_checkpoint(self, checkpoint_path):
         """Save all model adapters"""
         os.makedirs(checkpoint_path, exist_ok=True)
