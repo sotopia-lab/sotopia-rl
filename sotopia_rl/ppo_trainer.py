@@ -199,49 +199,7 @@ class SotopiaPPOTrainer:
         except Exception as e:
             print(f"Training error: {str(e)}")
             raise
-
-    # def setup_distributed(self):
-    
-    #     self.local_rank = int(os.environ.get("LOCAL_RANK", 0))
-    #     self.device = torch.device(f"cuda:{self.local_rank}")
         
-    #     self.is_main_process = (self.local_rank == 0)
-        
-    #     print(f"setup_distributed: local_rank={self.local_rank}, is_main={self.is_main_process}")
-
-    # def setup_distributed(self):
-    #     """Set up distributed training environment"""
-    #     # Check if DeepSpeed or distributed training is enabled
-    #     self.args.multi_gpu = torch.cuda.device_count() > 1 and (
-    #         (hasattr(self.args, 'deepspeed_config') and self.args.deepspeed_config is not None) or 
-    #         (hasattr(self.args, 'use_distributed') and self.args.use_distributed)
-    #     )
-
-    #     if self.args.multi_gpu:
-    #         if 'LOCAL_RANK' in os.environ:
-    #             self.local_rank = int(os.environ['LOCAL_RANK'])
-    #         else:
-    #             self.local_rank = self.args.local_rank if hasattr(self.args, 'local_rank') else 0
-
-    #         if not dist.is_initialized():
-    #             dist.init_process_group(backend='nccl')
-
-    #         self.world_size = dist.get_world_size()
-    #         self.is_main_process = (self.local_rank == 0)
-    #         self.device = torch.device(f"cuda:{self.local_rank}")
-
-    #         torch.cuda.set_device(self.local_rank)
-            
-
-    #         if self.is_main_process:
-    #             print(f"[INFO] Distributed training enabled with {self.world_size} GPUs.")
-    #     else:
-    #         self.local_rank = 0
-    #         self.is_main_process = True
-    #         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    #         self.world_size = 1
-    #         print(f"Training on single {'GPU' if torch.cuda.is_available() else 'CPU'}")
-
     def save_checkpoint(self, checkpoint_path):
         """Save all model adapters"""
         os.makedirs(checkpoint_path, exist_ok=True)
