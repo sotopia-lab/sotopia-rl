@@ -41,7 +41,6 @@ class RejectionSampler:
 
         # Load the tokenizer
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-        self.tokenizer.pad_token = self.tokenizer.eos_token
 
         # Load models
         self.sft_model = self.load_sft_model(sft_model_path)

@@ -16,7 +16,9 @@ from trl import SFTTrainer
 
 import wandb
 from sotopia_rl.data import SFTDataset
+import os
 
+os.environ['NCCL_P2P_DISABLE'] = '1'
 
 class SotopiaSFTTrainer:
     def __init__(self, args):

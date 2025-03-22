@@ -29,7 +29,7 @@ def load_model_and_tokenizer(args):
         torch_dtype=torch.float32, #important
         device_map="auto",
         num_labels=1,  # For regression task
-        #pad_token_id=tokenizer.eos_token_id # very important
+        pad_token_id=tokenizer.pad_token_id # very important to add this
     )
 
     adapter_path = os.path.join(args.adapter_path, 'adapter_model')

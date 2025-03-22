@@ -847,21 +847,17 @@ files = [
 
 [[package]]
 name = "deepspeed"
-version = "0.16.4"
+version = "0.15.4"
 description = "DeepSpeed library"
 optional = false
 python-versions = "*"
 groups = ["main"]
 markers = "python_version <= \"3.11\" or python_version >= \"3.12\""
 files = [
-    {file = "deepspeed-0.16.4-cp310-cp310-win_amd64.whl", hash = "sha256:09e0b4f10c22b8054f340d90077a8d382092491fcf90fe1779c4e6180314e234"},
-    {file = "deepspeed-0.16.4-cp311-cp311-win_amd64.whl", hash = "sha256:7daa0c05780dd7f95d51bace474e116707c733f4d9d8c279773e1e969db1b841"},
-    {file = "deepspeed-0.16.4-cp312-cp312-win_amd64.whl", hash = "sha256:2998a0a38fe5798d58e7575e16e032f03cc7841ee32f691cd82253745e7a97b4"},
-    {file = "deepspeed-0.16.4.tar.gz", hash = "sha256:495febfb6dd20423f44b1c4a1bb6da2cadbcaf9b07962e17f87d52edfeec9bba"},
+    {file = "deepspeed-0.15.4.tar.gz", hash = "sha256:60e7c044b7fc386cdad1206212d22b6963ea551f656ed51f7cb34b299459bf2c"},
 ]
 
 [package.dependencies]
-einops = "*"
 hjson = "*"
 msgpack = "*"
 ninja = "*"
@@ -875,10 +871,10 @@ tqdm = "*"
 
 [package.extras]
 1bit-mpi = ["mpi4py"]
-all = ["accelerate", "autodoc_pydantic (>=2.0.0)", "clang-format (==18.1.3)", "comet_ml (>=3.41.0)", "deepspeed-kernels", "diffusers (>=0.25.0)", "docutils (<0.18)", "future", "google", "hjson", "importlib-metadata (>=4)", "lm-eval (==0.3.0)", "mpi4py", "mup", "neural-compressor (==2.1.0)", "packaging", "pre-commit (>=3.2.0)", "protobuf", "psutil", "py-cpuinfo", "pydantic (>=2.0.0)", "pytest (>=7.2.0)", "pytest-forked", "pytest-randomly", "pytest-xdist", "qtorch", "qtorch (==0.3.0)", "recommonmark", "safetensors", "sentencepiece", "sphinx", "sphinx-rtd-theme", "sphinx_rtd_theme", "tabulate", "tensorboard", "torch", "torchvision", "tqdm", "transformers (>=4.32.1)", "transformers (>=4.39.0)", "triton (==1.0.0)", "triton (==2.1.0)", "triton (>=2.1.0)", "wandb", "xgboost"]
+all = ["accelerate", "autodoc_pydantic (>=2.0.0)", "clang-format (==18.1.3)", "comet_ml (>=3.41.0)", "deepspeed-kernels", "diffusers (>=0.25.0)", "docutils (<0.18)", "future", "google", "hjson", "importlib-metadata (>=4)", "lm-eval (==0.3.0)", "mpi4py", "mup", "neural-compressor (==2.1.0)", "packaging", "pre-commit (>=2.20.0)", "protobuf", "psutil", "py-cpuinfo", "pydantic (>=2.0.0)", "pytest (>=7.2.0)", "pytest-forked", "pytest-randomly", "pytest-xdist", "qtorch", "qtorch (==0.3.0)", "recommonmark", "safetensors", "sentencepiece", "sphinx", "sphinx-rtd-theme", "sphinx_rtd_theme", "tabulate", "tensorboard", "torch", "torchvision", "tqdm", "transformers (>=4.32.1)", "transformers (>=4.39.0)", "triton (==1.0.0)", "triton (==2.1.0)", "triton (>=2.1.0)", "wandb", "xgboost"]
 autotuning = ["tabulate"]
 autotuning-ml = ["hjson", "tabulate", "xgboost"]
-dev = ["accelerate", "clang-format (==18.1.3)", "comet_ml (>=3.41.0)", "deepspeed-kernels", "docutils (<0.18)", "future", "importlib-metadata (>=4)", "mup", "pre-commit (>=3.2.0)", "pytest (>=7.2.0)", "pytest-forked", "pytest-randomly", "pytest-xdist", "qtorch (==0.3.0)", "recommonmark", "sphinx", "sphinx-rtd-theme", "tensorboard", "torchvision", "transformers (>=4.39.0)", "wandb"]
+dev = ["accelerate", "clang-format (==18.1.3)", "comet_ml (>=3.41.0)", "deepspeed-kernels", "docutils (<0.18)", "future", "importlib-metadata (>=4)", "mup", "pre-commit (>=2.20.0)", "pytest (>=7.2.0)", "pytest-forked", "pytest-randomly", "pytest-xdist", "qtorch (==0.3.0)", "recommonmark", "sphinx", "sphinx-rtd-theme", "tensorboard", "torchvision", "transformers (>=4.39.0)", "wandb"]
 inf = ["google", "lm-eval (==0.3.0)", "protobuf", "qtorch", "safetensors", "sentencepiece", "transformers (>=4.32.1)"]
 readthedocs = ["autodoc_pydantic (>=2.0.0)", "docutils (<0.18)", "hjson", "packaging", "psutil", "py-cpuinfo", "pydantic (>=2.0.0)", "recommonmark", "sphinx_rtd_theme", "torch", "tqdm"]
 sd = ["diffusers (>=0.25.0)", "triton (>=2.1.0)"]
@@ -1013,10 +1009,10 @@ files = [
 name = "einops"
 version = "0.8.0"
 description = "A new flavour of deep learning operations"
-optional = false
+optional = true
 python-versions = ">=3.8"
 groups = ["main"]
-markers = "python_version <= \"3.11\" or python_version >= \"3.12\""
+markers = "(python_version <= \"3.11\" or python_version >= \"3.12\") and extra == \"eval\""
 files = [
     {file = "einops-0.8.0-py3-none-any.whl", hash = "sha256:9572fb63046264a862693b0a87088af3bdc8c068fde03de63453cbbde245465f"},
     {file = "einops-0.8.0.tar.gz", hash = "sha256:63486517fed345712a8385c100cb279108d9d47e6ae59099b07657e983deae85"},
@@ -6890,4 +6886,4 @@ server = ["django", "djangorestframework"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10, <3.13"
-content-hash = "eb16b53171ca00053ba1d58f5ace58ad76d873f2e1ad51ceb25df608c4e9e7d2"
+content-hash = "f411412ec60466e1fc855f9f13dbd08589f0c9fb3d19719d2913112422534268"

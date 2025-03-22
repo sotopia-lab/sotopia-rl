@@ -13,7 +13,7 @@ deepspeed --num_gpus=8 /data/haofeiy2/sotopia-rl/scripts/train_sft.py \
 --checkpoint_dir /data/haofeiy2/sotopia-rl/sft_qwen25_7b \
 --use_qlora \
 --deepspeed \
---deepspeed_config ds_config_sft.json
+--deepspeed_config /data/haofeiy2/sotopia-rl/scripts/ds_config_sft.json
 
 CUDA_VISIBLE_DEVICES=2 python /data/haofeiy2/sotopia-rl/scripts/train_sft.py \
 --model_name /mnt/data_from_server1/models/Qwen2.5-7B-Instruct \
