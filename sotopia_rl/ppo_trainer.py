@@ -11,16 +11,19 @@ from transformers import (
     BitsAndBytesConfig,
     GenerationConfig,
 )
-# from trl import PPOv2Config, PPOv2Trainer
+from trl import PPOv2Config, PPOv2Trainer
+from accelerate import Accelerator
 
 import wandb
 from sotopia_rl.data import PPODataset
+os.environ['NCCL_P2P_DISABLE'] = '1' 
 
 
 class SotopiaPPOTrainer:
-    def __init__(self, args):
+    def __init__(self, args, accelerator):
         self.args = args
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.accelerator = accelerator
+        self.device = accelerator.device
 
         # Initialize the training environment
         self._init_wandb()
@@ -34,8 +37,33 @@ class SotopiaPPOTrainer:
         self._setup_generation_models()    # Policy and reference policy
         self._setup_classification_models() # Reward and value models
 
+        self.policy, self.ref_policy, self.reward_model, self.value_model = self.accelerator.prepare(
+            self.policy, self.ref_policy, self.reward_model, self.value_model
+        )
+        self.policy = self.accelerator.unwrap_model(self.policy)
+        self.ref_policy = self.accelerator.unwrap_model(self.ref_policy)
+        self.reward_model = self.accelerator.unwrap_model(self.reward_model)
+        self.value_model = self.accelerator.unwrap_model(self.value_model)
+
+        self.policy.to(self.device)
+        self.ref_policy.to(self.device)
+        self.reward_model.to(self.device)
+        self.value_model.to(self.device)
+
         # Setup the PPO trainer
         self._setup_ppo_trainer()
+
+        def save_model(self, output_dir: str, _internal_call: bool = False):
+            if hasattr(self.model, "policy"):
+                model_to_save = self.model.policy
+            elif hasattr(self.model, "module") and hasattr(self.model.module, "policy"):
+                model_to_save = self.model.module.policy
+            else:
+                model_to_save = self.model
+            model_to_save.save_pretrained(output_dir)
+            print(f"Model saved to {output_dir}")
+
+        self.ppo_trainer.save_model = save_model.__get__(self.ppo_trainer, type(self.ppo_trainer))
 
     def _init_wandb(self):
         """Initialize Weights & Biases logging"""
@@ -47,7 +75,7 @@ class SotopiaPPOTrainer:
 
     def _setup_tokenizer(self):
         """Load and configure tokenizer"""
-        self.tokenizer = AutoTokenizer.from_pretrained(self.args.model_name, padding_side="left")
+        self.tokenizer = AutoTokenizer.from_pretrained(self.args.model_name, padding_side="left", pad_token="<pad>")
 
     def _setup_dataset(self):
         """Prepare training and validation datasets"""
@@ -65,10 +93,13 @@ class SotopiaPPOTrainer:
             max_length=self.args.max_length
         )
 
+        print(f"dataset: {len(dataset)}")
+        
+        generator = torch.Generator().manual_seed(42)
         val_ratio = getattr(self.args, 'val_ratio', 0.05)
         train_size = min(int(len(dataset) * (1 - val_ratio)), len(dataset) - 2)
         val_size = len(dataset) - train_size
-        self.train_dataset, self.val_dataset = random_split(dataset, [train_size, val_size])
+        self.train_dataset, self.val_dataset = random_split(dataset, [train_size, val_size], generator=generator)
         print(f"Dataset split: {len(self.train_dataset)} train, {len(self.val_dataset)} validation")
 
     def _create_quantization_config(self):
@@ -84,10 +115,13 @@ class SotopiaPPOTrainer:
         base_gen_model = AutoModelForCausalLM.from_pretrained(
             self.args.model_name,
             torch_dtype=torch.float32, # very important, otherwise NaN for RM
-            device_map=self.device,
             quantization_config=self.quant_config,
             return_dict=True,
+            device_map=None
         )
+
+        if base_gen_model.config.pad_token_id is None:
+            base_gen_model.config.pad_token_id = self.tokenizer.pad_token_id
 
         # Create generation config
         generation_config = GenerationConfig(
@@ -122,11 +156,14 @@ class SotopiaPPOTrainer:
         base_cls_model = AutoModelForSequenceClassification.from_pretrained(
             self.args.model_name,
             torch_dtype=torch.float32, # very important, otherwise NaN
-            device_map=self.device,
             quantization_config=self.quant_config,
             num_labels=1,
-            return_dict=True
+            return_dict=True,
+            device_map=None
         )
+
+        if base_cls_model.config.pad_token_id is None:
+            base_cls_model.config.pad_token_id = self.tokenizer.pad_token_id
 
         self.reward_model = PeftModelForSequenceClassification.from_pretrained(
             base_cls_model,
@@ -146,6 +183,7 @@ class SotopiaPPOTrainer:
     def _setup_ppo_trainer(self):
         """Configure the PPO trainer"""
         # Get data collator if available
+
 
         # Configure PPO settings
         ppo_config = PPOv2Config(
