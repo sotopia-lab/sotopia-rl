@@ -1,5 +1,4 @@
 #!/bin/bash
-# rm-reward-direct-default-o3-mini vs sft_qwen25_7b
 export VLLM_GPU=0
 export DJANGO_GPU=1
 export VLLM_PORT=8001
@@ -12,7 +11,6 @@ export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-1
 export RM_MODEL_PATH="${REPO_FOLDER_NAME}/${RM_FOLDER_NAME}/checkpoint-4000"
 
 
-# rm_reward_goal_progress_gpt-4o vs sft_qwen25_7b
 export VLLM_GPU=2
 export DJANGO_GPU=3
 export VLLM_PORT=8003
@@ -25,7 +23,6 @@ export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-1
 export RM_MODEL_PATH="${REPO_FOLDER_NAME}/${RM_FOLDER_NAME}/checkpoint-2240"
 
 
-
 export VLLM_GPU=4
 export DJANGO_GPU=5
 export VLLM_PORT=8015
@@ -36,7 +33,6 @@ export RM_FOLDER_NAME="rm_reward_discounting"
 export REPO_FOLDER_NAME="/data/haofeiy2/sotopia-rl"
 export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-1000/"
 export RM_MODEL_PATH="${REPO_FOLDER_NAME}/${RM_FOLDER_NAME}/checkpoint-2250"
-
 
 
 export VLLM_GPU=6
@@ -63,13 +59,13 @@ export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-1
 export RM_MODEL_PATH="${REPO_FOLDER_NAME}/${RM_FOLDER_NAME}/checkpoint-4200"
 
 
-
 export TAG="${RM_FOLDER_NAME}_rej_sampling_num${REJ_SAMPLING_NUM}_vs_${SFT_MODEL_FOLDER_NAME}-0322"
 export SFT_MODEL_NAME="qwen25-7b-instruct-sft-gpu${VLLM_GPU}"
 export MODEL_A=custom/${RM_FOLDER_NAME}_rejsampling_num${REJ_SAMPLING_NUM}@http://localhost:${DJANGO_PORT}/sotopia
 export MODEL_B=custom/${SFT_MODEL_NAME}@http://localhost:${VLLM_PORT}/v1
 export REDIS_OM_URL="redis://:QzmCUD3C3RdsR@35.232.108.130:6379"
 export SFT_MODEL_VLLM_API_URL="http://localhost:${VLLM_PORT}/v1/completions"
+
 
 # Command 1: Launch the VLLM API server with LoRA enabled.
 CUDA_VISIBLE_DEVICES=$VLLM_GPU python -m vllm.entrypoints.openai.api_server \

@@ -1,5 +1,4 @@
 from collections import defaultdict
-
 from sotopia.database.logs import EpisodeLog
 
 
@@ -129,4 +128,4 @@ def analyze_episodes_with_positions(tag):
     }
 
 # Run the analysis
-results = analyze_episodes_with_positions("rm_reward_direct_default_o3-mini_rej_sampling_num10_vs_sft_qwen25_7b-0322")
+results = analyze_episodes_with_positions("rm_reward_utterance_quality_gpt-4o_rej_sampling_num10_vs_sft_qwen25_7b-0322")
