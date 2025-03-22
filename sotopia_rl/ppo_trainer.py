@@ -54,12 +54,12 @@ class SotopiaPPOTrainer:
         self._setup_ppo_trainer()
 
         def save_model(self, output_dir: str, _internal_call: bool = False):
-            if hasattr(self.model, "module"):
-                model_to_save = self.model.module
+            if hasattr(self.model, "policy"):
+                model_to_save = self.model.policy
+            elif hasattr(self.model, "module") and hasattr(self.model.module, "policy"):
+                model_to_save = self.model.module.policy
             else:
                 model_to_save = self.model
-            if not hasattr(model_to_save, "policy"):
-                model_to_save.policy = model_to_save
             model_to_save.save_pretrained(output_dir)
             print(f"Model saved to {output_dir}")
 
