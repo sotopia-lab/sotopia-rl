@@ -13,37 +13,28 @@ from transformers import (
 class RejectionSampler:
     def __init__(
         self,
-        sft_model_path,
+        sft_model_name,
+        sft_model_vllm_api_url,
         reward_model_path,
-        model_name,
+        reward_model_name,
         template_path,
         max_responses,
-        vllm_api_url='http://localhost:8005/v1/completions',  # New parameter for vLLM API endpoint
-        max_length=4096,
-        sft_batch_size=5,
-        rm_batch_size=5,
-        use_qlora=False,
+        max_length,
+        sft_batch_size,
+        rm_batch_size,
     ):
         self.max_responses = max_responses
         self.sft_batch_size = sft_batch_size
         self.rm_batch_size = rm_batch_size
+        self.sft_model_name = sft_model_name
         self.max_length = max_length
-        self.use_qlora = use_qlora
-        self.vllm_api_url = vllm_api_url  # Store vLLM API URL
+        self.sft_model_vllm_api_url = sft_model_vllm_api_url  # Store vLLM API URL
         
-        # Set up reward model device
         self.reward_device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        # Load the tokenizer
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-
-        # For vLLM, we don't need to load the SFT model locally
-        # We'll just make API calls
-
-        # Load reward model (still local)
+        self.tokenizer = AutoTokenizer.from_pretrained(reward_model_name)
         self.reward_model = self.load_reward_model(reward_model_path)
 
-        # Load Jinja template from file
         env = Environment(loader=FileSystemLoader("/".join(template_path.split("/")[:-1])))
         self.template = env.get_template(template_path.split("/")[-1])
 
@@ -82,7 +73,7 @@ class RejectionSampler:
             add_generation_prompt=add_generation_prompt,
         )
 
-    def inference(self, messages, temperature=1.0, max_new_tokens=200, stream=False, n=1):
+    def inference(self, messages, temperature, top_p, max_new_tokens):
         """Generate responses using vLLM API and select the best one based on reward model scores."""
         prompt = self.format_prompt(messages, add_generation_prompt=True)
         
@@ -95,22 +86,19 @@ class RejectionSampler:
             # Generate responses using vLLM API
             payload = {
                 "prompt": prompt,
-                "model": "qwen25-7b-instruct-sft-gpu2",
+                "model": self.sft_model_name,
                 "temperature": temperature,
+                "top_p": top_p,
                 "max_tokens": max_new_tokens,
                 "n": current_batch_size,  # Number of completions to generate
                 "stop": [self.tokenizer.eos_token] if self.tokenizer.eos_token else None
             }
             
             try:
-                response = requests.post(self.vllm_api_url, json=payload)
-                response.raise_for_status()  # Raise exception for error status codes
+                response = requests.post(self.sft_model_vllm_api_url, json=payload)
+                response.raise_for_status()
                 
-                # Extract generated responses from the API response
                 api_responses = response.json()
-                
-                # Process API response based on vLLM API format
-                # Adjust this based on the exact response format from your vLLM server
                 for completion in api_responses.get("choices", []):
                     if "text" in completion:
                         total_responses.append(completion["text"])
@@ -127,18 +115,14 @@ class RejectionSampler:
         if not total_responses:
             return "Failed to generate responses from vLLM API."
 
-        # Prepare messages with generated responses
         messages_list = []
         for response in total_responses:
             messages_with_response = messages + [{'role': 'assistant', 'content': response}]
             messages_list.append(messages_with_response)
 
-        # Evaluate responses with reward model in batches
         rewards = self.inference_rm(messages_list)
-
         print(rewards)
 
-        # Find the best response
         top_index = np.argmax(rewards)
         top_response = total_responses[top_index]
 
@@ -150,7 +134,6 @@ class RejectionSampler:
         for i in range(0, len(messages_list), self.rm_batch_size):
             batch_messages = messages_list[i:i + self.rm_batch_size]
 
-            # Format prompts for the current batch
             prompts = [
                 self.format_prompt(msgs, add_generation_prompt=False) for msgs in batch_messages
             ]
@@ -158,14 +141,11 @@ class RejectionSampler:
                 prompts, return_tensors="pt", padding=True, truncation=True, max_length=self.max_length
             ).to(self.reward_device)
 
-            # Forward pass through the reward model
             with torch.no_grad():
                 outputs = self.reward_model(**inputs, return_dict=True)
 
-            # Extract reward values from the logits
             batch_rewards = outputs.logits.squeeze().detach().cpu().numpy()
 
-            # Handle different shapes (single item vs batch)
             if batch_rewards.ndim == 0:
                 batch_rewards = [batch_rewards.item()]
             rewards.extend(batch_rewards)
