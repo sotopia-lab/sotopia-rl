@@ -75,7 +75,7 @@ class SotopiaPPOTrainer:
 
     def _setup_tokenizer(self):
         """Load and configure tokenizer"""
-        self.tokenizer = AutoTokenizer.from_pretrained(self.args.model_name, padding_side="left", pad_token="<pad>")
+        self.tokenizer = AutoTokenizer.from_pretrained(self.args.model_name, padding_side="left")
 
     def _setup_dataset(self):
         """Prepare training and validation datasets"""
