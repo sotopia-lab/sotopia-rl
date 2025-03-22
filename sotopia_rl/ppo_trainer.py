@@ -64,14 +64,6 @@ class SotopiaPPOTrainer:
     def _setup_tokenizer(self):
         """Load and configure tokenizer"""
         self.tokenizer = AutoTokenizer.from_pretrained(self.args.model_name, padding_side="left", pad_token="<pad>")
-        if self.tokenizer.pad_token is None:
-            if self.tokenizer.eos_token is not None:
-                self.tokenizer.pad_token = self.tokenizer.eos_token
-            else:
-                self.tokenizer.add_special_tokens({'pad_token': '[PAD]'})
-    
-        print(f"Pad token set to: {self.tokenizer.pad_token} (ID: {self.tokenizer.pad_token_id})")
-
 
     def _setup_dataset(self):
         """Prepare training and validation datasets"""

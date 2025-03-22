@@ -1,12 +1,12 @@
 import argparse
 import os
-
+import argparse
+from accelerate import Accelerator
 from sotopia_rl import SotopiaPPOTrainer
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Train a model with PPO using a reward model.")
-    import argparse
-    from accelerate import Accelerator
+    
 
     # Base model arguments
     parser.add_argument("--model_name", type=str, default="/data/models/gemma-2-2b-it",
