@@ -11,7 +11,7 @@ from transformers import (
     BitsAndBytesConfig,
     GenerationConfig,
 )
-from trl import PPOv2Config, PPOv2Trainer
+# from trl import PPOv2Config, PPOv2Trainer
 
 import wandb
 from sotopia_rl.data import PPODataset
