@@ -145,7 +145,6 @@ def generate(
         output_scores=True,
         stopping_criteria=stopping_criteria,
     )
-    import pdb; pdb.set_trace()
     logits = torch.stack(output.scores, 1)
     return torch.cat((queries, output.sequences[:, context_length:]), dim=1), logits
 
