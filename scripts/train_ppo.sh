@@ -1,18 +1,19 @@
-CUDA_VISIBLE_DEVICES=6,7,8,9 accelerate launch \
-  --config_file /home/haofeiy2/.cache/huggingface/accelerate/default_config.yaml \
+CUDA_VISIBLE_DEVICES=4,5,6,7 accelerate launch \
+  --config_file /data/haofeiy2/sotopia-rl/scripts/accelerate_config_ppo.yaml \
+  --main_process_port 29510 \
   /data/haofeiy2/sotopia-rl/scripts/train_ppo.py \
-  --model_name /data/models/Qwen2.5-7B-Instruct \
-  --value_model_name /data/models/Qwen2.5-7B-Instruct \
-  --reward_model_name /data/models/Qwen2.5-7B-Instruct \
-  --policy_adapter_path /mnt/data_from_server2/haofeiy2/sotopia-rl/sft_qwen25_7b/checkpoint-1000 \
-  --ref_adapter_path /mnt/data_from_server2/haofeiy2/sotopia-rl/sft_qwen25_7b/checkpoint-1000 \
-  --reward_adapter_path /data/haofeiy2/sotopia-rl-0321/sotopia-rl/rm_reward_direct_default_o3-mini/checkpoint-4000 \
-  --value_adapter_path /data/haofeiy2/sotopia-rl-0321/sotopia-rl/rm_reward_direct_default_o3-mini/checkpoint-4000 \
+  --model_name /mnt/data_from_server1/models/Qwen2.5-7B-Instruct \
+  --value_model_name /mnt/data_from_server1/models/Qwen2.5-7B-Instruct \
+  --reward_model_name /mnt/data_from_server1/models/Qwen2.5-7B-Instruct \
+  --policy_adapter_path /data/haofeiy2/sotopia-rl/sft_qwen25_7b/checkpoint-1000 \
+  --ref_adapter_path /data/haofeiy2/sotopia-rl/sft_qwen25_7b/checkpoint-1000 \
+  --reward_adapter_path /data/haofeiy2/sotopia-rl/rm_reward_only_response_gpt-4o/checkpoint-3595 \
+  --value_adapter_path /data/haofeiy2/sotopia-rl/rm_reward_only_response_gpt-4o/checkpoint-3595 \
   --policy_use_qlora \
   --reward_use_qlora \
   --value_use_qlora \
-  --per_device_train_batch_size 4 \
-  --per_device_eval_batch_size 4 \
+  --per_device_train_batch_size 1 \
+  --per_device_eval_batch_size 1 \
   --mini_batch_size 1 \
   --ppo_data_path /data/haofeiy2/sotopia-rl/data/sotopia_pi_bc_episodes_sft.json \
   --template_path /data/haofeiy2/sotopia-rl/evals/qwen2.5-7b.jinja \
@@ -20,7 +21,29 @@ CUDA_VISIBLE_DEVICES=6,7,8,9 accelerate launch \
   --gamma 0.99 \
   --lam 0.95 \
   --use_lora \
-  --checkpoint_dir /data/haofeiy2/sotopia-rl/0322/ppo_qwen25_7b
+  --checkpoint_dir /data/haofeiy2/sotopia-rl/ppo_qwen25_7b_reward_only_response_gpt-4o
+
+CUDA_VISIBLE_DEVICES=4 python /data/haofeiy2/sotopia-rl/scripts/train_ppo.py \
+  --model_name /mnt/data_from_server1/models/Qwen2.5-7B-Instruct \
+  --value_model_name /mnt/data_from_server1/models/Qwen2.5-7B-Instruct \
+  --reward_model_name /mnt/data_from_server1/models/Qwen2.5-7B-Instruct \
+  --policy_adapter_path /data/haofeiy2/sotopia-rl/sft_qwen25_7b/checkpoint-1000 \
+  --ref_adapter_path /data/haofeiy2/sotopia-rl/sft_qwen25_7b/checkpoint-1000 \
+  --reward_adapter_path /data/haofeiy2/sotopia-rl/rm_reward_mixed/checkpoint-5000 \
+  --value_adapter_path /data/haofeiy2/sotopia-rl/rm_reward_mixed/checkpoint-5000 \
+  --policy_use_qlora \
+  --reward_use_qlora \
+  --value_use_qlora \
+  --per_device_train_batch_size 1 \
+  --per_device_eval_batch_size 1 \
+  --mini_batch_size 1 \
+  --ppo_data_path /data/haofeiy2/sotopia-rl/data/sotopia_pi_bc_episodes_sft.json \
+  --template_path /data/haofeiy2/sotopia-rl/evals/qwen2.5-7b.jinja \
+  --ppo_epochs 4 \
+  --gamma 0.99 \
+  --lam 0.95 \
+  --use_lora \
+  --checkpoint_dir /data/haofeiy2/sotopia-rl/ppo_qwen25_7b_reward_only_response_gpt-4o
 
 CUDA_VISIBLE_DEVICES=2,6,9 poetry run python /data/haofeiy2/sotopia-rl/scripts/train_ppo.py \
   --model_name /mnt/data_from_server1/models/Qwen2.5-7B-Instruct \

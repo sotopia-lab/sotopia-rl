@@ -89,6 +89,7 @@ def generate_response(model, tokenizer, prompt, max_length=512):
             do_sample=False,
             temperature=0.0,
         )
+    import pdb; pdb.set_trace()
 
     response = tokenizer.decode(output[0], skip_special_tokens=False)
     return response

@@ -11,7 +11,8 @@ from transformers import (
     BitsAndBytesConfig,
     GenerationConfig,
 )
-from trl import PPOv2Config, PPOv2Trainer
+from trl import PPOv2Config
+from .ppo_trainer_src import PPOv2Trainer
 from accelerate import Accelerator
 
 import wandb
@@ -92,7 +93,6 @@ class SotopiaPPOTrainer:
             template,
             max_length=self.args.max_length
         )
-
         print(f"dataset: {len(dataset)}")
         
         generator = torch.Generator().manual_seed(42)
@@ -126,7 +126,9 @@ class SotopiaPPOTrainer:
         # Create generation config
         generation_config = GenerationConfig(
             pad_token_id=self.tokenizer.pad_token_id,
+            pad_token=self.tokenizer.pad_token,
             eos_token_id=self.tokenizer.eos_token_id,
+            eos_token=self.tokenizer.eos_token,
             max_length=self.args.max_length,
             do_sample=getattr(self.args, 'do_sample', True),
             temperature=getattr(self.args, 'temperature', 0.7),
@@ -194,8 +196,6 @@ class SotopiaPPOTrainer:
         else:
             raise ValueError(f"No adapter found at {adapter_path}")
 
-
-
     def _setup_ppo_trainer(self):
         """Configure the PPO trainer"""
         # Configure PPO settings
@@ -231,7 +231,6 @@ class SotopiaPPOTrainer:
             train_dataset=self.train_dataset,
             eval_dataset=self.val_dataset,
         )
-
         print("PPO trainer setup complete")
 
     def train(self):
