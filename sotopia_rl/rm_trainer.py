@@ -57,7 +57,7 @@ class SotopiaRMTrainer(Trainer):
             base_model = base_model.to(self.device)
 
         model = PeftModelForSequenceClassification(base_model, peft_config)
-        model.config.pad_token_id = tokenizer.pad_token_id # important to set the config pad_token_id
+        model.config.pad_token_id = tokenizer.pad_token_id  # important to set the config pad_token_id
 
         # Set up the TrainingArguments with DeepSpeed support
         training_args = TrainingArguments(
