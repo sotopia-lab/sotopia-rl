@@ -213,8 +213,7 @@ class SotopiaPPOTrainer:
             temperature=self.args.temperature,
             save_steps=self.args.save_steps,
             response_length=self.args.response_length, #important
-            stop_token_id=self.tokenizer.eos_token_id, #important
-            stop_token='eos', #important, just fill with pad after eos
+            stop_token_id=198, #very important, 198 is \n, we need to stop at EOS + \n because sequence classification jinja
             missing_eos_penalty=1.0,
             local_rollout_forward_batch_size=self.args.local_rollout_forward_batch_size,
         )
