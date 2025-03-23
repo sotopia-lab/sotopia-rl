@@ -202,7 +202,6 @@ class SotopiaPPOTrainer:
             per_device_train_batch_size=self.args.per_device_train_batch_size,
             per_device_eval_batch_size=self.args.per_device_eval_batch_size,
             num_mini_batches=self.args.num_mini_batches,
-            local_rollout_forward_batch_size=self.args.local_rollout_forward_batch_size,
             gradient_accumulation_steps=self.args.gradient_accumulation_steps,
             num_train_epochs=self.args.num_epochs,
             num_ppo_epochs=self.args.ppo_epochs,
