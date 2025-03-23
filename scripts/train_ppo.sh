@@ -36,7 +36,8 @@ CUDA_VISIBLE_DEVICES=4 python /data/haofeiy2/sotopia-rl/scripts/train_ppo.py \
   --value_use_qlora \
   --per_device_train_batch_size 2 \
   --per_device_eval_batch_size 2 \
-  --mini_batch_size 1 \
+  --num_mini_batches 1 \
+  --gradient_accumulation_steps 1 \
   --ppo_data_path /data/haofeiy2/sotopia-rl/data/sotopia_pi_bc_episodes_sft.json \
   --template_path /data/haofeiy2/sotopia-rl/evals/qwen2.5-7b.jinja \
   --ppo_epochs 4 \
