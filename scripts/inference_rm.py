@@ -20,9 +20,7 @@ def parse_args():
 
 def load_model_and_tokenizer(args):
     print(f"Loading base model: {args.model_path}")
-
     tokenizer = AutoTokenizer.from_pretrained(args.model_path)
-
     print("Using full precision model")
     base_model = AutoModelForSequenceClassification.from_pretrained(
         args.model_path,
