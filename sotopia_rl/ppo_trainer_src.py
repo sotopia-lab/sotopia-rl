@@ -278,6 +278,7 @@ class PPOv2Trainer(Trainer):
             top_p=1.0,
             do_sample=True,
             eos_token_id=tokenizer.eos_token_id, # TODO(haofei): check if this is correct
+            pad_token_id=tokenizer.pad_token_id, # TODO(haofei): check if this is correct
         )
 
         accelerator.print("===training policy===")
