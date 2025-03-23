@@ -63,12 +63,6 @@ INVALID_LOGPROB = 1.0
 
 class FixedTokenStoppingCriteria(StoppingCriteria):
     def __init__(self, stop_ids, require_all: bool = True):
-        """
-        Args:
-            stop_ids (List[int]): The list of token IDs that, when generated consecutively, should trigger stopping.
-            require_all (bool): If True, stop only if all sequences in the batch meet the stopping criteria;
-                                if False, stop if any sequence meets the criteria.
-        """
         self.stop_ids = stop_ids
         self.require_all = require_all
         # Keep track of which sequences have already met the stopping criteria
