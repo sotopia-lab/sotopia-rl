@@ -57,7 +57,11 @@ class SotopiaRMTrainer(Trainer):
             base_model = base_model.to(self.device)
 
         model = PeftModelForSequenceClassification(base_model, peft_config)
-        model.config.pad_token_id = tokenizer.pad_token_id # important to set the config pad_token_id
+        # VERY VERY IMPORTANT
+        # specifically designed for PPO training, 
+        # based on the get_reward function
+        # it fill the input_ids paddings with 0s
+        model.config.pad_token_id = 0 
 
         # Set up the TrainingArguments with DeepSpeed support
         training_args = TrainingArguments(
