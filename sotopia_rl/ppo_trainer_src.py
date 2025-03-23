@@ -40,12 +40,12 @@ from transformers import (
 from transformers.integrations import get_reporting_integration_callbacks
 from transformers.trainer import DEFAULT_CALLBACKS, DEFAULT_PROGRESS_CALLBACK
 from transformers.trainer_callback import CallbackHandler, ExportableState, PrinterCallback
+from transformers import StoppingCriteria, StoppingCriteriaList
 
 from trl.core import masked_mean, masked_whiten
 from trl.models.utils import unwrap_model_for_generation
 from trl.trainer.utils import (
     OnlineTrainerState,
-    batch_generation,
     disable_dropout_in_model,
     exact_div,
     first_true_indices,
@@ -53,83 +53,118 @@ from trl.trainer.utils import (
     prepare_deepspeed,
     print_rich_table,
     truncate_response,
-    trl_sanitze_kwargs_for_tagging
+    trl_sanitze_kwargs_for_tagging,
+    get_reward,
 )
 from trl.trainer.ppov2_config import PPOv2Config
 
 
 INVALID_LOGPROB = 1.0
 
+class FixedTokenStoppingCriteria(StoppingCriteria):
+    def __init__(self, stop_ids, require_all: bool = True):
+        self.stop_ids = stop_ids
+        self.require_all = require_all
+        # Keep track of which sequences have already met the stopping criteria
+        self.already_stopped = None
+        
+    def __call__(self, input_ids, scores, **kwargs):
+        batch_size = input_ids.shape[0]
+        
+        # Initialize the tracking array if it doesn't exist yet
+        if self.already_stopped is None:
+            self.already_stopped = [False for _ in range(batch_size)]
+        
+        # Check if we have generated enough tokens to compare
+        if input_ids.shape[-1] < len(self.stop_ids):
+            return False
+            
+        for batch_idx in range(batch_size):
+            # Skip sequences that have already met the criteria
+            if self.already_stopped[batch_idx]:
+                continue
+                
+            # Get the last n tokens where n is the length of stop_ids
+            last_tokens = input_ids[batch_idx, -len(self.stop_ids):].tolist()
+            
+            # Mark this sequence as stopped if it matches the stop tokens
+            if last_tokens == self.stop_ids:
+                self.already_stopped[batch_idx] = True
+        
+        # If we require all sequences to stop, check if all are stopped
+        if self.require_all:
+            return all(self.already_stopped)
+        # Otherwise, check if any sequences should stop
+        else:
+            return any(self.already_stopped)
 
-def insert_after_last_eos(row, eos_token, insert_token):
-    # Find all positions where the EOS token occurs
-    eos_positions = (row == eos_token).nonzero(as_tuple=True)[0]
-    if len(eos_positions) == 0:
-        # If no EOS token is found, simply append the insert token at the end.
-        return torch.cat([row, torch.tensor([insert_token], device=row.device)])
-    # The last occurrence of the EOS token
-    last_index = eos_positions[-1].item()
-    # Insert the token immediately after the last EOS token
-    return torch.cat([row[:last_index + 1],
-                      torch.tensor([insert_token], device=row.device),
-                      row[last_index + 1:]])
 
-
-def get_reward(
-    model: torch.nn.Module, query_responses: torch.Tensor, pad_token_id: int, context_length: int
-) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+def generate(
+    lm_backbone: torch.nn.Module, queries: torch.Tensor, pad_token_id: int, generation_config: GenerationConfig
+) -> Tuple[torch.Tensor, torch.Tensor]:
     """
-    Computes the reward logits and the rewards for a given model and query responses.
+    Generates sequences from the language model backbone in a way that does not affect padding tokens.
 
     Args:
-        model (`torch.nn.Module`):
-            The model used to compute the reward logits.
-        query_responses (`torch.Tensor`):
-            The tensor containing the query responses.
+        lm_backbone (`torch.nn.Module`):
+            The language model backbone used for generation.
+        queries (`torch.Tensor`):
+            The tensor containing the input queries.
         pad_token_id (`int`):
             The token ID representing the pad token.
-        context_length (`int`):
-            The length of the context in the query responses.
+        generation_config (`GenerationConfig`):
+            The configuration for the generation process.
 
     Returns:
         tuple:
-            - `reward_logits` (`torch.Tensor`):
-                The logits for the reward model.
-            - `final_rewards` (`torch.Tensor`):
-                The final rewards for each query response.
-            - `sequence_lengths` (`torch.Tensor`):
-                The lengths of the sequences in the query responses.
+            - `generated_sequences` (`torch.Tensor`):
+                The concatenated tensor of input queries and generated sequences.
+            - `logits` (`torch.Tensor`):
+                The logits output from the generation process.
     """
+    fixed_stop_tokens = [151645, 198]  # Replace with your fixed token IDs.
+    stopping_criteria = StoppingCriteriaList([FixedTokenStoppingCriteria(fixed_stop_tokens)])
 
-    eos_token_id = 151645
-    insert_token_id = 198
-    query_responses = torch.stack([
-        insert_after_last_eos(row, eos_token_id, insert_token_id)
-        for row in query_responses
-    ])
-    attention_mask = query_responses != pad_token_id
-    position_ids = attention_mask.cumsum(1) - attention_mask.long()  # exclusive cumsum
-    lm_backbone = getattr(model, model.base_model_prefix)
-    input_ids = torch.masked_fill(query_responses, ~attention_mask, 0)
-    output = lm_backbone(
+
+    context_length = queries.shape[1]
+    attention_mask = queries != pad_token_id
+    input_ids = torch.masked_fill(queries, ~attention_mask, 0)
+    output = lm_backbone.generate(
         input_ids=input_ids,
         attention_mask=attention_mask,
-        position_ids=position_ids,
-        return_dict=True,
-        output_hidden_states=True,
-        use_cache=False,  # otherwise mistral-based RM would error out
+        # position_ids=attention_mask.cumsum(1) - attention_mask.long(), # not needed: already adjusted in generations
+        # https://github.com/huggingface/transformers/blob/ac33aeeeee2a7a89b89c93c2962e6feb90daef0a/src/transformers/models/gpt2/modeling_gpt2.py#L1227-L1250
+        generation_config=generation_config,
+        return_dict_in_generate=True,
+        output_scores=True,
+        stopping_criteria=stopping_criteria,
     )
-    reward_logits = model.score(output.hidden_states[-1])
-    sequence_lengths = first_true_indices(query_responses[:, context_length:] == pad_token_id) - 1 + context_length
-    # https://github.com/huggingface/transformers/blob/dc68a39c8111217683bf49a4912d0c9018bab33d/src/transformers/models/gpt2/modeling_gpt2.py#L1454
-    return (
-        reward_logits,
-        reward_logits[
-            torch.arange(reward_logits.size(0), device=reward_logits.device),
-            sequence_lengths,
-        ].squeeze(-1),
-        sequence_lengths,
-    )
+    logits = torch.stack(output.scores, 1)
+    return torch.cat((queries, output.sequences[:, context_length:]), dim=1), logits
+
+
+@torch.no_grad()
+def batch_generation(
+    model: torch.nn.Module,
+    queries: torch.Tensor,
+    local_rollout_forward_batch_size: int,
+    pad_token_id: int,
+    generation_config: GenerationConfig,
+):
+    query_responses = []
+    logitss = []
+    for i in range(0, queries.shape[0], local_rollout_forward_batch_size):
+        query = queries[i : i + local_rollout_forward_batch_size]
+        query_response, logits = generate(
+            model,
+            query,
+            pad_token_id,
+            generation_config,
+        )
+        query_responses.append(query_response)
+        logitss.append(logits)
+    return torch.cat(query_responses, 0), torch.cat(logitss, 0)
+
 
 
 # taken from https://github.com/OpenLMLab/MOSS-RLHF/blob/40b91eb2f2b71b16919addede0341d2bef70825d/ppo/ppo_trainer.py#L29
@@ -347,7 +382,7 @@ class PPOv2Trainer(Trainer):
             top_k=0.0,
             top_p=1.0,
             do_sample=True,
-            eos_token_id=tokenizer.eos_token_id, # TODO(haofei): check if this is correct
+            #eos_token_id=tokenizer.eos_token_id, # TODO(haofei): check if this is correct
             pad_token_id=tokenizer.pad_token_id, # TODO(haofei): check if this is correct
         )
 
