@@ -53,108 +53,13 @@ from trl.trainer.utils import (
     prepare_deepspeed,
     print_rich_table,
     truncate_response,
-    trl_sanitze_kwargs_for_tagging
+    trl_sanitze_kwargs_for_tagging,
+    get_reward,
 )
 from trl.trainer.ppov2_config import PPOv2Config
 
 
 INVALID_LOGPROB = 1.0
-
-
-def insert_after_last_eos(row, eos_token, insert_token):
-    # Find all positions where the EOS token occurs
-    eos_positions = (row == eos_token).nonzero(as_tuple=True)[0]
-    if len(eos_positions) == 0:
-        # If no EOS token is found, simply append the insert token at the end.
-        return torch.cat([row, torch.tensor([insert_token], device=row.device)])
-    # The last occurrence of the EOS token
-    last_index = eos_positions[-1].item()
-    # Insert the token immediately after the last EOS token
-    return torch.cat([row[:last_index + 1],
-                      torch.tensor([insert_token], device=row.device),
-                      row[last_index + 1:]])
-
-def replace_eos_with_insert_logits(reward_logits: torch.Tensor, modified_query_responses: torch.Tensor, eos_token_id: int, insert_token_id: int) -> torch.Tensor:
-    """
-    For each example, finds the inserted token (insert_token_id) in the modified_query_responses,
-    replaces the logits of the EOS token (immediately preceding the inserted token)
-    with those of the inserted token, and removes the inserted token's logits.
-    """
-    new_reward_logits_rows = []
-    for i in range(reward_logits.size(0)):
-        row = modified_query_responses[i]
-        # Find the index of the inserted token in this row (assume a unique occurrence)
-        ins_indices = (row == insert_token_id).nonzero(as_tuple=True)[0]
-        if len(ins_indices) == 0:
-            new_reward_logits_rows.append(reward_logits[i])
-            continue
-        ins_index = ins_indices[-1].item()
-        # Replace the logits at the EOS token position (ins_index - 1) with the inserted token's logits
-        reward_logits[i, ins_index - 1] = reward_logits[i, ins_index]
-        # Remove the inserted token's logits by concatenating the slices before and after ins_index
-        new_row_logits = torch.cat([reward_logits[i, :ins_index], reward_logits[i, ins_index+1:]], dim=0)
-        new_reward_logits_rows.append(new_row_logits)
-    return torch.stack(new_reward_logits_rows)
-
-def get_reward(
-    model: torch.nn.Module, query_responses: torch.Tensor, pad_token_id: int, context_length: int
-) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-    """
-    Computes the reward logits and the rewards for a given model and query responses.
-
-    Args:
-        model (`torch.nn.Module`):
-            The model used to compute the reward logits.
-        query_responses (`torch.Tensor`):
-            The tensor containing the query responses.
-        pad_token_id (`int`):
-            The token ID representing the pad token.
-        context_length (`int`):
-            The length of the context in the query responses.
-
-    Returns:
-        tuple:
-            - `reward_logits` (`torch.Tensor`):
-                The logits for the reward model.
-            - `final_rewards` (`torch.Tensor`):
-                The final rewards for each query response.
-            - `sequence_lengths` (`torch.Tensor`):
-                The lengths of the sequences in the query responses.
-    """
-
-    eos_token_id = 151645
-    insert_token_id = 198
-    modified_query_responses = torch.stack([
-        insert_after_last_eos(row, eos_token_id, insert_token_id)
-        for row in query_responses
-    ])
-    attention_mask = modified_query_responses != pad_token_id
-    position_ids = attention_mask.cumsum(1) - attention_mask.long()  # exclusive cumsum
-    lm_backbone = getattr(model, model.base_model_prefix)
-    input_ids = torch.masked_fill(modified_query_responses, ~attention_mask, 0)
-    output = lm_backbone(
-        input_ids=input_ids,
-        attention_mask=attention_mask,
-        position_ids=position_ids,
-        return_dict=True,
-        output_hidden_states=True,
-        use_cache=False,  # otherwise mistral-based RM would error out
-    )
-    reward_logits = model.score(output.hidden_states[-1])
-
-    reward_logits = replace_eos_with_insert_logits(reward_logits, modified_query_responses, eos_token_id, insert_token_id)
-
-    import pdb; pdb.set_trace()
-    sequence_lengths = first_true_indices(query_responses[:, context_length:] == pad_token_id) - 1 + context_length
-    # https://github.com/huggingface/transformers/blob/dc68a39c8111217683bf49a4912d0c9018bab33d/src/transformers/models/gpt2/modeling_gpt2.py#L1454
-    return (
-        reward_logits,
-        reward_logits[
-            torch.arange(reward_logits.size(0), device=reward_logits.device),
-            sequence_lengths,
-        ].squeeze(-1),
-        sequence_lengths,
-    )
 
 
 # taken from https://github.com/OpenLMLab/MOSS-RLHF/blob/40b91eb2f2b71b16919addede0341d2bef70825d/ppo/ppo_trainer.py#L29
