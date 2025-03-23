@@ -413,7 +413,6 @@ class PPOv2Trainer(Trainer):
                 ref_logprobs = torch.masked_fill(ref_logprobs, padding_mask, INVALID_LOGPROB)
                 sequence_lengths_p1 = sequence_lengths + 1
                 padding_mask_p1 = response_idxs > (sequence_lengths_p1.unsqueeze(1))
-                import pdb; pdb.set_trace()
                 values = torch.masked_fill(values, padding_mask_p1, 0)
 
                 # 4. compute rewards
