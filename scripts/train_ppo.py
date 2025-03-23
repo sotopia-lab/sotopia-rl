@@ -33,8 +33,6 @@ if __name__ == '__main__':
                         help="GAE lambda for advantage estimation")
     parser.add_argument("--max_length", type=int, default=4096,
                         help="Maximum length of input sequences")
-    parser.add_argument("--local_rollout_forward_batch_size", type=int, default=64,
-                        help="Batch size for local rollout forward pass")
     parser.add_argument("--num_mini_batches", type=int, default=1,
                         help="Mini batch size for PPO updates")
     parser.add_argument("--gradient_accumulation_steps", type=int, default=1,

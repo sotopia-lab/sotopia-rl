@@ -216,7 +216,6 @@ class SotopiaPPOTrainer:
             response_length=self.args.response_length, #important
             stop_token_id=198, #very important, 198 is \n, we need to stop at EOS + \n because sequence classification jinja
             missing_eos_penalty=1.0,
-            local_rollout_forward_batch_size=self.args.local_rollout_forward_batch_size,
         )
 
         # Create the TRL PPO trainer
