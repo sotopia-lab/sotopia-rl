@@ -128,7 +128,6 @@ class SotopiaPPOTrainer:
             pad_token_id=self.tokenizer.pad_token_id,
             pad_token=self.tokenizer.pad_token,
             eos_token_id=self.tokenizer.eos_token_id,
-            eos_token=self.tokenizer.eos_token,
             max_length=self.args.max_length,
             do_sample=getattr(self.args, 'do_sample', True),
             temperature=getattr(self.args, 'temperature', 0.7),
