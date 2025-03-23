@@ -50,7 +50,6 @@ from trl.trainer.utils import (
     exact_div,
     first_true_indices,
     forward,
-    get_reward,
     prepare_deepspeed,
     print_rich_table,
     truncate_response,
@@ -60,6 +59,77 @@ from trl.trainer.ppov2_config import PPOv2Config
 
 
 INVALID_LOGPROB = 1.0
+
+
+def insert_after_last_eos(row, eos_token, insert_token):
+    # Find all positions where the EOS token occurs
+    eos_positions = (row == eos_token).nonzero(as_tuple=True)[0]
+    if len(eos_positions) == 0:
+        # If no EOS token is found, simply append the insert token at the end.
+        return torch.cat([row, torch.tensor([insert_token], device=row.device)])
+    # The last occurrence of the EOS token
+    last_index = eos_positions[-1].item()
+    # Insert the token immediately after the last EOS token
+    return torch.cat([row[:last_index + 1],
+                      torch.tensor([insert_token], device=row.device),
+                      row[last_index + 1:]])
+
+
+def get_reward(
+    model: torch.nn.Module, query_responses: torch.Tensor, pad_token_id: int, context_length: int
+) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    """
+    Computes the reward logits and the rewards for a given model and query responses.
+
+    Args:
+        model (`torch.nn.Module`):
+            The model used to compute the reward logits.
+        query_responses (`torch.Tensor`):
+            The tensor containing the query responses.
+        pad_token_id (`int`):
+            The token ID representing the pad token.
+        context_length (`int`):
+            The length of the context in the query responses.
+
+    Returns:
+        tuple:
+            - `reward_logits` (`torch.Tensor`):
+                The logits for the reward model.
+            - `final_rewards` (`torch.Tensor`):
+                The final rewards for each query response.
+            - `sequence_lengths` (`torch.Tensor`):
+                The lengths of the sequences in the query responses.
+    """
+
+    eos_token_id = 151645
+    insert_token_id = 198
+    query_responses = torch.stack([
+        insert_after_last_eos(row, eos_token_id, insert_token_id)
+        for row in query_responses
+    ])
+    attention_mask = query_responses != pad_token_id
+    position_ids = attention_mask.cumsum(1) - attention_mask.long()  # exclusive cumsum
+    lm_backbone = getattr(model, model.base_model_prefix)
+    input_ids = torch.masked_fill(query_responses, ~attention_mask, 0)
+    output = lm_backbone(
+        input_ids=input_ids,
+        attention_mask=attention_mask,
+        position_ids=position_ids,
+        return_dict=True,
+        output_hidden_states=True,
+        use_cache=False,  # otherwise mistral-based RM would error out
+    )
+    reward_logits = model.score(output.hidden_states[-1])
+    sequence_lengths = first_true_indices(query_responses[:, context_length:] == pad_token_id) - 1 + context_length
+    # https://github.com/huggingface/transformers/blob/dc68a39c8111217683bf49a4912d0c9018bab33d/src/transformers/models/gpt2/modeling_gpt2.py#L1454
+    return (
+        reward_logits,
+        reward_logits[
+            torch.arange(reward_logits.size(0), device=reward_logits.device),
+            sequence_lengths,
+        ].squeeze(-1),
+        sequence_lengths,
+    )
 
 
 # taken from https://github.com/OpenLMLab/MOSS-RLHF/blob/40b91eb2f2b71b16919addede0341d2bef70825d/ppo/ppo_trainer.py#L29
@@ -342,7 +412,6 @@ class PPOv2Trainer(Trainer):
                         tokenizer.pad_token_id,
                         generation_config,
                     )
-                    import pdb; pdb.set_trace()
 
                 for i in range(0, queries.shape[0], args.local_rollout_forward_batch_size):
                     query = queries[i : i + args.local_rollout_forward_batch_size]
@@ -381,7 +450,6 @@ class PPOv2Trainer(Trainer):
                     _, score, _ = get_reward(
                         reward_model, postprocessed_query_response, tokenizer.pad_token_id, context_length
                     )
-                    import pdb; pdb.set_trace()
 
                     responses.append(response)
                     postprocessed_responses.append(postprocessed_response)
