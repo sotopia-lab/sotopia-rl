@@ -40,12 +40,12 @@ from transformers import (
 from transformers.integrations import get_reporting_integration_callbacks
 from transformers.trainer import DEFAULT_CALLBACKS, DEFAULT_PROGRESS_CALLBACK
 from transformers.trainer_callback import CallbackHandler, ExportableState, PrinterCallback
+from transformers import StoppingCriteria, StoppingCriteriaList
 
 from trl.core import masked_mean, masked_whiten
 from trl.models.utils import unwrap_model_for_generation
 from trl.trainer.utils import (
     OnlineTrainerState,
-    batch_generation,
     disable_dropout_in_model,
     exact_div,
     first_true_indices,
@@ -60,6 +60,92 @@ from trl.trainer.ppov2_config import PPOv2Config
 
 
 INVALID_LOGPROB = 1.0
+
+class FixedTokenStoppingCriteria(StoppingCriteria):
+    def __init__(self, stop_ids):
+        """
+        Args:
+            stop_ids (List[int]): The list of token IDs that, when generated consecutively, should trigger stopping.
+        """
+        self.stop_ids = stop_ids
+
+    def __call__(self, input_ids, scores, **kwargs):
+        # Only check when we have generated at least len(stop_ids) tokens.
+        if input_ids.shape[-1] < len(self.stop_ids):
+            return False
+        # Get the last len(stop_ids) tokens
+        if input_ids[0, -len(self.stop_ids):].tolist() == self.stop_ids:
+            return True
+        return False
+
+
+def generate(
+    lm_backbone: torch.nn.Module, queries: torch.Tensor, pad_token_id: int, generation_config: GenerationConfig
+) -> Tuple[torch.Tensor, torch.Tensor]:
+    """
+    Generates sequences from the language model backbone in a way that does not affect padding tokens.
+
+    Args:
+        lm_backbone (`torch.nn.Module`):
+            The language model backbone used for generation.
+        queries (`torch.Tensor`):
+            The tensor containing the input queries.
+        pad_token_id (`int`):
+            The token ID representing the pad token.
+        generation_config (`GenerationConfig`):
+            The configuration for the generation process.
+
+    Returns:
+        tuple:
+            - `generated_sequences` (`torch.Tensor`):
+                The concatenated tensor of input queries and generated sequences.
+            - `logits` (`torch.Tensor`):
+                The logits output from the generation process.
+    """
+    fixed_stop_tokens = [151645, 198]  # Replace with your fixed token IDs.
+    stopping_criteria = StoppingCriteriaList([FixedTokenStoppingCriteria(fixed_stop_tokens)])
+
+
+    context_length = queries.shape[1]
+    attention_mask = queries != pad_token_id
+    input_ids = torch.masked_fill(queries, ~attention_mask, 0)
+    output = lm_backbone.generate(
+        input_ids=input_ids,
+        attention_mask=attention_mask,
+        # position_ids=attention_mask.cumsum(1) - attention_mask.long(), # not needed: already adjusted in generations
+        # https://github.com/huggingface/transformers/blob/ac33aeeeee2a7a89b89c93c2962e6feb90daef0a/src/transformers/models/gpt2/modeling_gpt2.py#L1227-L1250
+        generation_config=generation_config,
+        return_dict_in_generate=True,
+        output_scores=True,
+        stopping_criteria=stopping_criteria,
+    )
+    import pdb; pdb.set_trace()
+    logits = torch.stack(output.scores, 1)
+    return torch.cat((queries, output.sequences[:, context_length:]), dim=1), logits
+
+
+@torch.no_grad()
+def batch_generation(
+    model: torch.nn.Module,
+    queries: torch.Tensor,
+    local_rollout_forward_batch_size: int,
+    pad_token_id: int,
+    generation_config: GenerationConfig,
+):
+    query_responses = []
+    logitss = []
+    for i in range(0, queries.shape[0], local_rollout_forward_batch_size):
+        query = queries[i : i + local_rollout_forward_batch_size]
+        query_response, logits = generate(
+            model,
+            query,
+            pad_token_id,
+            generation_config,
+        )
+        query_responses.append(query_response)
+        logitss.append(logits)
+    return torch.cat(query_responses, 0), torch.cat(logitss, 0)
+
 
 
 # taken from https://github.com/OpenLMLab/MOSS-RLHF/blob/40b91eb2f2b71b16919addede0341d2bef70825d/ppo/ppo_trainer.py#L29
