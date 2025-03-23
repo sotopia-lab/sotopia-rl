@@ -167,9 +167,11 @@ class SotopiaPPOTrainer:
             return_dict=True,
             device_map=None,
         )
-
-        if base_cls_model.config.pad_token_id is None:
-            base_cls_model.config.pad_token_id = self.tokenizer.pad_token_id
+        # VERY VERY IMPORTANT
+        # specifically designed for PPO training, 
+        # based on the get_reward function
+        # it fill the input_ids paddings with 0s
+        base_cls_model.config.pad_token_id = 0
 
         adapter_path = os.path.join(self.args.value_adapter_path, 'adapter_model')
         if os.path.exists(adapter_path + '.safetensors') or os.path.exists(adapter_path + '.bin'):
