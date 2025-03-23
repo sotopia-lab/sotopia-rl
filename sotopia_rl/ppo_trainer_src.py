@@ -62,21 +62,47 @@ from trl.trainer.ppov2_config import PPOv2Config
 INVALID_LOGPROB = 1.0
 
 class FixedTokenStoppingCriteria(StoppingCriteria):
-    def __init__(self, stop_ids):
+    def __init__(self, stop_ids, require_all: bool = True):
         """
         Args:
             stop_ids (List[int]): The list of token IDs that, when generated consecutively, should trigger stopping.
+            require_all (bool): If True, stop only if all sequences in the batch meet the stopping criteria;
+                                if False, stop if any sequence meets the criteria.
         """
         self.stop_ids = stop_ids
-
+        self.require_all = require_all
+        # Keep track of which sequences have already met the stopping criteria
+        self.already_stopped = None
+        
     def __call__(self, input_ids, scores, **kwargs):
-        # Only check when we have generated at least len(stop_ids) tokens.
+        batch_size = input_ids.shape[0]
+        
+        # Initialize the tracking array if it doesn't exist yet
+        if self.already_stopped is None:
+            self.already_stopped = [False for _ in range(batch_size)]
+        
+        # Check if we have generated enough tokens to compare
         if input_ids.shape[-1] < len(self.stop_ids):
             return False
-        # Get the last len(stop_ids) tokens
-        if input_ids[0, -len(self.stop_ids):].tolist() == self.stop_ids:
-            return True
-        return False
+            
+        for batch_idx in range(batch_size):
+            # Skip sequences that have already met the criteria
+            if self.already_stopped[batch_idx]:
+                continue
+                
+            # Get the last n tokens where n is the length of stop_ids
+            last_tokens = input_ids[batch_idx, -len(self.stop_ids):].tolist()
+            
+            # Mark this sequence as stopped if it matches the stop tokens
+            if last_tokens == self.stop_ids:
+                self.already_stopped[batch_idx] = True
+        
+        # If we require all sequences to stop, check if all are stopped
+        if self.require_all:
+            return all(self.already_stopped)
+        # Otherwise, check if any sequences should stop
+        else:
+            return any(self.already_stopped)
 
 
 def generate(
@@ -363,7 +389,7 @@ class PPOv2Trainer(Trainer):
             top_k=0.0,
             top_p=1.0,
             do_sample=True,
-            eos_token_id=tokenizer.eos_token_id, # TODO(haofei): check if this is correct
+            #eos_token_id=tokenizer.eos_token_id, # TODO(haofei): check if this is correct
             pad_token_id=tokenizer.pad_token_id, # TODO(haofei): check if this is correct
         )
 
