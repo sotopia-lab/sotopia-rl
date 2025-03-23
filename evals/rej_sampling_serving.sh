@@ -49,14 +49,26 @@ export RM_MODEL_PATH="${REPO_FOLDER_NAME}/${RM_FOLDER_NAME}/checkpoint-3595"
 
 export VLLM_GPU=8
 export DJANGO_GPU=9
-export VLLM_PORT=8045
-export DJANGO_PORT=8057
+export VLLM_PORT=8065
+export DJANGO_PORT=8077
 export REJ_SAMPLING_NUM=10
 export SFT_MODEL_FOLDER_NAME="sft_qwen25_7b"
 export RM_FOLDER_NAME="rm_reward_utterance_quality_gpt-4o"
 export REPO_FOLDER_NAME="/data/haofeiy2/sotopia-rl"
 export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-1000/"
 export RM_MODEL_PATH="${REPO_FOLDER_NAME}/${RM_FOLDER_NAME}/checkpoint-4200"
+
+
+export VLLM_GPU=6
+export DJANGO_GPU=7
+export VLLM_PORT=8065
+export DJANGO_PORT=8077
+export REJ_SAMPLING_NUM=10
+export SFT_MODEL_FOLDER_NAME="sft_qwen25_7b"
+export RM_FOLDER_NAME="rm_reward_mixed"
+export REPO_FOLDER_NAME="/data/haofeiy2/sotopia-rl"
+export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-1000/"
+export RM_MODEL_PATH="${REPO_FOLDER_NAME}/${RM_FOLDER_NAME}/checkpoint-5000"
 
 
 export TAG="${RM_FOLDER_NAME}_rej_sampling_num${REJ_SAMPLING_NUM}_vs_${SFT_MODEL_FOLDER_NAME}-0322"
