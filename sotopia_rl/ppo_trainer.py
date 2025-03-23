@@ -65,6 +65,85 @@ class SotopiaPPOTrainer:
 
         self.ppo_trainer.save_model = save_model.__get__(self.ppo_trainer, type(self.ppo_trainer))
 
+        def save_model(self, output_dir: str, _internal_call: bool = False):
+            if hasattr(self.model, "module"):
+                model_to_save = self.model.module
+            else:
+                model_to_save = self.model
+            if not hasattr(model_to_save, "policy"):
+                model_to_save.policy = model_to_save
+            model_to_save.save_pretrained(output_dir)
+            print(f"Model saved to {output_dir}")
+
+        self.ppo_trainer.save_model = save_model.__get__(self.ppo_trainer, type(self.ppo_trainer))
+
+        def debug_reward_forward(self):
+            
+            with open("/data/haofeiy2/sotopia-rl/data/sotopia_pi_gpt4_rm_overfit.json", 'r') as f:
+                example_data = json.load(f)
+            if len(example_data) == 0:
+                print("Example data is empty. Skipping debug_reward_forward.")
+                return
+
+            template_dir = os.path.dirname(self.args.template_path)
+            template_file = os.path.basename(self.args.template_path)
+            env = Environment(loader=FileSystemLoader(template_dir))
+            template = env.get_template(template_file)
+
+            example = example_data[1]
+            rendered_prompt = template.render(
+                messages=[
+                    {"role": "user", "content": example["input"]},
+                    {"role": "assistant", "content": example["output"]}
+                ],
+                add_generation_prompt=False
+            )
+            print("\n===== Debug Reward Forward =====")
+            print("Rendered prompt:")
+            print(rendered_prompt)
+
+            inputs = self.tokenizer(rendered_prompt, return_tensors="pt", truncation=True, padding=True)
+            inputs = {k: v.to(self.device) for k, v in inputs.items()}
+
+            lm_backbone = getattr(self.reward_model, self.reward_model.base_model_prefix)
+            lm_backbone.eval()
+            outputs_check = lm_backbone(**inputs)
+            with torch.no_grad():
+                outputs = self.reward_model(**inputs)
+
+            print(outputs.logits)
+            print(outputs_check.logits)
+            query_responses = query_responses.to('cuda')
+            import pdb; pdb.set_trace()
+            attention_mask = query_responses != self.tokenizer.pad_token_id
+            position_ids = attention_mask.cumsum(1) - attention_mask.long()  # exclusive cumsum
+            lm_backbone = getattr(self.reward_model, self.reward_model.base_model_prefix)
+            self.reward_model.config.pad_token_id = self.tokenizer.pad_token_id
+            #input_ids = torch.masked_fill(query_responses, ~attention_mask, 0)
+            input_ids = query_responses
+            outputs = lm_backbone(
+                input_ids=input_ids,
+                attention_mask=attention_mask,
+                position_ids=position_ids,
+                return_dict=True,
+                output_hidden_states=True,
+                use_cache=False,  # otherwise mistral-based RM would error out
+            )
+            predicted_reward = outputs.logits.squeeze().cpu().item()
+            print("Predicted reward:", predicted_reward)
+            import pdb; pdb.set_trace()
+
+            gth_reward = example.get("value")
+            print("Predicted reward:", predicted_reward)
+            if gth_reward is not None:
+                print("Ground truth reward:", gth_reward)
+            else:
+                print("Ground truth reward: Not available")
+            print("===== End Debug =====\n")
+
+        
+        debug_reward_forward(self)
+
     def _init_wandb(self):
         """Initialize Weights & Biases logging"""
         wandb.init(
