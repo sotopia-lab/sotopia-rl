@@ -71,6 +71,41 @@ export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-1
 export RM_MODEL_PATH="${REPO_FOLDER_NAME}/${RM_FOLDER_NAME}/checkpoint-5000"
 
 
+export VLLM_GPU=0
+export DJANGO_GPU=1
+export VLLM_PORT=8001
+export DJANGO_PORT=8008
+export REJ_SAMPLING_NUM=10
+export SFT_MODEL_FOLDER_NAME="sft_qwen25_7b"
+export RM_FOLDER_NAME="rm_reward_mixed_direct_o3_only_response"
+export REPO_FOLDER_NAME="/data/haofeiy2/sotopia-rl"
+export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-1000/"
+export RM_MODEL_PATH="${REPO_FOLDER_NAME}/${RM_FOLDER_NAME}/checkpoint-4600"
+
+export VLLM_GPU=2
+export DJANGO_GPU=3
+export VLLM_PORT=8013
+export DJANGO_PORT=8024
+export REJ_SAMPLING_NUM=10
+export SFT_MODEL_FOLDER_NAME="sft_qwen25_7b"
+export RM_FOLDER_NAME="rm_reward_direct_default_gpt-4o"
+export REPO_FOLDER_NAME="/data/haofeiy2/sotopia-rl"
+export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-1000/"
+export RM_MODEL_PATH="${REPO_FOLDER_NAME}/${RM_FOLDER_NAME}/checkpoint-4400"
+
+
+export VLLM_GPU=4
+export DJANGO_GPU=5
+export VLLM_PORT=8035
+export DJANGO_PORT=8047
+export REJ_SAMPLING_NUM=10
+export SFT_MODEL_FOLDER_NAME="sft_qwen25_7b"
+export RM_FOLDER_NAME="rm_reward_direct_5-scale_gpt-4o"
+export REPO_FOLDER_NAME="/data/haofeiy2/sotopia-rl"
+export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-1000/"
+export RM_MODEL_PATH="${REPO_FOLDER_NAME}/${RM_FOLDER_NAME}/checkpoint-4600"
+
+
 export TAG="${RM_FOLDER_NAME}_rej_sampling_num${REJ_SAMPLING_NUM}_vs_${SFT_MODEL_FOLDER_NAME}-0322"
 export SFT_MODEL_NAME="qwen25-7b-instruct-sft-gpu${VLLM_GPU}"
 export MODEL_A=custom/${RM_FOLDER_NAME}_rejsampling_num${REJ_SAMPLING_NUM}@http://localhost:${DJANGO_PORT}/sotopia
