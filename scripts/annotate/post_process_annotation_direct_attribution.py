@@ -31,7 +31,7 @@ def get_attributed_data(data: List[Dict[str, Any]], utterance_pattern: str) -> L
                 sotopia_utterance = json.load(f)
 
             new_utterance = deepcopy(sotopia_utterance)
-            new_utterance['attributed_reward'] = attributed_uttr[1]
+            new_utterance['attribution'] = attributed_uttr[1]
             new_utterance['turn_number'] = turn_number
             new_utterance['goal_score'] = d['goal_score']
 
@@ -57,32 +57,40 @@ def main(data_dir: str, input_file: str, reward_output_file: str, sft_output_fil
 
     utterance_pattern = r'Utterance (\d+) by ([A-Za-z ]+)'
     print("turning into attributed utterances")
-    
+
     attributed_data = get_attributed_data(data, utterance_pattern)
+
+    def calc_reward(utter_attrib: float, goal_score: float) -> float:
+        if utter_attrib == -1:
+            reward = -1.0
+        else:
+            reward = utter_attrib / 3 * goal_score
+        return reward
+
     sotopia_pi_utterance_reward = []
     for d in tqdm(attributed_data):
         sotopia_pi_utterance_reward.append(
             {
                 "input": d['prompt'],
                 "output": d['result'],
-                "value": d['attributed_reward'],
+                "value": calc_reward(d['attribution'], d['goal_score']),
             }
         )
 
     with open(os.path.join(data_dir, reward_output_file), 'w') as f:
         json.dump(sotopia_pi_utterance_reward, f, indent=4)
 
-    # sotopia_pi_utterance_sft = []
-    # for d in tqdm(attributed_data):
-    #     sotopia_pi_utterance_sft.append(
-    #         {
-    #             "input": d['prompt'],
-    #             "output": d["result"],
-    #         }
-    #     )
+    sotopia_pi_utterance_sft = []
+    for d in tqdm(attributed_data):
+        sotopia_pi_utterance_sft.append(
+            {
+                "input": d['prompt'],
+                "output": d["result"],
+            }
+        )
 
-    # with open(os.path.join(data_dir, sft_output_file), 'w') as f:
-    #     json.dump(sotopia_pi_utterance_sft, f, indent=4)
+    with open(os.path.join(data_dir, sft_output_file), 'w') as f:
+        json.dump(sotopia_pi_utterance_sft, f, indent=4)
 
 if __name__ == "__main__":
     main()
