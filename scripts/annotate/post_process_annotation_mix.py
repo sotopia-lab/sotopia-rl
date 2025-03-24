@@ -31,7 +31,7 @@ def get_attributed_data(data: List[Dict[str, Any]], utterance_pattern: str) -> L
                 sotopia_utterance = json.load(f)
 
             new_utterance = deepcopy(sotopia_utterance)
-            new_utterance['attribution'] = attributed_uttr[1]
+            new_utterance['attributed_reward'] = attributed_uttr[1]
             new_utterance['turn_number'] = turn_number
             new_utterance['goal_score'] = d['goal_score']
 
@@ -39,58 +39,62 @@ def get_attributed_data(data: List[Dict[str, Any]], utterance_pattern: str) -> L
     return attributed_data
 
 
+def mix_attribution_data(dicts: List[List[Dict[str, Any]]], mix_weights: list[float]) -> List[List[Dict[str, Any]]]:
+    assert len(dicts) == len(mix_weights)
+    assert sum(mix_weights) == 1
+    # 
+    result = deepcopy(dicts[0])
+    for i, record in enumerate(dicts[0]):
+        curr_dict = record['attributed_utterances']
+        attributed_utterances_dicts = [d[i]['attributed_utterances'] for d in dicts]
+        for key in curr_dict:
+            scores = []
+            for j in range(len(attributed_utterances_dicts)):
+                a_dict = attributed_utterances_dicts[j]
+                scores.append(a_dict[key][1])
+            assert len(scores) == len(mix_weights)
+            new_score = sum([score * weight for score, weight in zip(scores, mix_weights)])
+            curr_dict[key][1] = new_score
+    return result
+            
+
 @click.command()
 @click.option("--data_dir", type=str, required=True, help="Directory containing data files.")
-@click.option("--input_file", type=str, required=True, help="Path to the raw JSON file.")
 @click.option("--reward_output_file", type=str, required=True, help="Path to the processed JSON file.")
-@click.option("--sft_output_file", type=str, required=True, help="Path to the processed JSON file.")
-def main(data_dir: str, input_file: str, reward_output_file: str, sft_output_file: str) -> None:
-    with open(os.path.join(data_dir, input_file), 'r') as f:
-        data: List[Dict[str, Any]] = [json.loads(d) for d in f.readlines()]
+@click.option("--mix_input_files", multiple=True, type=str, required=True, help="List of processed JSON files.")
+@click.option("--mix_weights", multiple=True, type=float, required=True, help="List of weights for mixing the data.")
+def main(data_dir: str, reward_output_file: str, mix_input_files: tuple[str], mix_weights: tuple[float]) -> None:
+    atrribution_dicts = []
+    for weight, mix_input_file in zip(mix_weights, mix_input_files):
+        with open(os.path.join(data_dir, mix_input_file), 'r') as f:
+            data: List[Dict[str, Any]] = [json.loads(d) for d in f.readlines()]
 
-    cache_dir = os.path.join(data_dir, "episode_utterances")
-    if not os.path.exists(cache_dir):
-        os.makedirs(cache_dir)
-        for d in tqdm(data):
-            run_reverse_by_pk_agent(d['episode_id'], True, cache_dir)
-            run_reverse_by_pk_agent(d['episode_id'], False, cache_dir)
+        cache_dir = os.path.join(data_dir, "episode_utterances")
+        if not os.path.exists(cache_dir):
+            os.makedirs(cache_dir)
+            for d in tqdm(data):
+                run_reverse_by_pk_agent(d['episode_id'], True, cache_dir)
+                run_reverse_by_pk_agent(d['episode_id'], False, cache_dir)
 
-    utterance_pattern = r'Utterance (\d+) by ([A-Za-z ]+)'
-    print("turning into attributed utterances")
-
+        utterance_pattern = r'Utterance (\d+) by ([A-Za-z ]+)'
+        print("turning into attributed utterances")
+        atrribution_dicts.append(data)
+    
+    data = mix_attribution_data(atrribution_dicts, mix_weights)
+    breakpoint()
     attributed_data = get_attributed_data(data, utterance_pattern)
-
-    def calc_reward(utter_attrib: float, goal_score: float) -> float:
-        if utter_attrib == -1:
-            reward = -1.0
-        else:
-            reward = utter_attrib / 3 * ( goal_score - 5 ) * 2
-        return reward
-
     sotopia_pi_utterance_reward = []
     for d in tqdm(attributed_data):
         sotopia_pi_utterance_reward.append(
             {
                 "input": d['prompt'],
                 "output": d['result'],
-                "value": calc_reward(d['attribution'], d['goal_score']),
+                "value": d['attributed_reward'],
             }
         )
 
     with open(os.path.join(data_dir, reward_output_file), 'w') as f:
         json.dump(sotopia_pi_utterance_reward, f, indent=4)
-
-    sotopia_pi_utterance_sft = []
-    for d in tqdm(attributed_data):
-        sotopia_pi_utterance_sft.append(
-            {
-                "input": d['prompt'],
-                "output": d["result"],
-            }
-        )
-
-    with open(os.path.join(data_dir, sft_output_file), 'w') as f:
-        json.dump(sotopia_pi_utterance_sft, f, indent=4)
-
+    
 if __name__ == "__main__":
     main()

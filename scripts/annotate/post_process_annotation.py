@@ -57,7 +57,7 @@ def main(data_dir: str, input_file: str, reward_output_file: str, sft_output_fil
 
     utterance_pattern = r'Utterance (\d+) by ([A-Za-z ]+)'
     print("turning into attributed utterances")
-
+    
     attributed_data = get_attributed_data(data, utterance_pattern)
     sotopia_pi_utterance_reward = []
     for d in tqdm(attributed_data):
