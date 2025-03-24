@@ -129,4 +129,4 @@ def analyze_episodes_with_positions(tag):
     }
 
 # Run the analysis
-results = analyze_episodes_with_positions("SFT_RM_o3mini_rejection_sampling_num5_vs_qwen25-7b-instruct-sft-0320-v4")
+results = analyze_episodes_with_positions("ppo_qwen25_7b_reward_only_response_gpt-4o_step_1500_vs_sft_qwen25_7b_step_1000-0323")

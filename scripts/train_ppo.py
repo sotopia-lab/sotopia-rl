@@ -1,9 +1,12 @@
 import argparse
-
+import os
+import argparse
+from accelerate import Accelerator
 from sotopia_rl import SotopiaPPOTrainer
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Train a model with PPO using a reward model.")
+    
 
     # Base model arguments
     parser.add_argument("--model_name", type=str, default="/data/models/gemma-2-2b-it",
@@ -30,7 +33,7 @@ if __name__ == '__main__':
                         help="GAE lambda for advantage estimation")
     parser.add_argument("--max_length", type=int, default=4096,
                         help="Maximum length of input sequences")
-    parser.add_argument("--mini_batch_size", type=int, default=1,
+    parser.add_argument("--num_mini_batches", type=int, default=1,
                         help="Mini batch size for PPO updates")
     parser.add_argument("--gradient_accumulation_steps", type=int, default=1,
                         help="Number of steps to accumulate gradients before performing an update")
@@ -118,9 +121,11 @@ if __name__ == '__main__':
                         help="Wandb run name")
     parser.add_argument("--seed", type=int, default=42,
                         help="Random seed for reproducibility")
+ 
 
     args = parser.parse_args()
+    accelerator = Accelerator()
 
     # Initialize trainer and start training
-    trainer = SotopiaPPOTrainer(args)
+    trainer = SotopiaPPOTrainer(args, accelerator)
     trainer.train()

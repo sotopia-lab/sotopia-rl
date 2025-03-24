@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 T = TypeVar("T", bound=BaseModel)
 
 DEFAULT_PROMPT = """
-Two agents are in a conversation. For now, you are the judge of the utterance of one of the agents. You are given the utterance or action of that agent and the immediate response it recieves. Your task is to judge how successful the utterance is and give a score between 0 and 10. 0 means the utterance is not successful at all, and 10 means the utterance is fully successful.
+Two agents are in a conversation. For now, you are the judge of the utterance of one of the agents. You are given the utterance or action of that agent at a certain point and the conversation before it. Your task is to judge how much would the utterance contribute to the final goal in a scale of 0 to 10. 0 means the utterance is not contributing at all, and 10 means the utterance is fully contributing to the final goal.
 
 You will also be provided with the agent's final goal achieving score, which would help you in making the decision better. Note, the goal achieving score is between 0 and 10, where 0 means the goal is not achieved at all, and 10 means that the goal is fully achieved.
 
@@ -17,13 +17,13 @@ You will also be provided with the agent's final goal achieving score, which wou
 {goal}
 ### Final Goal Achieving Score out of 10:
 {score}
+### Conversation History:
+{conversation}
 ### Your Agent's Utterance:
 {utterance}
-### Immediate Response:
-{response}
 """
 
-class GoalAchievingScore(BaseModel):
+class UtteranceScore(BaseModel):
     score: int = Field(ge=0, le=10)
     reasoning: str
 
@@ -80,10 +80,10 @@ def assign_attributions_for_conversation(
                 agent=agent,
                 goal=goal,
                 score=final_goal_score,
-                utterance=utterance,
-                response=conversation[i + 1][-1]
+                conversation="\n".join([f"{s}: {u}" for s, u in conversation[:i]]),
+                utterance=utterance
             )
-            response = openai_call_with_response_model(prompt, llm_name, GoalAchievingScore)
+            response = openai_call_with_response_model(prompt, llm_name, UtteranceScore)
             score = response.score if response else prev_score
             attribution_dict[f"Utterance {i//2} by {speaker}"] = score
             prev_score = score

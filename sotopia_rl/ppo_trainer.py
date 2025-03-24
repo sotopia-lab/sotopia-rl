@@ -11,16 +11,20 @@ from transformers import (
     BitsAndBytesConfig,
     GenerationConfig,
 )
-from trl import PPOv2Config, PPOv2Trainer
+from trl import PPOv2Config
+from .ppo_trainer_src import PPOv2Trainer
+from accelerate import Accelerator
 
 import wandb
 from sotopia_rl.data import PPODataset
+os.environ['NCCL_P2P_DISABLE'] = '1' 
 
 
 class SotopiaPPOTrainer:
-    def __init__(self, args):
+    def __init__(self, args, accelerator):
         self.args = args
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.accelerator = accelerator
+        self.device = accelerator.device
 
         # Initialize the training environment
         self._init_wandb()
@@ -34,8 +38,33 @@ class SotopiaPPOTrainer:
         self._setup_generation_models()    # Policy and reference policy
         self._setup_classification_models() # Reward and value models
 
+        self.policy, self.ref_policy, self.reward_model, self.value_model = self.accelerator.prepare(
+            self.policy, self.ref_policy, self.reward_model, self.value_model
+        )
+        self.policy = self.accelerator.unwrap_model(self.policy)
+        self.ref_policy = self.accelerator.unwrap_model(self.ref_policy)
+        self.reward_model = self.accelerator.unwrap_model(self.reward_model)
+        self.value_model = self.accelerator.unwrap_model(self.value_model)
+
+        self.policy.to(self.device)
+        self.ref_policy.to(self.device)
+        self.reward_model.to(self.device)
+        self.value_model.to(self.device)
+
         # Setup the PPO trainer
         self._setup_ppo_trainer()
+
+        def save_model(self, output_dir: str, _internal_call: bool = False):
+            if hasattr(self.model, "policy"):
+                model_to_save = self.model.policy
+            elif hasattr(self.model, "module") and hasattr(self.model.module, "policy"):
+                model_to_save = self.model.module.policy
+            else:
+                model_to_save = self.model
+            model_to_save.save_pretrained(output_dir)
+            print(f"Model saved to {output_dir}")
+
+        self.ppo_trainer.save_model = save_model.__get__(self.ppo_trainer, type(self.ppo_trainer))
 
     def _init_wandb(self):
         """Initialize Weights & Biases logging"""
@@ -64,11 +93,13 @@ class SotopiaPPOTrainer:
             template,
             max_length=self.args.max_length
         )
-
+        print(f"dataset: {len(dataset)}")
+        
+        generator = torch.Generator().manual_seed(42)
         val_ratio = getattr(self.args, 'val_ratio', 0.05)
         train_size = min(int(len(dataset) * (1 - val_ratio)), len(dataset) - 2)
         val_size = len(dataset) - train_size
-        self.train_dataset, self.val_dataset = random_split(dataset, [train_size, val_size])
+        self.train_dataset, self.val_dataset = random_split(dataset, [train_size, val_size], generator=generator)
         print(f"Dataset split: {len(self.train_dataset)} train, {len(self.val_dataset)} validation")
 
     def _create_quantization_config(self):
@@ -84,16 +115,19 @@ class SotopiaPPOTrainer:
         base_gen_model = AutoModelForCausalLM.from_pretrained(
             self.args.model_name,
             torch_dtype=torch.float32, # very important, otherwise NaN for RM
-            device_map=self.device,
             quantization_config=self.quant_config,
             return_dict=True,
+            device_map=None
         )
+
+        if base_gen_model.config.pad_token_id is None:
+            base_gen_model.config.pad_token_id = self.tokenizer.pad_token_id
 
         # Create generation config
         generation_config = GenerationConfig(
             pad_token_id=self.tokenizer.pad_token_id,
+            pad_token=self.tokenizer.pad_token,
             eos_token_id=self.tokenizer.eos_token_id,
-            bos_token_id=self.tokenizer.eos_token_id,
             max_length=self.args.max_length,
             do_sample=getattr(self.args, 'do_sample', True),
             temperature=getattr(self.args, 'temperature', 0.7),
@@ -102,71 +136,86 @@ class SotopiaPPOTrainer:
             no_repeat_ngram_size=getattr(self.args, 'no_repeat_ngram_size', 0)
         )
 
-        self.policy = PeftModelForCausalLM.from_pretrained(
-            base_gen_model,
-            self.args.policy_adapter_path,
-            generation_config=generation_config
-        )
-        print("Policy model loaded/created")
+        adapter_path = os.path.join(self.args.policy_adapter_path, 'adapter_model')
+        if os.path.exists(adapter_path + '.safetensors') or os.path.exists(adapter_path + '.bin'):
+            print(f"Loading policy adapter from: {self.args.policy_adapter_path}")
+            self.policy = PeftModelForCausalLM.from_pretrained(
+                base_gen_model,
+                self.args.policy_adapter_path,
+                generation_config=generation_config
+            )
+        else:
+            print(f"No adapter found at {adapter_path})")
 
-        self.ref_policy = PeftModelForCausalLM.from_pretrained(
-            base_gen_model,
-            self.args.ref_adapter_path,
-            generation_config=generation_config
-        )
-        self.ref_policy.eval()
-        print("Reference policy model loaded/created")
+        adapter_path = os.path.join(self.args.ref_adapter_path, 'adapter_model')
+        if os.path.exists(adapter_path + '.safetensors') or os.path.exists(adapter_path + '.bin'):
+            print(f"Loading reference policy adapter from: {self.args.ref_adapter_path}")
+            self.ref_policy = PeftModelForCausalLM.from_pretrained(
+                base_gen_model,
+                self.args.ref_adapter_path,
+                generation_config=generation_config
+            )
+            self.ref_policy.eval()
+        else:
+            print(f"No adapter found at {adapter_path}")
 
 
     def _setup_classification_models(self):
         base_cls_model = AutoModelForSequenceClassification.from_pretrained(
             self.args.model_name,
             torch_dtype=torch.float32, # very important, otherwise NaN
-            device_map=self.device,
-            quantization_config=self.quant_config,
             num_labels=1,
-            return_dict=True
+            return_dict=True,
+            device_map=None,
         )
+        # VERY VERY IMPORTANT
+        # specifically designed for PPO training, 
+        # based on the get_reward function
+        # it fill the input_ids paddings with 0s
+        base_cls_model.config.pad_token_id = 0
 
-        self.reward_model = PeftModelForSequenceClassification.from_pretrained(
-            base_cls_model,
-            self.args.reward_adapter_path,
-            num_labels=1
-        )
-        self.reward_model.eval()
-        print("Reward model loaded/created")
+        adapter_path = os.path.join(self.args.value_adapter_path, 'adapter_model')
+        if os.path.exists(adapter_path + '.safetensors') or os.path.exists(adapter_path + '.bin'):
+            print(f"Loading value adapter from: {self.args.value_adapter_path}")
+            self.value_model = PeftModelForSequenceClassification.from_pretrained(
+                base_cls_model,
+                self.args.value_adapter_path,
+            )
+        else:
+            raise ValueError(f"No adapter found at {adapter_path}")
 
-        self.value_model = PeftModelForSequenceClassification.from_pretrained(
-            base_cls_model,
-            self.args.value_adapter_path,
-            num_labels=1
-        )
-        print("Value model loaded/created")
+        adapter_path = os.path.join(self.args.reward_adapter_path, 'adapter_model')
+        if os.path.exists(adapter_path + '.safetensors') or os.path.exists(adapter_path + '.bin'):
+            print(f"Loading reward adapter from: {self.args.reward_adapter_path}")
+            self.reward_model = PeftModelForSequenceClassification.from_pretrained(
+                base_cls_model,
+                self.args.reward_adapter_path,
+            )
+            self.reward_model.eval()
+        else:
+            raise ValueError(f"No adapter found at {adapter_path}")
 
     def _setup_ppo_trainer(self):
         """Configure the PPO trainer"""
-        # Get data collator if available
-
         # Configure PPO settings
         ppo_config = PPOv2Config(
             per_device_train_batch_size=self.args.per_device_train_batch_size,
             per_device_eval_batch_size=self.args.per_device_eval_batch_size,
+            num_mini_batches=self.args.num_mini_batches,
+            local_rollout_forward_batch_size=self.args.local_rollout_forward_batch_size,
+            gradient_accumulation_steps=self.args.gradient_accumulation_steps,
             num_train_epochs=self.args.num_epochs,
             num_ppo_epochs=self.args.ppo_epochs,
             learning_rate=self.args.learning_rate,
             output_dir=self.args.checkpoint_dir,
             gamma=self.args.gamma,
             lam=self.args.lam,
-            mini_batch_size=self.args.mini_batch_size,
-            gradient_accumulation_steps=self.args.gradient_accumulation_steps,
             seed=self.args.seed,
             temperature=self.args.temperature,
             save_steps=self.args.save_steps,
             response_length=self.args.response_length, #important
-            stop_token_id=self.tokenizer.eos_token_id, #important
-            stop_token='eos', #important, just fill with pad after eos
+            stop_token_id=198, #very important, 198 is \n, we need to stop at EOS + \n because sequence classification jinja
             missing_eos_penalty=1.0,
-            local_rollout_forward_batch_size=self.args.local_rollout_forward_batch_size,
         )
 
         # Create the TRL PPO trainer
@@ -180,7 +229,6 @@ class SotopiaPPOTrainer:
             train_dataset=self.train_dataset,
             eval_dataset=self.val_dataset,
         )
-
         print("PPO trainer setup complete")
 
     def train(self):
