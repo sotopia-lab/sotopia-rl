@@ -71,6 +71,7 @@ class SotopiaRMTrainer(Trainer):
             eval_steps=args.evaluation_steps,
             logging_dir="./logs",
             gradient_accumulation_steps=args.accumulation_steps,
+            learning_rate=args.learning_rate,
             warmup_steps=int(len(train_dataset) * args.warmup_epochs),
             optim="adamw_torch",
             fp16=True,
