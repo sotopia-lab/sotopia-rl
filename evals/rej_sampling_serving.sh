@@ -1,110 +1,14 @@
 #!/bin/bash
-export VLLM_GPU=0
-export DJANGO_GPU=1
-export VLLM_PORT=8001
-export DJANGO_PORT=8002
-export REJ_SAMPLING_NUM=10
-export SFT_MODEL_FOLDER_NAME="sft_qwen25_7b"
-export RM_FOLDER_NAME="rm_reward_direct_default_o3-mini"
-export REPO_FOLDER_NAME="/data/haofeiy2/sotopia-rl"
-export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-1000/"
-export RM_MODEL_PATH="${REPO_FOLDER_NAME}/${RM_FOLDER_NAME}/checkpoint-4000"
-export ENV_MODEL="gpt-4o"
-
-export VLLM_GPU=2
-export DJANGO_GPU=3
-export VLLM_PORT=8003
-export DJANGO_PORT=8004
-export REJ_SAMPLING_NUM=10
-export SFT_MODEL_FOLDER_NAME="sft_qwen25_7b"
-export RM_FOLDER_NAME="rm_reward_goal_progress_gpt-4o"
-export REPO_FOLDER_NAME="/data/haofeiy2/sotopia-rl"
-export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-1000/"
-export RM_MODEL_PATH="${REPO_FOLDER_NAME}/${RM_FOLDER_NAME}/checkpoint-2240"
-export ENV_MODEL="gpt-4o"
-
-export VLLM_GPU=4
-export DJANGO_GPU=5
-export VLLM_PORT=8015
-export DJANGO_PORT=8017
-export REJ_SAMPLING_NUM=10
-export SFT_MODEL_FOLDER_NAME="sft_qwen25_7b"
-export RM_FOLDER_NAME="rm_reward_discounting"
-export REPO_FOLDER_NAME="/data/haofeiy2/sotopia-rl"
-export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-1000/"
-export RM_MODEL_PATH="${REPO_FOLDER_NAME}/${RM_FOLDER_NAME}/checkpoint-2250"
-export ENV_MODEL="gpt-4o"
-
-export VLLM_GPU=6
-export DJANGO_GPU=7
-export VLLM_PORT=8025
-export DJANGO_PORT=8037
-export REJ_SAMPLING_NUM=10
-export SFT_MODEL_FOLDER_NAME="sft_qwen25_7b"
-export RM_FOLDER_NAME="rm_reward_only_response_gpt-4o"
-export REPO_FOLDER_NAME="/data/haofeiy2/sotopia-rl"
-export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-1000/"
-export RM_MODEL_PATH="${REPO_FOLDER_NAME}/${RM_FOLDER_NAME}/checkpoint-3595"
-export ENV_MODEL="gpt-4o"
-
-export VLLM_GPU=8
-export DJANGO_GPU=9
-export VLLM_PORT=8065
-export DJANGO_PORT=8077
-export REJ_SAMPLING_NUM=10
-export SFT_MODEL_FOLDER_NAME="sft_qwen25_7b"
-export RM_FOLDER_NAME="rm_reward_utterance_quality_gpt-4o"
-export REPO_FOLDER_NAME="/data/haofeiy2/sotopia-rl"
-export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-1000/"
-export RM_MODEL_PATH="${REPO_FOLDER_NAME}/${RM_FOLDER_NAME}/checkpoint-4200"
-export ENV_MODEL="gpt-4o"
-
-export VLLM_GPU=6
-export DJANGO_GPU=7
-export VLLM_PORT=8065
-export DJANGO_PORT=8077
-export REJ_SAMPLING_NUM=10
-export SFT_MODEL_FOLDER_NAME="sft_qwen25_7b"
-export RM_FOLDER_NAME="rm_reward_mixed"
-export REPO_FOLDER_NAME="/data/haofeiy2/sotopia-rl"
-export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-1000/"
-export RM_MODEL_PATH="${REPO_FOLDER_NAME}/${RM_FOLDER_NAME}/checkpoint-5000"
-export ENV_MODEL="gpt-4o"
-
-export VLLM_GPU=0
-export DJANGO_GPU=1
-export VLLM_PORT=8001
-export DJANGO_PORT=8008
-export REJ_SAMPLING_NUM=10
-export SFT_MODEL_FOLDER_NAME="sft_qwen25_7b"
-export RM_FOLDER_NAME="rm_reward_mixed_direct_o3_only_response"
-export REPO_FOLDER_NAME="/data/haofeiy2/sotopia-rl"
-export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-1000/"
-export RM_MODEL_PATH="${REPO_FOLDER_NAME}/${RM_FOLDER_NAME}/checkpoint-4600"
-export ENV_MODEL="gpt-4o"
-
-export VLLM_GPU=2
-export DJANGO_GPU=3
-export VLLM_PORT=8013
-export DJANGO_PORT=8024
-export REJ_SAMPLING_NUM=10
-export SFT_MODEL_FOLDER_NAME="sft_qwen25_7b"
-export RM_FOLDER_NAME="rm_reward_direct_default_gpt-4o"
-export REPO_FOLDER_NAME="/data/haofeiy2/sotopia-rl"
-export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-1000/"
-export RM_MODEL_PATH="${REPO_FOLDER_NAME}/${RM_FOLDER_NAME}/checkpoint-4400"
-export ENV_MODEL="gpt-4o"
-
-
 export VLLM_GPU=4
 export DJANGO_GPU=5
 export VLLM_PORT=8035
 export DJANGO_PORT=8047
 export REJ_SAMPLING_NUM=10
-export SFT_MODEL_FOLDER_NAME="sft_qwen25_7b"
+export SFT_MODEL_FOLDER_NAME="sft_qwen25_7b_sft_round_1_bc_data_top_2"
+export SFT_MODEL_CKPT_STEP=1500
 export RM_FOLDER_NAME="rm_reward_direct_5-scale_gpt-4o"
 export REPO_FOLDER_NAME="/data/haofeiy2/sotopia-rl"
-export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-1000/"
+export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-${SFT_MODEL_CKPT_STEP}"
 export RM_MODEL_PATH="${REPO_FOLDER_NAME}/${RM_FOLDER_NAME}/checkpoint-4600"
 export ENV_MODEL="gpt-4o"
 
