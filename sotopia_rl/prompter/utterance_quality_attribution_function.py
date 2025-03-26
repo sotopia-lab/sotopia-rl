@@ -6,10 +6,50 @@ from pydantic import BaseModel, Field
 
 T = TypeVar("T", bound=BaseModel)
 
-DEFAULT_PROMPT = """
-Two agents are in a conversation. For now, you are the judge of the utterance of one of the agents. You are given the utterance or action of that agent at a certain point and the conversation before it. Your task is to judge how much would the utterance contribute to the final goal in a scale of 0 to 10. 0 means the utterance is not contributing at all, and 10 means the utterance is fully contributing to the final goal.
+# DEFAULT_PROMPT = """
+# Two agents are in a conversation. For now, you are the judge of the utterance of one of the agents. You are given the utterance or action of that agent at a certain point and the conversation before it. Your task is to judge how much would the utterance contribute to the final goal in a scale of 0 to 10. 0 means the utterance is not contributing at all, and 10 means the utterance is fully contributing to the final goal.
 
-You will also be provided with the agent's final goal achieving score, which would help you in making the decision better. Note, the goal achieving score is between 0 and 10, where 0 means the goal is not achieved at all, and 10 means that the goal is fully achieved.
+# You will also be provided with the agent's final goal achieving score, which would help you in making the decision better. Note, the goal achieving score is between 0 and 10, where 0 means the goal is not achieved at all, and 10 means that the goal is fully achieved.
+
+# ### Your Agent's Name:
+# {agent}
+# ### Your Agent's Goal:
+# {goal}
+# ### Final Goal Achieving Score out of 10:
+# {score}
+# ### Conversation History:
+# {conversation}
+# ### Your Agent's Utterance:
+# {utterance}
+# """
+
+ONLY_RESPONSE_DIRECT_INSTRUCTIONS = """
+## Reward Attribution Instructions for LLMs
+
+Two agents are in a conversation. For now, you are the judge of the utterance of one of the agents. 
+
+1. Input Context:
+   - You will recieve the utterance or action of an agent at a certain point and the conversation before it.
+   - You will also be provided with the social goal of the agent and its final goal achievement score.
+
+2. Objective:
+   - Assign an importance value to the utterance based on its contribution to the final goal achievement score, judging from how good/bad the quality of the utterance is. Note, you should only consider the chosen utterance, not the quality of the conversation history.
+
+3. Scoring Based on Outcome:
+   - Failure (Final Score < 5):
+     - Identify the utterance that most critically led to the failure.
+     - Assign that key utterance an importance of 3.
+   - Success (Final Score ≥ 5):
+     - Identify the utterance that most critically led to the success.
+     - Assign that key utterance an importance of 3.
+
+4. Additional Reward Guidelines:
+   - If an utterance has no impact on the final goal achievement, assign it an importance of 0.
+   - If an utterance has a moderate impact on the final goal achievement, assign it an importance of 1 or 2 (depending on the degree of impact).
+   - If an utterance has a significant impact on the final goal achievement (aside from the key critical utterance already identified), assign it an importance of 3.
+
+   Note:
+   - Please only assign a score between 0 and 3.
 
 ### Your Agent's Name:
 {agent}
@@ -17,6 +57,36 @@ You will also be provided with the agent's final goal achieving score, which wou
 {goal}
 ### Final Goal Achieving Score out of 10:
 {score}
+### Conversation History:
+{conversation}
+### Your Agent's Utterance:
+{utterance}
+"""
+
+DEFAULT_PROMPT = """
+## Reward Attribution Instructions for LLMs
+
+Two agents are in a conversation. For now, you are the judge of the utterance of one of the agents. 
+
+1. Input Context:
+   - You will recieve the utterance or action of an agent at a certain point and the conversation before it.
+   - You will also be provided with the social goal of the agent.
+
+2. Objective:
+   - Assign an importance value to the utterance based on its contribution to the final goal achievement score, judging from how good/bad the quality of the utterance is. Note, you should only consider the chosen utterance, not the quality of the conversation history. The conversation history is only provided for context.
+
+3. Additional Reward Guidelines:
+   - If an utterance has no impact on the final goal achievement, assign it an importance of 0.
+   - If an utterance has a moderate impact on the final goal achievement, assign it an importance of 1 or 2 (depending on the degree of impact).
+   - If an utterance has a significant impact on the final goal achievement (aside from the key critical utterance already identified), assign it an importance of 3.
+
+   Note:
+   - Please only assign a score between 0 and 3.
+
+### Your Agent's Name:
+{agent}
+### Your Agent's Goal:
+{goal}
 ### Conversation History:
 {conversation}
 ### Your Agent's Utterance:
@@ -75,7 +145,7 @@ def assign_attributions_for_conversation(
     prev_score = 0
     attribution_dict = {}
     for i, (speaker, utterance) in enumerate(conversation):
-        if speaker == agent and i + 1 < len(conversation):
+        if speaker == agent:
             prompt = prompt_format.format(
                 agent=agent,
                 goal=goal,
@@ -92,7 +162,7 @@ def assign_attributions_for_conversation(
 def calc_attributed_reward(attributed_data: List[Dict[str, float | int]], attribution_instruction_name: str, goal_score: float | int) -> List[Dict[str, Any]]:
     utterance_reward_map = {}
     for k, v in attributed_data.items():
-        utterance_reward_map[k] = v / 10 * goal_score
+        utterance_reward_map[k] = {"reward": v / 3 * goal_score, "attribution": v}
     return utterance_reward_map
 
 # unified function
