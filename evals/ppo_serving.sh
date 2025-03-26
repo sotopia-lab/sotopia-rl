@@ -1,15 +1,16 @@
-export SFT_GPU=0
-export PPO_GPU=1
-export SFT_PORT=8010
-export PPO_PORT=8015
-export SFT_MODEL_FOLDER_NAME="sft_qwen25_7b"
-export PPO_MODEL_FOLDER_NAME="ppo_qwen25_7b_rm_reward_utterance_quality_no_goal_gpt-4o_3200_v2"
-export SFT_MODEL_CKPT_STEP=1000
-export PPO_MODEL_CKPT_STEP=500
+export SFT_GPU=8
+export PPO_GPU=9
+export SFT_PORT=8070
+export PPO_PORT=8075
+export SFT_MODEL_FOLDER_NAME="sft_qwen25_7b_sft_round_1_bc_data_top_2"
+export SFT_MODEL_CKPT_STEP=1500
+export PPO_MODEL_FOLDER_NAME="ppo_qwen25_7b_reward_utterance_quality_gpt-4o"
+export PPO_MODEL_CKPT_STEP=2400
 export REPO_FOLDER_NAME="/data/haofeiy2/sotopia-rl"
 export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-${SFT_MODEL_CKPT_STEP}/"
 export PPO_MODEL_PATH="${REPO_FOLDER_NAME}/${PPO_MODEL_FOLDER_NAME}/checkpoint-${PPO_MODEL_CKPT_STEP}/"
 export ENV_MODEL="gpt-4o"
+
 
 export TAG="${PPO_MODEL_FOLDER_NAME}_step_${PPO_MODEL_CKPT_STEP}_vs_${SFT_MODEL_FOLDER_NAME}_step_${SFT_MODEL_CKPT_STEP}-0323"
 export SFT_MODEL_NAME="${SFT_MODEL_FOLDER_NAME}-gpu${SFT_GPU}"
@@ -20,7 +21,7 @@ export REDIS_OM_URL="redis://:QzmCUD3C3RdsR@35.232.108.130:6379"
 
 # Command 1: Launch the VLLM API server with LoRA enabled.
 CUDA_VISIBLE_DEVICES=$SFT_GPU python -m vllm.entrypoints.openai.api_server \
-    --model /data/models/Qwen2.5-7B-Instruct \
+    --model /mnt/data_from_server1/models/Qwen2.5-7B-Instruct \
     --port "$SFT_PORT" \
     --chat-template /data/haofeiy2/sotopia-rl/evals/qwen2.5-7b.jinja \
     --served-model-name qwen25-7b-instruct \
@@ -29,7 +30,7 @@ CUDA_VISIBLE_DEVICES=$SFT_GPU python -m vllm.entrypoints.openai.api_server \
 
 # Command 2: Launch the VLLM API server with LoRA enabled.
 CUDA_VISIBLE_DEVICES=$PPO_GPU python -m vllm.entrypoints.openai.api_server \
-    --model /data/models/Qwen2.5-7B-Instruct \
+    --model /mnt/data_from_server1/models/Qwen2.5-7B-Instruct \
     --port "$PPO_PORT" \
     --chat-template /data/haofeiy2/sotopia-rl/evals/qwen2.5-7b.jinja \
     --served-model-name qwen25-7b-instruct \
