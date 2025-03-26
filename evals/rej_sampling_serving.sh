@@ -9,7 +9,7 @@ export RM_FOLDER_NAME="rm_reward_direct_default_o3-mini"
 export REPO_FOLDER_NAME="/data/haofeiy2/sotopia-rl"
 export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-1000/"
 export RM_MODEL_PATH="${REPO_FOLDER_NAME}/${RM_FOLDER_NAME}/checkpoint-4000"
-
+export ENV_MODEL="gpt-4o"
 
 export VLLM_GPU=2
 export DJANGO_GPU=3
@@ -21,7 +21,7 @@ export RM_FOLDER_NAME="rm_reward_goal_progress_gpt-4o"
 export REPO_FOLDER_NAME="/data/haofeiy2/sotopia-rl"
 export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-1000/"
 export RM_MODEL_PATH="${REPO_FOLDER_NAME}/${RM_FOLDER_NAME}/checkpoint-2240"
-
+export ENV_MODEL="gpt-4o"
 
 export VLLM_GPU=4
 export DJANGO_GPU=5
@@ -33,7 +33,7 @@ export RM_FOLDER_NAME="rm_reward_discounting"
 export REPO_FOLDER_NAME="/data/haofeiy2/sotopia-rl"
 export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-1000/"
 export RM_MODEL_PATH="${REPO_FOLDER_NAME}/${RM_FOLDER_NAME}/checkpoint-2250"
-
+export ENV_MODEL="gpt-4o"
 
 export VLLM_GPU=6
 export DJANGO_GPU=7
@@ -45,7 +45,7 @@ export RM_FOLDER_NAME="rm_reward_only_response_gpt-4o"
 export REPO_FOLDER_NAME="/data/haofeiy2/sotopia-rl"
 export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-1000/"
 export RM_MODEL_PATH="${REPO_FOLDER_NAME}/${RM_FOLDER_NAME}/checkpoint-3595"
-
+export ENV_MODEL="gpt-4o"
 
 export VLLM_GPU=8
 export DJANGO_GPU=9
@@ -57,7 +57,7 @@ export RM_FOLDER_NAME="rm_reward_utterance_quality_gpt-4o"
 export REPO_FOLDER_NAME="/data/haofeiy2/sotopia-rl"
 export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-1000/"
 export RM_MODEL_PATH="${REPO_FOLDER_NAME}/${RM_FOLDER_NAME}/checkpoint-4200"
-
+export ENV_MODEL="gpt-4o"
 
 export VLLM_GPU=6
 export DJANGO_GPU=7
@@ -69,7 +69,7 @@ export RM_FOLDER_NAME="rm_reward_mixed"
 export REPO_FOLDER_NAME="/data/haofeiy2/sotopia-rl"
 export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-1000/"
 export RM_MODEL_PATH="${REPO_FOLDER_NAME}/${RM_FOLDER_NAME}/checkpoint-5000"
-
+export ENV_MODEL="gpt-4o"
 
 export VLLM_GPU=0
 export DJANGO_GPU=1
@@ -81,6 +81,7 @@ export RM_FOLDER_NAME="rm_reward_mixed_direct_o3_only_response"
 export REPO_FOLDER_NAME="/data/haofeiy2/sotopia-rl"
 export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-1000/"
 export RM_MODEL_PATH="${REPO_FOLDER_NAME}/${RM_FOLDER_NAME}/checkpoint-4600"
+export ENV_MODEL="gpt-4o"
 
 export VLLM_GPU=2
 export DJANGO_GPU=3
@@ -92,6 +93,7 @@ export RM_FOLDER_NAME="rm_reward_direct_default_gpt-4o"
 export REPO_FOLDER_NAME="/data/haofeiy2/sotopia-rl"
 export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-1000/"
 export RM_MODEL_PATH="${REPO_FOLDER_NAME}/${RM_FOLDER_NAME}/checkpoint-4400"
+export ENV_MODEL="gpt-4o"
 
 
 export VLLM_GPU=4
@@ -104,6 +106,7 @@ export RM_FOLDER_NAME="rm_reward_direct_5-scale_gpt-4o"
 export REPO_FOLDER_NAME="/data/haofeiy2/sotopia-rl"
 export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-1000/"
 export RM_MODEL_PATH="${REPO_FOLDER_NAME}/${RM_FOLDER_NAME}/checkpoint-4600"
+export ENV_MODEL="gpt-4o"
 
 
 export TAG="${RM_FOLDER_NAME}_rej_sampling_num${REJ_SAMPLING_NUM}_vs_${SFT_MODEL_FOLDER_NAME}-0322"
@@ -144,6 +147,7 @@ python examples/experiment_eval.py \
   --gin.BATCH_SIZE=1 \
   --gin.PUSH_TO_DB=True \
   '--gin.ENV_IDS=["01H7VFHNV13MHN97GAH73E3KM8", "01H7VFHN5WVC5HKKVBHZBA553R", "01H7VFHN9W0WAFZCBT09PKJJNK", "01H7VFHPDZVVCDZR3AARA547CY", "01H7VFHPQQQY6H4DNC6NBQ8XTG", "01H7VFHN7WJK7VWVRZZTQ6DX9T", "01H7VFHPS5WJW2694R1MNC8JFY", "01H7VFHNN7XTR99319DS8KZCQM", "01H7VFHQ11NAMZS4A2RDGDB01V", "01H7VFHPSWGDGEYRP63H2DJKV0", "01H7VFHNF4G18PC9JHGRC8A1R6", "01H7VFHNNYH3W0VRWVY178K2TK", "01H7VFHP8AN5643B0NR0NP00VE", "01H7VFHN7A1ZX5KSMT2YN9RXC4"]' \
+  "--gin.ENV_MODEL='${ENV_MODEL}'" \
   "--gin.AGENT1_MODEL='${MODEL_A}'" \
   "--gin.AGENT2_MODEL='${MODEL_B}'" \
   "--gin.TAG='${TAG}'" \
@@ -155,6 +159,7 @@ python examples/experiment_eval.py \
   --gin.BATCH_SIZE=1 \
   --gin.PUSH_TO_DB=True \
   '--gin.ENV_IDS=["01H7VFHNV13MHN97GAH73E3KM8", "01H7VFHN5WVC5HKKVBHZBA553R", "01H7VFHN9W0WAFZCBT09PKJJNK", "01H7VFHPDZVVCDZR3AARA547CY", "01H7VFHPQQQY6H4DNC6NBQ8XTG", "01H7VFHN7WJK7VWVRZZTQ6DX9T", "01H7VFHPS5WJW2694R1MNC8JFY", "01H7VFHNN7XTR99319DS8KZCQM", "01H7VFHQ11NAMZS4A2RDGDB01V", "01H7VFHPSWGDGEYRP63H2DJKV0", "01H7VFHNF4G18PC9JHGRC8A1R6", "01H7VFHNNYH3W0VRWVY178K2TK", "01H7VFHP8AN5643B0NR0NP00VE", "01H7VFHN7A1ZX5KSMT2YN9RXC4"]' \
+  "--gin.ENV_MODEL='${ENV_MODEL}'" \
   "--gin.AGENT2_MODEL='${MODEL_A}'" \
   "--gin.AGENT1_MODEL='${MODEL_B}'" \
   "--gin.TAG='${TAG}'"
