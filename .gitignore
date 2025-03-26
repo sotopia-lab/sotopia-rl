@@ -22,3 +22,4 @@ data/episode_utterances/
 **/.vscode/**
 **/saves_qwen/*
 !**/*_overfit.json
+data/notebooks/*
