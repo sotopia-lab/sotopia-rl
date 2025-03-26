@@ -23,14 +23,14 @@ export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-$
 export PPO_MODEL_PATH="${REPO_FOLDER_NAME}/${PPO_MODEL_FOLDER_NAME}/checkpoint-${PPO_MODEL_CKPT_STEP}/"
 
 
-export SFT_GPU=8
-export PPO_GPU=9
+export SFT_GPU=2
+export PPO_GPU=3
 export SFT_PORT=8070
 export PPO_PORT=8075
 export SFT_MODEL_FOLDER_NAME="sft_qwen25_7b"
-export PPO_MODEL_FOLDER_NAME="ppo_qwen25_7b_reward_utterance_quality_gpt-4o"
+export PPO_MODEL_FOLDER_NAME="ppo_qwen25_7b_rm_reward_direct_default_gpt-4o_4400"
 export SFT_MODEL_CKPT_STEP=1000
-export PPO_MODEL_CKPT_STEP=2400
+export PPO_MODEL_CKPT_STEP=1500
 export REPO_FOLDER_NAME="/data/haofeiy2/sotopia-rl"
 export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-${SFT_MODEL_CKPT_STEP}/"
 export PPO_MODEL_PATH="${REPO_FOLDER_NAME}/${PPO_MODEL_FOLDER_NAME}/checkpoint-${PPO_MODEL_CKPT_STEP}/"
