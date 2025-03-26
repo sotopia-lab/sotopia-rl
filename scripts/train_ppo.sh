@@ -5,7 +5,7 @@ CUDA_VISIBLE_DEVICES=0,1 accelerate launch \
   --model_name /mnt/data_from_server1/models/Qwen2.5-7B-Instruct \
   --value_model_name /mnt/data_from_server1/models/Qwen2.5-7B-Instruct \
   --reward_model_name /mnt/data_from_server1/models/Qwen2.5-7B-Instruct \
-  --policy_adapter_path /data/haofeiy2/sotopia-rl/sft_qwen25_7b/checkpoint-1000 \
+  --policy_adapter_path /mnt/data_from_server2/haofeiy2/sotopia-rl/sft_qwen25_7b/checkpoint-1000 \
   --ref_adapter_path /data/haofeiy2/sotopia-rl/sft_qwen25_7b/checkpoint-1000 \
   --reward_adapter_path /data/haofeiy2/sotopia-rl/rm_reward_utterance_quality_gpt-4o/checkpoint-4200 \
   --value_adapter_path /data/haofeiy2/sotopia-rl/rm_reward_utterance_quality_gpt-4o/checkpoint-4200 \
