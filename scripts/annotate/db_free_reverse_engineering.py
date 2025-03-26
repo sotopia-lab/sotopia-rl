@@ -186,6 +186,7 @@ def reverse_episode_log(
             turn_dic["result"] = str_result
             turn_dic["history"] = list(history[1:])
             turn_dic["speaker"] = speaker
+            turn_dic["episode_id"] = epilog.pk
             prompt_result_instances.append(turn_dic)
 
     return prompt_result_instances
