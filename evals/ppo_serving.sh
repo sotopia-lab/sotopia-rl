@@ -5,11 +5,16 @@ export PPO_PORT=8015
 export SFT_MODEL_FOLDER_NAME="sft_qwen25_7b"
 export PPO_MODEL_FOLDER_NAME="ppo_qwen25_7b_rm_reward_utterance_quality_no_goal_gpt-4o_3200_v2"
 export SFT_MODEL_CKPT_STEP=1000
-export PPO_MODEL_CKPT_STEP=500
+export PPO_MODEL_CKPT_STEP=250
 export REPO_FOLDER_NAME="/data/haofeiy2/sotopia-rl"
 export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-${SFT_MODEL_CKPT_STEP}/"
 export PPO_MODEL_PATH="${REPO_FOLDER_NAME}/${PPO_MODEL_FOLDER_NAME}/checkpoint-${PPO_MODEL_CKPT_STEP}/"
 export ENV_MODEL="gpt-4o"
+# ablation study
+# export ENV_MODEL="together_ai/deepseek-ai/DeepSeek-V3"
+# export ENV_MODEL="Qwen/Qwen2.5-72B-Instruct-Turbo"
+# export ENV_MODEL="meta-llama/Llama-3.3-70B-Instruct-Turbo"
+# export ENV_MODEL="gpt-4"
 
 export TAG="${PPO_MODEL_FOLDER_NAME}_step_${PPO_MODEL_CKPT_STEP}_vs_${SFT_MODEL_FOLDER_NAME}_step_${SFT_MODEL_CKPT_STEP}-0323"
 export SFT_MODEL_NAME="${SFT_MODEL_FOLDER_NAME}-gpu${SFT_GPU}"

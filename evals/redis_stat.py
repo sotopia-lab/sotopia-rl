@@ -131,4 +131,4 @@ def analyze_episodes_with_positions(tag):
     }
 
 # Run the analysis
-results = analyze_episodes_with_positions("ppo_qwen25_7b_rm_reward_utterance_quality_no_goal_gpt-4o_3200_v2_step_1500_vs_sft_qwen25_7b_step_1000-0323_v5")
+results = analyze_episodes_with_positions("ppo_qwen25_7b_rm_reward_utterance_quality_no_goal_gpt-4o_3200_v2_step_500_vs_sft_qwen25_7b_step_1000-0323")
