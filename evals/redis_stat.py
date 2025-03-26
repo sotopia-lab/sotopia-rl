@@ -23,8 +23,9 @@ def analyze_episodes_with_positions(tag):
 
     # Process each episode
     for episode in episodes:
+        print(f"\nGoal: {episode.rewards[0][-1]['goal']}")
+        # import pdb; pdb.set_trace()
         try:
-            import pdb; pdb.set_trace()
             # Skip if no models or rewards
             if not hasattr(episode, 'models') or len(episode.models) < 3:
                 continue
@@ -130,4 +131,4 @@ def analyze_episodes_with_positions(tag):
     }
 
 # Run the analysis
-results = analyze_episodes_with_positions("Qwen2.5-7B-Instruct_vs_sft_qwen25_7b_sft_round_1_bc_data_top_2_step_1500-0323_v2")
+results = analyze_episodes_with_positions("ppo_qwen25_7b_rm_reward_utterance_quality_no_goal_gpt-4o_3200_v2_step_1500_vs_sft_qwen25_7b_step_1000-0323_v5")
