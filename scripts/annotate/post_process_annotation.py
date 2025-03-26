@@ -12,6 +12,7 @@ from tqdm import tqdm
 def get_attributed_data(data: List[Dict[str, Any]], utterance_pattern: str) -> List[Dict[str, Any]]:
     attributed_data = []
     print(f"Processing {len(data)} episodes")
+    error_count = 0
     for d in tqdm(data):
         for uttr_key, attributed_uttr in d['attributed_utterances'].items():
             match = re.search(utterance_pattern, uttr_key)
@@ -31,11 +32,16 @@ def get_attributed_data(data: List[Dict[str, Any]], utterance_pattern: str) -> L
                 sotopia_utterance = json.load(f)
 
             new_utterance = deepcopy(sotopia_utterance)
-            new_utterance['attributed_reward'] = attributed_uttr[1]
+            try:
+                new_utterance['attributed_reward'] = attributed_uttr[1]["reward"]
+            except:
+                error_count += 1
+                continue
             new_utterance['turn_number'] = turn_number
             new_utterance['goal_score'] = d['goal_score']
 
             attributed_data.append(new_utterance)
+    print(f"Error Count: {error_count}")
     return attributed_data
 
 
@@ -43,7 +49,7 @@ def get_attributed_data(data: List[Dict[str, Any]], utterance_pattern: str) -> L
 @click.option("--data_dir", type=str, required=True, help="Directory containing data files.")
 @click.option("--input_file", type=str, required=True, help="Path to the raw JSON file.")
 @click.option("--reward_output_file", type=str, required=True, help="Path to the processed JSON file.")
-@click.option("--sft_output_file", type=str, required=True, help="Path to the processed JSON file.")
+@click.option("--sft_output_file", type=str, required=False, help="Path to the processed JSON file.")
 def main(data_dir: str, input_file: str, reward_output_file: str, sft_output_file: str) -> None:
     with open(os.path.join(data_dir, input_file), 'r') as f:
         data: List[Dict[str, Any]] = [json.loads(d) for d in f.readlines()]
@@ -71,18 +77,5 @@ def main(data_dir: str, input_file: str, reward_output_file: str, sft_output_fil
 
     with open(os.path.join(data_dir, reward_output_file), 'w') as f:
         json.dump(sotopia_pi_utterance_reward, f, indent=4)
-
-    # sotopia_pi_utterance_sft = []
-    # for d in tqdm(attributed_data):
-    #     sotopia_pi_utterance_sft.append(
-    #         {
-    #             "input": d['prompt'],
-    #             "output": d["result"],
-    #         }
-    #     )
-
-    # with open(os.path.join(data_dir, sft_output_file), 'w') as f:
-    #     json.dump(sotopia_pi_utterance_sft, f, indent=4)
-
 if __name__ == "__main__":
     main()
