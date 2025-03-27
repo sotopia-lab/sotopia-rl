@@ -16,10 +16,21 @@ export ENV_MODEL="gpt-4o"
 
 export SFT_GPU=2
 export ORI_GPU=9
-export SFT_PORT=8060
-export ORI_PORT=8065
+export SFT_PORT=8090
+export ORI_PORT=8095
+export SFT_MODEL_FOLDER_NAME="sft_qwen25_7b"
+export SFT_MODEL_CKPT_STEP=1000
+export REPO_FOLDER_NAME="/data/haofeiy2/sotopia-rl"
+export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-${SFT_MODEL_CKPT_STEP}/"
+export ORI_MODEL_PATH="/data/models/Qwen2.5-7B-Instruct"
+export ENV_MODEL="gpt-4o"
+
+export SFT_GPU=3
+export ORI_GPU=8
+export SFT_PORT=8040
+export ORI_PORT=8045
 export SFT_MODEL_FOLDER_NAME="sft_qwen25_7b_sft_round_1_bc_data_top_2"
-export SFT_MODEL_CKPT_STEP=1500
+export SFT_MODEL_CKPT_STEP=500
 export REPO_FOLDER_NAME="/data/haofeiy2/sotopia-rl-0321/sotopia-rl"
 export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-${SFT_MODEL_CKPT_STEP}/"
 export ORI_MODEL_PATH="/data/models/Qwen2.5-7B-Instruct"
@@ -27,7 +38,7 @@ export ENV_MODEL="gpt-4o"
 
 
 
-export TAG="Qwen2.5-7B-Instruct_vs_${SFT_MODEL_FOLDER_NAME}_step_${SFT_MODEL_CKPT_STEP}-0323_v2"
+export TAG="Qwen2.5-7B-Instruct_vs_${SFT_MODEL_FOLDER_NAME}_step_${SFT_MODEL_CKPT_STEP}-0323_1222"
 export SFT_MODEL_NAME="${SFT_MODEL_FOLDER_NAME}-gpu${SFT_GPU}"
 export ORI_MODEL_NAME="Qwen2.5-7B-Instruct-gpu${ORI_GPU}"
 export MODEL_A=custom/${ORI_MODEL_NAME}@http://localhost:${ORI_PORT}/v1

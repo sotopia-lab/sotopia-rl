@@ -114,9 +114,64 @@ export REDIS_OM_URL="redis://:QzmCUD3C3RdsR@35.232.108.130:6379"
 export SFT_MODEL_VLLM_API_URL="http://localhost:${VLLM_PORT}/v1/completions"
 
 
+
+# done rm_reward_all_the_same_rej_sampling_num10_vs_sft_qwen25_7b_sft_round_1_bc_data_top_2_0326_v0
+export VLLM_GPU=3
+export DJANGO_GPU=8
+export VLLM_PORT=8015
+export DJANGO_PORT=8027
+export REJ_SAMPLING_NUM=10
+export SFT_MODEL_FOLDER_NAME="sft_qwen25_7b_sft_round_1_bc_data_top_2"
+export SFT_MODEL_CKPT_STEP=1500
+export RM_FOLDER_NAME="rm_reward_all_the_same"
+export REPO_FOLDER_NAME="/data/haofeiy2/sotopia-rl"
+export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-${SFT_MODEL_CKPT_STEP}"
+export RM_MODEL_PATH="${REPO_FOLDER_NAME}/${RM_FOLDER_NAME}/checkpoint-4000"
+export ENV_MODEL="gpt-4o"
+
+
+#done rm_reward_direct_10-scale_no_goal_gpt-4o_without_goal_leak_rej_sampling_num10_vs_sft_qwen25_7b_sft_round_1_bc_data_top_2_0326_v1
+export VLLM_GPU=3
+export DJANGO_GPU=8
+export VLLM_PORT=8005
+export DJANGO_PORT=8017
+export REJ_SAMPLING_NUM=10
+export SFT_MODEL_FOLDER_NAME="sft_qwen25_7b_sft_round_1_bc_data_top_2"
+export SFT_MODEL_CKPT_STEP=1500
+export RM_FOLDER_NAME="rm_reward_direct_10-scale_no_goal_gpt-4o_without_goal_leak"
+export REPO_FOLDER_NAME="/data/haofeiy2/sotopia-rl"
+export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-${SFT_MODEL_CKPT_STEP}"
+export RM_MODEL_PATH="${REPO_FOLDER_NAME}/${RM_FOLDER_NAME}/checkpoint-4000"
+export ENV_MODEL="gpt-4o"
+
+
+#done rm_reward_direct_default_no_goal_gpt-4o_without_goal_leak_rej_sampling_num10_vs_sft_qwen25_7b_sft_round_1_bc_data_top_2_0326_v0
+export VLLM_GPU=2
+export DJANGO_GPU=9
+export VLLM_PORT=8060
+export DJANGO_PORT=8080
+export REJ_SAMPLING_NUM=10
+export SFT_MODEL_FOLDER_NAME="sft_qwen25_7b_sft_round_1_bc_data_top_2"
+export SFT_MODEL_CKPT_STEP=1500
+export RM_FOLDER_NAME="rm_reward_direct_default_no_goal_gpt-4o_without_goal_leak"
+export REPO_FOLDER_NAME="/data/haofeiy2/sotopia-rl"
+export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-${SFT_MODEL_CKPT_STEP}"
+export RM_MODEL_PATH="${REPO_FOLDER_NAME}/${RM_FOLDER_NAME}/checkpoint-4000"
+export ENV_MODEL="gpt-4o"
+
+
+export TAG="${RM_FOLDER_NAME}_rej_sampling_num${REJ_SAMPLING_NUM}_vs_${SFT_MODEL_FOLDER_NAME}_0326_v0"
+export SFT_MODEL_NAME="qwen25-7b-instruct-sft-gpu${VLLM_GPU}"
+export MODEL_A=custom/${RM_FOLDER_NAME}_rejsampling_num${REJ_SAMPLING_NUM}@http://localhost:${DJANGO_PORT}/sotopia
+export MODEL_B=custom/${SFT_MODEL_NAME}@http://localhost:${VLLM_PORT}/v1
+export REDIS_OM_URL="redis://:QzmCUD3C3RdsR@35.232.108.130:6379"
+export SFT_MODEL_VLLM_API_URL="http://localhost:${VLLM_PORT}/v1/completions"
+
+
+
 # Command 1: Launch the VLLM API server with LoRA enabled.
 CUDA_VISIBLE_DEVICES=$VLLM_GPU python -m vllm.entrypoints.openai.api_server \
-    --model /mnt/data_from_server1/models/Qwen2.5-7B-Instruct \
+    --model /data/models/Qwen2.5-7B-Instruct \
     --port "$VLLM_PORT" \
     --chat-template /data/haofeiy2/sotopia-rl/evals/qwen2.5-7b.jinja \
     --served-model-name qwen25-7b-instruct \
@@ -128,7 +183,7 @@ CUDA_VISIBLE_DEVICES=$DJANGO_GPU python /data/haofeiy2/sotopia-rl/serves/manage.
     --sft_model_name "$SFT_MODEL_NAME" \
     --sft_model_vllm_api_url "$SFT_MODEL_VLLM_API_URL" \
     --reward_model_path "$RM_MODEL_PATH" \
-    --reward_model_name "/mnt/data_from_server1/models/Qwen2.5-7B-Instruct" \
+    --reward_model_name "/data/models/Qwen2.5-7B-Instruct" \
     --template_path "/data/haofeiy2/sotopia-rl/evals/qwen2.5-7b.jinja" \
     --max_responses "$REJ_SAMPLING_NUM" \
     --max_length 4096 \
@@ -158,3 +213,4 @@ python examples/experiment_eval.py \
   "--gin.AGENT2_MODEL='${MODEL_A}'" \
   "--gin.AGENT1_MODEL='${MODEL_B}'" \
   "--gin.TAG='${TAG}'"
+

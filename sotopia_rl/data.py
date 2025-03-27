@@ -38,6 +38,11 @@ class SFTDataset(Dataset):
             return_tensors="pt"
         )
 
+        print('=' * 10)
+        print(tokens['input_ids'].size())
+        print(self.max_length)
+        print('=' * 10)
+
         input_ids = tokens["input_ids"]
         attention_mask = tokens["attention_mask"]
 

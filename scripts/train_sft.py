@@ -1,6 +1,6 @@
 import argparse
 import os
-
+from accelerate import Accelerator
 from sotopia_rl import SotopiaSFTTrainer
 
 if __name__ == "__main__":
@@ -30,26 +30,8 @@ if __name__ == "__main__":
     parser.add_argument("--wandb_run_name", type=str, default="sft-run", help="Wandb run name")
     parser.add_argument("--use_qlora", action="store_true", help="Use QLoRA (4-bit) for model loading.")
 
-    # DeepSpeed and distributed training arguments
-    parser.add_argument("--use_distributed", action="store_true", help="Enable distributed training")
-    parser.add_argument("--deepspeed", action="store_true", help="Enable DeepSpeed")
-    parser.add_argument("--deepspeed_config", type=str, default=None,
-                        help="Path to DeepSpeed config file")
-
     args = parser.parse_args()
+    accelerator = Accelerator()
 
-    if args.deepspeed:
-        args.use_distributed = True
-    else:
-        raise ValueError("DeepSpeed Config is required for this script.")
-
-    # Configure local_rank automatically if needed
-    if args.use_distributed and args.local_rank == -1:
-        if 'LOCAL_RANK' in os.environ:
-            args.local_rank = int(os.environ['LOCAL_RANK'])
-        else:
-            print("Warning: --use_distributed is set but no local_rank detected. Setting to 0.")
-            args.local_rank = 0
-
-    trainer = SotopiaSFTTrainer(args)
+    trainer = SotopiaSFTTrainer(args, accelerator)
     trainer.train()

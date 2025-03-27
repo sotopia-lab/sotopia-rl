@@ -23,7 +23,7 @@ def analyze_episodes_with_positions(tag):
 
     # Process each episode
     for episode in episodes:
-        print(f"\nGoal: {episode.rewards[0][-1]['goal']}")
+        # print(f"\nGoal: {episode.rewards[0][-1]['goal']}")
         # import pdb; pdb.set_trace()
         try:
             # Skip if no models or rewards
@@ -32,7 +32,7 @@ def analyze_episodes_with_positions(tag):
             if not hasattr(episode, 'rewards') or len(episode.rewards) < 2:
                 continue
 
-            print(episode.models)
+            # print(episode.models)
             # Get model names
             model1_name = episode.models[1]  # agent1's model
             model2_name = episode.models[2]  # agent2's model
@@ -131,4 +131,4 @@ def analyze_episodes_with_positions(tag):
     }
 
 # Run the analysis
-results = analyze_episodes_with_positions("ppo_qwen25_7b_rm_reward_utterance_quality_no_goal_gpt-4o_3200_v2_step_500_vs_sft_qwen25_7b_step_1000-0323")
+results = analyze_episodes_with_positions("rm_reward_direct_default_no_goal_gpt-4o_without_goal_leak_rej_sampling_num10_vs_sft_qwen25_7b_sft_round_1_bc_data_top_2_0326_v0")
