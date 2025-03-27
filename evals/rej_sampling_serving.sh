@@ -159,6 +159,20 @@ export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-$
 export RM_MODEL_PATH="${REPO_FOLDER_NAME}/${RM_FOLDER_NAME}/checkpoint-4000"
 export ENV_MODEL="gpt-4o"
 
+#rej3 38
+export VLLM_GPU=3
+export DJANGO_GPU=8
+export VLLM_PORT=8030
+export DJANGO_PORT=8040
+export REJ_SAMPLING_NUM=10
+export SFT_MODEL_FOLDER_NAME="sft_qwen25_7b_sft_round_1_bc_data_top_2"
+export SFT_MODEL_CKPT_STEP=1500
+export RM_FOLDER_NAME="rm_reward_utterance_quality_no_goal_gpt-4o"
+export REPO_FOLDER_NAME="/data/haofeiy2/sotopia-rl"
+export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-${SFT_MODEL_CKPT_STEP}"
+export RM_MODEL_PATH="${REPO_FOLDER_NAME}/${RM_FOLDER_NAME}/checkpoint-4000"
+export ENV_MODEL="gpt-4o"
+
 
 export TAG="${RM_FOLDER_NAME}_rej_sampling_num${REJ_SAMPLING_NUM}_vs_${SFT_MODEL_FOLDER_NAME}_0326_v0"
 export SFT_MODEL_NAME="qwen25-7b-instruct-sft-gpu${VLLM_GPU}"

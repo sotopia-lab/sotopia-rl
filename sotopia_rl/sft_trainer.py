@@ -52,6 +52,7 @@ class SotopiaSFTTrainer:
         else:
             base_model = AutoModelForCausalLM.from_pretrained(args.model_name).to(self.device)
 
+        
         if args.use_lora:
             peft_config = LoraConfig(
                 r=args.lora_r,
@@ -59,7 +60,7 @@ class SotopiaSFTTrainer:
                 lora_dropout=args.lora_dropout,
                 target_modules=args.target_modules.split(",")
             )
-            base_model.enable_input_require_grads()
+            #base_model.enable_input_require_grads()
             self.model = get_peft_model(base_model, peft_config)
             if not args.use_qlora:
                 self.model = self.model.to(self.device)
@@ -67,12 +68,7 @@ class SotopiaSFTTrainer:
             self.model = base_model
 
         if args.lora_checkpoint_path:
-            self.model = PeftModelForCausalLM.from_pretrained(
-                base_model,
-                args.lora_checkpoint_path
-            )
-            print("Loading lora checkpoint from {}".format(args.lora_checkpoint_path))
-
+            self.load_lora_checkpoint(args.lora_checkpoint_path)
 
         self.model = self.accelerator.prepare(self.model)
         self.model = self.accelerator.unwrap_model(self.model)
@@ -137,6 +133,6 @@ class SotopiaSFTTrainer:
             self.model.save_pretrained(checkpoint_path)
             print(f"LoRA checkpoint saved at {checkpoint_path}")
 
-    def load_lora_checkpoint(self, checkpoint_path):
-        self.model = self.model.from_pretrained(self.model, checkpoint_path)
+    def load_lora_checkpoint(self, checkpoint_path, is_trainable=True):
+        self.model = self.model.from_pretrained(self.model, checkpoint_path, is_trainable=is_trainable) # important to set is_trainable
         print(f"LoRA checkpoint loaded from {checkpoint_path}")

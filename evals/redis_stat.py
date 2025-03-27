@@ -131,4 +131,4 @@ def analyze_episodes_with_positions(tag):
     }
 
 # Run the analysis
-results = analyze_episodes_with_positions("rm_reward_direct_default_no_goal_gpt-4o_without_goal_leak_rej_sampling_num10_vs_sft_qwen25_7b_sft_round_1_bc_data_top_2_0326_v0")
+results = analyze_episodes_with_positions("ppo_qwen25_7b_reward_direct_default_no_goal_gpt-4o_without_goal_leak_with_sft_self_play_data_step_950_vs_sft_qwen25_7b_sft_round_1_bc_data_top_2_step_1500-0327")
