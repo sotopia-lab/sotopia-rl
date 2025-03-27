@@ -97,7 +97,7 @@ class SotopiaSFTTrainer:
             logging_dir="./logs",
             logging_steps=1,
             report_to="wandb",
-            gradient_checkpointing=True,
+            gradient_checkpointing=False,
             optim="paged_adamw_8bit" if args.use_qlora else "adamw_torch",
             bf16=True,
             fp16=False,
