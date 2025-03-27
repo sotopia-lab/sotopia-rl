@@ -1,4 +1,4 @@
-CUDA_VISIBLE_DEVICES=0 accelerate launch \
+CUDA_VISIBLE_DEVICES=0,1 accelerate launch \
   --config_file /data/haofeiy2/sotopia-rl/scripts/accelerate_config_ppo2.yaml \
   --main_process_port 29512 \
     /data/haofeiy2/sotopia-rl/scripts/train_sft.py \

@@ -35,7 +35,6 @@ class SotopiaSFTTrainer:
 
         self.tokenizer = AutoTokenizer.from_pretrained(args.model_name)
         self.tokenizer.model_max_length = args.max_length
-        self.tokenizer.padding_side = "right"
 
         quantization_config = BitsAndBytesConfig(
             load_in_4bit=True,
@@ -47,7 +46,8 @@ class SotopiaSFTTrainer:
             print(f"Using QLoRA (4bit) to load model: {args.model_name}")
             base_model = AutoModelForCausalLM.from_pretrained(
                 args.model_name,
-                #quantization_config=quantization_config,
+                torch_dtype=torch.float16,
+                quantization_config=quantization_config,
             )
         else:
             base_model = AutoModelForCausalLM.from_pretrained(args.model_name).to(self.device)
@@ -66,15 +66,12 @@ class SotopiaSFTTrainer:
         else:
             self.model = base_model
 
-        '''
         if args.lora_checkpoint_path:
-            print(args.lora_checkpoint_path)
             self.model = PeftModelForCausalLM.from_pretrained(
                 base_model,
                 args.lora_checkpoint_path
             )
-            print("Loading lora checkpoint from {}".format(args.lora_checkpoint_path))'
-        '''
+            print("Loading lora checkpoint from {}".format(args.lora_checkpoint_path))
 
 
         self.model = self.accelerator.prepare(self.model)
@@ -102,11 +99,12 @@ class SotopiaSFTTrainer:
             report_to="wandb",
             gradient_checkpointing=True,
             optim="paged_adamw_8bit" if args.use_qlora else "adamw_torch",
-            fp16=True,
+            bf16=True,
+            fp16=False,
             dataloader_num_workers=4,
         )
 
-        self.collate_fn = getattr(self.train_dataset, 'dataset', self.train_dataset).collate_fn
+        self.collate_fn = self.train_dataset.dataset.collate_fn if hasattr(self.train_dataset, 'dataset') else None
 
         self.trainer = SFTTrainer(
             model=self.model,
