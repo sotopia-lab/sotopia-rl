@@ -3,7 +3,7 @@ import os
 import torch
 import torch.distributed as dist
 from jinja2 import Environment, FileSystemLoader
-from peft import LoraConfig, get_peft_model
+from peft import LoraConfig, get_peft_model, PeftModelForCausalLM
 from torch.utils.data import random_split
 from transformers import (
     AutoConfig,
@@ -60,23 +60,32 @@ class SotopiaSFTTrainer:
         else:
             base_model = AutoModelForCausalLM.from_pretrained(args.model_name).to(self.device)
 
-        if args.use_lora:
-            peft_config = LoraConfig(
-                r=args.lora_r,
-                lora_alpha=args.lora_alpha,
-                lora_dropout=args.lora_dropout,
-                target_modules=args.target_modules.split(",")
-            )
-            base_model.enable_input_require_grads() # very important
-            self.model = get_peft_model(base_model, peft_config)
-            if not args.use_qlora:
-                self.model = self.model.to(self.device)
-        else:
-            self.model = base_model
-
         # Load LoRA checkpoint if specified
         if args.lora_checkpoint_path:
-            self.load_lora_checkpoint(args.lora_checkpoint_path)
+            print(args.lora_checkpoint_path)
+            self.model = PeftModelForCausalLM(
+                base_model,
+                args.lora_checkpoint_path
+            )
+            print("Loading lora checkpoint from {}".format(args.lora_checkpoint_path))
+            self.model = self.model.to(self.device)
+
+        else:
+            if args.use_lora:
+                peft_config = LoraConfig(
+                    r=args.lora_r,
+                    lora_alpha=args.lora_alpha,
+                    lora_dropout=args.lora_dropout,
+                    target_modules=args.target_modules.split(",")
+                )
+                base_model.enable_input_require_grads() # very important
+                self.model = get_peft_model(base_model, peft_config)
+                if not args.use_qlora:
+                    self.model = self.model.to(self.device)
+            else:
+                self.model = base_model
+
+
 
         env = Environment(loader=FileSystemLoader("/".join(self.args.template_path.split("/")[:-1])))
         self.template = env.get_template(self.args.template_path.split("/")[-1])

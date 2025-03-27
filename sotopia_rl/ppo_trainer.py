@@ -142,7 +142,8 @@ class SotopiaPPOTrainer:
             self.policy = PeftModelForCausalLM.from_pretrained(
                 base_gen_model,
                 self.args.policy_adapter_path,
-                generation_config=generation_config
+                generation_config=generation_config,
+                is_trainable=True,
             )
         else:
             print(f"No adapter found at {adapter_path})")
@@ -153,7 +154,8 @@ class SotopiaPPOTrainer:
             self.ref_policy = PeftModelForCausalLM.from_pretrained(
                 base_gen_model,
                 self.args.ref_adapter_path,
-                generation_config=generation_config
+                generation_config=generation_config,
+                is_trainable=False,
             )
             self.ref_policy.eval()
         else:
@@ -180,6 +182,7 @@ class SotopiaPPOTrainer:
             self.value_model = PeftModelForSequenceClassification.from_pretrained(
                 base_cls_model,
                 self.args.value_adapter_path,
+                is_trainable=True,
             )
         else:
             raise ValueError(f"No adapter found at {adapter_path}")
@@ -190,6 +193,7 @@ class SotopiaPPOTrainer:
             self.reward_model = PeftModelForSequenceClassification.from_pretrained(
                 base_cls_model,
                 self.args.reward_adapter_path,
+                is_trainable=False,
             )
             self.reward_model.eval()
         else:
