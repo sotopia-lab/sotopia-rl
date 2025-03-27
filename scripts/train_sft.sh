@@ -10,7 +10,7 @@ CUDA_VISIBLE_DEVICES=0,1 accelerate launch \
     --accumulation_steps 1 \
     --num_epochs 20 \
     --use_lora \
-    --evaluation_steps 500 \
+    --evaluation_steps 100 \
     --sft_data_path /data/haofeiy2/sotopia-rl/data/sotopia_pi_round1_qwen_sft_pi_with_instruct_string.json \
     --template_path /data/haofeiy2/sotopia-rl/evals/qwen2.5-7b.jinja \
     --lora_checkpoint_path /data/haofeiy2/sotopia-rl/sft_qwen25_7b_sft_round_1_bc_data_top_2/checkpoint-1500 \
