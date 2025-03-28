@@ -11,7 +11,7 @@ from transformers import (
     BitsAndBytesConfig,
     GenerationConfig,
 )
-from trl import PPOv2Config
+from trl import PPOv2Config, get_kbit_device_map
 from .ppo_trainer_src import PPOv2Trainer
 from accelerate import Accelerator
 
@@ -118,10 +118,10 @@ class SotopiaPPOTrainer:
         # Load a single base model
         base_gen_model = AutoModelForCausalLM.from_pretrained(
             self.args.model_name,
-            torch_dtype=torch.bfloat16,
+            torch_dtype='auto',
             quantization_config=self.quant_config,
             return_dict=True,
-            device_map=None,
+            device_map=get_kbit_device_map(),
         )
 
         if base_gen_model.config.pad_token_id is None:
@@ -185,11 +185,11 @@ class SotopiaPPOTrainer:
         # Load a single base model
         base_cls_model = AutoModelForSequenceClassification.from_pretrained(
             self.args.model_name,
-            torch_dtype=torch.bfloat16,
+            torch_dtype='auto',
             num_labels=1,
             quantization_config=self.quant_config,
             return_dict=True,
-            device_map=None,
+            device_map=get_kbit_device_map(),
         )
         
         # Set pad token for classification
@@ -251,7 +251,7 @@ class SotopiaPPOTrainer:
             lam=self.args.lam,
             seed=self.args.seed,
             temperature=self.args.temperature,
-            save_steps=self.args.save_steps,
+            save_steps=5,
             response_length=self.args.response_length, #important
             stop_token_id=198, #very important, 198 is \n, we need to stop at EOS + \n because sequence classification jinja
             missing_eos_penalty=1.0,
