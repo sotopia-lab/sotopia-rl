@@ -22,6 +22,7 @@ os.environ['NCCL_P2P_DISABLE'] = '1'
 class SotopiaSFTTrainer:
     def __init__(self, args):
         self.args = args
+        
 
         # Setup distributed training
         self.setup_distributed()

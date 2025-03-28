@@ -32,7 +32,6 @@ export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-$
 export ORI_MODEL_PATH="/mnt/data_from_server1/models/Qwen2.5-7B-Instruct"
 export ENV_MODEL="gpt-4o"
 
-#done sft_qwen25_7b_sft_round_1_bc_data_top_2_step_1500_vs_sft_qwen25_7b_sft_round_1_bc_data_top_2_step_1500-0326
 export SFT1_GPU=8
 export SFT2_GPU=9
 export SFT1_PORT=8040
@@ -44,11 +43,11 @@ export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-$
 export ENV_MODEL="gpt-4o"
 
 
-export TAG="${SFT_MODEL_FOLDER_NAME}_step_${SFT_MODEL_CKPT_STEP}_vs_${SFT_MODEL_FOLDER_NAME}_step_${SFT_MODEL_CKPT_STEP}-0326"
-export SFT1_MODEL_NAME="${SFT_MODEL_FOLDER_NAME}-gpu${SFT1_GPU}"
-export SFT2_MODEL_NAME="${SFT_MODEL_FOLDER_NAME}-gpu${SFT2_GPU}"
-export MODEL_A=custom/${SFT_MODEL_NAME}@http://localhost:${SFT1_PORT}/v1
-export MODEL_B=custom/${SFT_MODEL_NAME}@http://localhost:${SFT2_PORT}/v1
+export TAG="${SFT1_MODEL_FOLDER_NAME}_step_${SFT1_MODEL_CKPT_STEP}_vs_${SFT2_MODEL_FOLDER_NAME}_step_${SFT2_MODEL_CKPT_STEP}-0326"
+export SFT1_MODEL_NAME="${SFT1_MODEL_FOLDER_NAME}-gpu${SFT1_GPU}"
+export SFT2_MODEL_NAME="${SFT2_MODEL_FOLDER_NAME}-gpu${SFT2_GPU}"
+export MODEL_A=custom/${SFT1_MODEL_NAME}@http://localhost:${SFT1_PORT}/v1
+export MODEL_B=custom/${SFT2_MODEL_NAME}@http://localhost:${SFT2_PORT}/v1
 export REDIS_OM_URL="redis://:QzmCUD3C3RdsR@35.232.108.130:6379"
 
 # Command 1: Launch the VLLM API server with LoRA enabled.

@@ -110,14 +110,15 @@ class SotopiaPPOTrainer:
             bnb_4bit_use_double_quant=True,
             bnb_4bit_quant_type="nf4"
         )
-
+    
     def _setup_generation_models(self):
+        # Load a single base model
         base_gen_model = AutoModelForCausalLM.from_pretrained(
             self.args.model_name,
-            torch_dtype=torch.float32, # very important, otherwise NaN for RM
+            torch_dtype=torch.bfloat16,
             quantization_config=self.quant_config,
             return_dict=True,
-            device_map=None
+            device_map=None,
         )
 
         if base_gen_model.config.pad_token_id is None:
@@ -136,68 +137,105 @@ class SotopiaPPOTrainer:
             no_repeat_ngram_size=getattr(self.args, 'no_repeat_ngram_size', 0)
         )
 
-        adapter_path = os.path.join(self.args.policy_adapter_path, 'adapter_model')
-        if os.path.exists(adapter_path + '.safetensors') or os.path.exists(adapter_path + '.bin'):
-            print(f"Loading policy adapter from: {self.args.policy_adapter_path}")
-            self.policy = PeftModelForCausalLM.from_pretrained(
-                base_gen_model,
-                self.args.policy_adapter_path,
-                generation_config=generation_config,
-                is_trainable=True,
-            )
-        else:
-            print(f"No adapter found at {adapter_path})")
+        # For reference policy - frozen (loaded first)
+        from peft import PeftModel
+        self.ref_policy = PeftModel.from_pretrained(
+            base_gen_model,
+            self.args.ref_adapter_path,
+            is_trainable=False,  # Already set as non-trainable
+            adapter_name="ref_adapter"
+        )
+        self.ref_policy.generation_config = generation_config
+        
+        # For policy - trainable (loaded second)
+        self.policy = PeftModel.from_pretrained(
+            base_gen_model,
+            self.args.policy_adapter_path,
+            is_trainable=True,
+            adapter_name="policy_adapter" 
+        )
+        self.policy.generation_config = generation_config
+        
+        # Activate the appropriate adapter for each model
+        if hasattr(self.ref_policy, "active_adapter"):
+            self.ref_policy.active_adapter = "ref_adapter"
+        
+        if hasattr(self.policy, "active_adapter"):
+            self.policy.active_adapter = "policy_adapter"
 
-        adapter_path = os.path.join(self.args.ref_adapter_path, 'adapter_model')
-        if os.path.exists(adapter_path + '.safetensors') or os.path.exists(adapter_path + '.bin'):
-            print(f"Loading reference policy adapter from: {self.args.ref_adapter_path}")
-            self.ref_policy = PeftModelForCausalLM.from_pretrained(
-                base_gen_model,
-                self.args.ref_adapter_path,
-                generation_config=generation_config,
-                is_trainable=False,
-            )
-            self.ref_policy.eval()
-        else:
-            print(f"No adapter found at {adapter_path}")
+        # Properly freeze all parameters in ref_policy
+        for name, param in self.ref_policy.named_parameters():
+            if 'ref_adapter' in name:
+                param.requires_grad = False
 
+        # Count trainable parameters
+        requires_grad_num = 0
+        for name, param in self.policy.named_parameters():
+            if param.requires_grad and self.policy.active_adapter in name:
+                requires_grad_num += 1
+        print(f"Number of trainable parameters in policy: {requires_grad_num}")
+
+        requires_grad_num = 0
+        for name, param in self.ref_policy.named_parameters():
+            if param.requires_grad and self.ref_policy.active_adapter in name:
+                requires_grad_num += 1
+        print(f"Number of trainable parameters in ref policy: {requires_grad_num}")
 
     def _setup_classification_models(self):
+        # Load a single base model
         base_cls_model = AutoModelForSequenceClassification.from_pretrained(
             self.args.model_name,
-            torch_dtype=torch.float32, # very important, otherwise NaN
+            torch_dtype=torch.bfloat16,
             num_labels=1,
+            quantization_config=self.quant_config,
             return_dict=True,
             device_map=None,
         )
-        # VERY VERY IMPORTANT
-        # specifically designed for PPO training, 
-        # based on the get_reward function
-        # it fill the input_ids paddings with 0s
+        
+        # Set pad token for classification
         base_cls_model.config.pad_token_id = 0
 
-        adapter_path = os.path.join(self.args.value_adapter_path, 'adapter_model')
-        if os.path.exists(adapter_path + '.safetensors') or os.path.exists(adapter_path + '.bin'):
-            print(f"Loading value adapter from: {self.args.value_adapter_path}")
-            self.value_model = PeftModelForSequenceClassification.from_pretrained(
-                base_cls_model,
-                self.args.value_adapter_path,
-                is_trainable=True,
-            )
-        else:
-            raise ValueError(f"No adapter found at {adapter_path}")
+        # For reward model - frozen (loaded first)
+        from peft import PeftModel
+        self.reward_model = PeftModel.from_pretrained(
+            base_cls_model,
+            self.args.reward_adapter_path,
+            is_trainable=False,  # Already set as non-trainable
+            adapter_name="reward_adapter"
+        )
+        
+        # For value model - trainable (loaded second)
+        self.value_model = PeftModel.from_pretrained(
+            base_cls_model,
+            self.args.value_adapter_path,
+            is_trainable=True,
+            adapter_name="value_adapter"
+        )
+        
+        # Activate the appropriate adapter for each model
+        if hasattr(self.reward_model, "active_adapter"):
+            self.reward_model.active_adapter = "reward_adapter"
+        
+        if hasattr(self.value_model, "active_adapter"):
+            self.value_model.active_adapter = "value_adapter"
 
-        adapter_path = os.path.join(self.args.reward_adapter_path, 'adapter_model')
-        if os.path.exists(adapter_path + '.safetensors') or os.path.exists(adapter_path + '.bin'):
-            print(f"Loading reward adapter from: {self.args.reward_adapter_path}")
-            self.reward_model = PeftModelForSequenceClassification.from_pretrained(
-                base_cls_model,
-                self.args.reward_adapter_path,
-                is_trainable=False,
-            )
-            self.reward_model.eval()
-        else:
-            raise ValueError(f"No adapter found at {adapter_path}")
+        # Properly freeze all parameters in reward_model
+        for name, param in self.reward_model.named_parameters():
+            if 'reward_adapter' in name or 'score' in name:
+                param.requires_grad = False
+
+        # Count trainable parameters
+        requires_grad_num = 0
+        for name, param in self.value_model.named_parameters():
+            if param.requires_grad and self.value_model.active_adapter in name:
+                requires_grad_num += 1
+        print(f"Number of trainable parameters in value model: {requires_grad_num}")
+
+        requires_grad_num = 0
+        for name, param in self.reward_model.named_parameters():
+            if param.requires_grad and self.reward_model.active_adapter in name:
+                requires_grad_num += 1
+        print(f"Number of trainable parameters in reward model: {requires_grad_num}")
 
     def _setup_ppo_trainer(self):
         """Configure the PPO trainer"""
