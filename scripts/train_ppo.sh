@@ -1,5 +1,5 @@
 # final direct
-CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7,8,9 accelerate launch \
+CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7,8 accelerate launch \
   --config_file /data/haofeiy2/sotopia-rl/scripts/accelerate_config_ppo.yaml \
   --main_process_port 29511 \
   /data/haofeiy2/sotopia-rl/scripts/train_ppo.py \
@@ -16,15 +16,15 @@ CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7,8,9 accelerate launch \
   --learning_rate 1e-5 \
   --per_device_train_batch_size 1 \
   --per_device_eval_batch_size 1 \
-  --gradient_accumulation_steps 5 \
+  --gradient_accumulation_steps 3 \
   --num_mini_batches 1 \
-  --ppo_data_path /data/haofeiy2/sotopia-rl/data/sotopia_pi_round1_qwen_sft_pi_with_instruct_string.json \
+  --ppo_data_path /data/haofeiy2/sotopia-rl/data/sotopia_pi_round1_qwen_sft_all_with_instruct_string.json \
   --template_path /data/haofeiy2/sotopia-rl/evals/qwen2.5-7b.jinja \
   --ppo_epochs 4 \
   --gamma 0.99 \
   --lam 0.95 \
   --use_lora \
-  --checkpoint_dir /data/haofeiy2/sotopia-rl/ppo_qwen25_7b_reward_direct_default_no_goal_gpt-4o_without_goal_leak_with_sft_self_play_data_new
+  --checkpoint_dir /data/haofeiy2/sotopia-rl/ppo_qwen25_7b_reward_direct_default_no_goal_gpt-4o_without_goal_leak_with_sft_self_play_data_use_sotopia_pi_full_data
 
 CUDA_VISIBLE_DEVICES=2,3 accelerate launch \
   --config_file /data/haofeiy2/sotopia-rl/scripts/accelerate_config_ppo.yaml \
