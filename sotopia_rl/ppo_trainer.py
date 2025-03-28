@@ -138,8 +138,7 @@ class SotopiaPPOTrainer:
         )
 
         # For reference policy - frozen (loaded first)
-        from peft import PeftModel
-        self.ref_policy = PeftModel.from_pretrained(
+        self.ref_policy = PeftModelForCausalLM.from_pretrained(
             base_gen_model,
             self.args.ref_adapter_path,
             is_trainable=False,  # Already set as non-trainable
@@ -148,7 +147,7 @@ class SotopiaPPOTrainer:
         self.ref_policy.generation_config = generation_config
         
         # For policy - trainable (loaded second)
-        self.policy = PeftModel.from_pretrained(
+        self.policy = PeftModelForCausalLM.from_pretrained(
             base_gen_model,
             self.args.policy_adapter_path,
             is_trainable=True,
@@ -196,8 +195,7 @@ class SotopiaPPOTrainer:
         base_cls_model.config.pad_token_id = 0
 
         # For reward model - frozen (loaded first)
-        from peft import PeftModel
-        self.reward_model = PeftModel.from_pretrained(
+        self.reward_model = PeftModelForSequenceClassification.from_pretrained(
             base_cls_model,
             self.args.reward_adapter_path,
             is_trainable=False,  # Already set as non-trainable
@@ -205,7 +203,7 @@ class SotopiaPPOTrainer:
         )
         
         # For value model - trainable (loaded second)
-        self.value_model = PeftModel.from_pretrained(
+        self.value_model = PeftModelForSequenceClassification.from_pretrained(
             base_cls_model,
             self.args.value_adapter_path,
             is_trainable=True,
@@ -271,7 +269,7 @@ class SotopiaPPOTrainer:
             train_dataset=self.train_dataset,
             eval_dataset=self.val_dataset,
         )
-        print("PPO trainer setup complete")
+        print("PPOtrainer setup complete")
 
     def train(self):
         """Run PPO training loop and save checkpoints"""

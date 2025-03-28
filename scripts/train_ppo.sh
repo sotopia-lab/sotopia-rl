@@ -1,5 +1,5 @@
 # final direct
-CUDA_VISIBLE_DEVICES=1,2,3,4,5,6,7,8,9 accelerate launch \
+CUDA_VISIBLE_DEVICES=2,3,4,5,7,8,9 accelerate launch \
   --config_file /data/haofeiy2/sotopia-rl/scripts/accelerate_config_ppo.yaml \
   --main_process_port 29510 \
   /data/haofeiy2/sotopia-rl/scripts/train_ppo.py \

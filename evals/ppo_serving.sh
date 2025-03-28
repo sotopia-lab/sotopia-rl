@@ -1,6 +1,5 @@
 export SFT_GPU=8
 export PPO_GPU=9
-<<<<<<< HEAD
 export SFT_PORT=8090
 export PPO_PORT=8095
 export SFT_MODEL_FOLDER_NAME="sft_qwen25_7b"
@@ -28,16 +27,6 @@ export SFT_GPU=2
 export PPO_GPU=3
 export SFT_PORT=8070
 export PPO_PORT=8075
-export SFT_MODEL_FOLDER_NAME="sft_qwen25_7b"
-export PPO_MODEL_FOLDER_NAME="ppo_qwen25_7b_rm_reward_direct_default_gpt-4o_4400"
-export SFT_MODEL_CKPT_STEP=1000
-export PPO_MODEL_CKPT_STEP=1500
-export REPO_FOLDER_NAME="/data/haofeiy2/sotopia-rl"
-export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-${SFT_MODEL_CKPT_STEP}/"
-export PPO_MODEL_PATH="${REPO_FOLDER_NAME}/${PPO_MODEL_FOLDER_NAME}/checkpoint-${PPO_MODEL_CKPT_STEP}/"
-=======
-export SFT_PORT=8070
-export PPO_PORT=8075
 export SFT_MODEL_FOLDER_NAME="sft_qwen25_7b_sft_round_1_bc_data_top_2"
 export SFT_MODEL_CKPT_STEP=1500
 export PPO_MODEL_FOLDER_NAME="ppo_qwen25_7b_reward_utterance_quality_gpt-4o"
@@ -46,10 +35,23 @@ export REPO_FOLDER_NAME="/data/haofeiy2/sotopia-rl"
 export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-${SFT_MODEL_CKPT_STEP}/"
 export PPO_MODEL_PATH="${REPO_FOLDER_NAME}/${PPO_MODEL_FOLDER_NAME}/checkpoint-${PPO_MODEL_CKPT_STEP}/"
 export ENV_MODEL="gpt-4o"
->>>>>>> 02528ff6751749ab385b4fdd9c5598fdec110e0b
 
 
-export TAG="${PPO_MODEL_FOLDER_NAME}_step_${PPO_MODEL_CKPT_STEP}_vs_${SFT_MODEL_FOLDER_NAME}_step_${SFT_MODEL_CKPT_STEP}-0323"
+export SFT_GPU=5
+export PPO_GPU=7
+export SFT_PORT=8005
+export PPO_PORT=8009
+export SFT_MODEL_FOLDER_NAME="sft_qwen25_7b_sft_round_1_bc_data_top_2"
+export PPO_MODEL_FOLDER_NAME="ppo_qwen25_7b_reward_direct_default_no_goal_gpt-4o_without_goal_leak_with_sft_self_play_data"
+export SFT_MODEL_CKPT_STEP=1500
+export PPO_MODEL_CKPT_STEP=15
+export REPO_FOLDER_NAME="/data/haofeiy2/sotopia-rl"
+export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-${SFT_MODEL_CKPT_STEP}/"
+export PPO_MODEL_PATH="${REPO_FOLDER_NAME}/${PPO_MODEL_FOLDER_NAME}/checkpoint-${PPO_MODEL_CKPT_STEP}/"
+export ENV_MODEL="gpt-4o"
+
+
+export TAG="${PPO_MODEL_FOLDER_NAME}_step_${PPO_MODEL_CKPT_STEP}_vs_${SFT_MODEL_FOLDER_NAME}_step_${SFT_MODEL_CKPT_STEP}-0327"
 export SFT_MODEL_NAME="${SFT_MODEL_FOLDER_NAME}-gpu${SFT_GPU}"
 export PPO_MODEL_NAME="${PPO_MODEL_FOLDER_NAME}-gpu${PPO_GPU}"
 export MODEL_A=custom/${PPO_MODEL_NAME}@http://localhost:${PPO_PORT}/v1
