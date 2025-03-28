@@ -16,7 +16,7 @@ CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7,8,9 accelerate launch \
   --learning_rate 1e-5 \
   --per_device_train_batch_size 1 \
   --per_device_eval_batch_size 1 \
-  --gradient_accumulation_steps 12 \
+  --gradient_accumulation_steps 5 \
   --num_mini_batches 1 \
   --ppo_data_path /data/haofeiy2/sotopia-rl/data/sotopia_pi_round1_qwen_sft_pi_with_instruct_string.json \
   --template_path /data/haofeiy2/sotopia-rl/evals/qwen2.5-7b.jinja \
