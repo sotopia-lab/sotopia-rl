@@ -25,7 +25,7 @@ if __name__ == '__main__':
                         help="Number of training epochs")
     parser.add_argument("--ppo_epochs", type=int, default=4,
                         help="Number of PPO epochs per update")
-    parser.add_argument("--learning_rate", type=float, default=1e-5,
+    parser.add_argument("--learning_rate", type=float, default=5e-6,
                         help="Learning rate for optimizer")
     parser.add_argument("--gamma", type=float, default=0.99,
                         help="Discount factor")

@@ -1,7 +1,7 @@
 # final direct
-CUDA_VISIBLE_DEVICES=2,3,4,5,7,8,9 accelerate launch \
+CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,7,8,9 accelerate launch \
   --config_file /data/haofeiy2/sotopia-rl/scripts/accelerate_config_ppo.yaml \
-  --main_process_port 29510 \
+  --main_process_port 29511 \
   /data/haofeiy2/sotopia-rl/scripts/train_ppo.py \
   --model_name /mnt/data_from_server1/models/Qwen2.5-7B-Instruct \
   --value_model_name /mnt/data_from_server1/models/Qwen2.5-7B-Instruct \
@@ -23,7 +23,7 @@ CUDA_VISIBLE_DEVICES=2,3,4,5,7,8,9 accelerate launch \
   --gamma 0.99 \
   --lam 0.95 \
   --use_lora \
-  --checkpoint_dir /data/haofeiy2/sotopia-rl/ppo_qwen25_7b_reward_direct_default_no_goal_gpt-4o_without_goal_leak_with_sft_self_play_data
+  --checkpoint_dir /data/haofeiy2/sotopia-rl/ppo_qwen25_7b_reward_direct_default_no_goal_gpt-4o_without_goal_leak_with_sft_self_play_data_larger_bsz
 
 CUDA_VISIBLE_DEVICES=2,3 accelerate launch \
   --config_file /data/haofeiy2/sotopia-rl/scripts/accelerate_config_ppo.yaml \

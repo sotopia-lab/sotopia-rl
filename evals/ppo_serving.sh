@@ -37,8 +37,8 @@ export PPO_MODEL_PATH="${REPO_FOLDER_NAME}/${PPO_MODEL_FOLDER_NAME}/checkpoint-$
 export ENV_MODEL="gpt-4o"
 
 
-export SFT_GPU=5
-export PPO_GPU=7
+export SFT_GPU=0
+export PPO_GPU=1
 export SFT_PORT=8005
 export PPO_PORT=8009
 export SFT_MODEL_FOLDER_NAME="sft_qwen25_7b_sft_round_1_bc_data_top_2"

@@ -18,7 +18,7 @@ from accelerate import Accelerator
 import wandb
 from sotopia_rl.data import PPODataset
 os.environ['NCCL_P2P_DISABLE'] = '1' 
-
+os.environ["TORCH_DISTRIBUTED_DEBUG"] = "DETAIL"
 
 class SotopiaPPOTrainer:
     def __init__(self, args, accelerator):
@@ -55,6 +55,8 @@ class SotopiaPPOTrainer:
         self._setup_ppo_trainer()
 
         def save_model(self, output_dir: str, _internal_call: bool = False):
+            print(self.model)
+            print(self.model.policy)
             if hasattr(self.model, "policy"):
                 model_to_save = self.model.policy
             elif hasattr(self.model, "module") and hasattr(self.model.module, "policy"):
@@ -62,6 +64,7 @@ class SotopiaPPOTrainer:
             else:
                 model_to_save = self.model
             model_to_save.save_pretrained(output_dir)
+            self.tokenizer.save_pretrained(output_dir)
             print(f"Model saved to {output_dir}")
 
         self.ppo_trainer.save_model = save_model.__get__(self.ppo_trainer, type(self.ppo_trainer))
@@ -156,15 +159,12 @@ class SotopiaPPOTrainer:
         self.policy.generation_config = generation_config
         
         # Activate the appropriate adapter for each model
-        if hasattr(self.ref_policy, "active_adapter"):
-            self.ref_policy.active_adapter = "ref_adapter"
-        
-        if hasattr(self.policy, "active_adapter"):
-            self.policy.active_adapter = "policy_adapter"
+        self.ref_policy.active_adapter = "ref_adapter"
+        self.policy.active_adapter = "policy_adapter"
 
         # Properly freeze all parameters in ref_policy
         for name, param in self.ref_policy.named_parameters():
-            if 'ref_adapter' in name:
+            if self.ref_policy.active_adapter in name:
                 param.requires_grad = False
 
         # Count trainable parameters
@@ -176,8 +176,9 @@ class SotopiaPPOTrainer:
 
         requires_grad_num = 0
         for name, param in self.ref_policy.named_parameters():
-            if param.requires_grad and self.ref_policy.active_adapter in name:
+            if param.requires_grad:
                 requires_grad_num += 1
+                print(name)
         print(f"Number of trainable parameters in ref policy: {requires_grad_num}")
 
     def _setup_classification_models(self):
@@ -211,28 +212,26 @@ class SotopiaPPOTrainer:
         )
         
         # Activate the appropriate adapter for each model
-        if hasattr(self.reward_model, "active_adapter"):
-            self.reward_model.active_adapter = "reward_adapter"
-        
-        if hasattr(self.value_model, "active_adapter"):
-            self.value_model.active_adapter = "value_adapter"
+        self.reward_model.active_adapter = "reward_adapter"
+        self.value_model.active_adapter = "value_adapter"
 
         # Properly freeze all parameters in reward_model
         for name, param in self.reward_model.named_parameters():
-            if 'reward_adapter' in name or 'score' in name:
+            if self.reward_model.active_adapter in name:
                 param.requires_grad = False
 
         # Count trainable parameters
         requires_grad_num = 0
         for name, param in self.value_model.named_parameters():
-            if param.requires_grad and self.value_model.active_adapter in name:
+            if param.requires_grad:
                 requires_grad_num += 1
         print(f"Number of trainable parameters in value model: {requires_grad_num}")
 
         requires_grad_num = 0
         for name, param in self.reward_model.named_parameters():
-            if param.requires_grad and self.reward_model.active_adapter in name:
+            if param.requires_grad:
                 requires_grad_num += 1
+                print(name)
         print(f"Number of trainable parameters in reward model: {requires_grad_num}")
 
     def _setup_ppo_trainer(self):
