@@ -163,6 +163,16 @@ def batch_generation(
         )
         query_responses.append(query_response)
         logitss.append(logits)
+        print('=' * 10)
+        print(local_rollout_forward_batch_size)
+        print(len(query))
+        print(query_response.shape)
+        print(logits.shape)
+        try:
+            a = torch.cat(query_responses, 0)
+            b = torch.cat(logitss, 0)
+        except:
+            import pdb; pdb.set_trace()
     return torch.cat(query_responses, 0), torch.cat(logitss, 0)
 
 
@@ -384,8 +394,8 @@ class PPOv2Trainer(Trainer):
             top_k=0.0,
             top_p=1.0,
             do_sample=True,
-            #eos_token_id=tokenizer.eos_token_id, # TODO(haofei): check if this is correct
-            pad_token_id=tokenizer.pad_token_id, # TODO(haofei): check if this is correct
+            eos_token_id=tokenizer.eos_token_id, # TODO(haofei): check if this is correct
+            #pad_token_id=tokenizer.pad_token_id, # TODO(haofei): check if this is correct
         )
 
         accelerator.print("===training policy===")
@@ -450,6 +460,7 @@ class PPOv2Trainer(Trainer):
                         generation_config,
                     )
 
+                print('local_rollout: {}'.format(args.local_rollout_forward_batch_size))
                 for i in range(0, queries.shape[0], args.local_rollout_forward_batch_size):
                     query = queries[i : i + args.local_rollout_forward_batch_size]
                     query_response = query_responses[i : i + args.local_rollout_forward_batch_size]

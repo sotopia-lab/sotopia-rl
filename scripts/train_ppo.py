@@ -31,7 +31,7 @@ if __name__ == '__main__':
                         help="Discount factor")
     parser.add_argument("--lam", type=float, default=0.95,
                         help="GAE lambda for advantage estimation")
-    parser.add_argument("--max_length", type=int, default=4096,
+    parser.add_argument("--max_length", type=int, default=8096,
                         help="Maximum length of input sequences")
     parser.add_argument("--num_mini_batches", type=int, default=1,
                         help="Mini batch size for PPO updates")
@@ -39,7 +39,7 @@ if __name__ == '__main__':
                         help="Number of steps to accumulate gradients before performing an update")
     parser.add_argument("--val_ratio", type=float, default=0.05,
                         help="Ratio of validation data")
-    parser.add_argument("--response_length", type=int, default=128,
+    parser.add_argument("--response_length", type=int, default=512,
                         help="Maximum length of generated responses")
     parser.add_argument("--local_rollout_forward_batch_size", type=int, default=16,
                         help="Batch size for local rollout forward pass")

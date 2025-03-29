@@ -127,6 +127,18 @@ class SotopiaPPOTrainer:
         if base_gen_model.config.pad_token_id is None:
             base_gen_model.config.pad_token_id = self.tokenizer.pad_token_id
 
+        base_gen_model2 = AutoModelForCausalLM.from_pretrained(
+            self.args.model_name,
+            torch_dtype='auto',
+            quantization_config=self.quant_config,
+            return_dict=True,
+            device_map=get_kbit_device_map(),
+        )
+
+        if base_gen_model2.config.pad_token_id is None:
+            base_gen_model2.config.pad_token_id = self.tokenizer.pad_token_id
+
+
         # Create generation config
         generation_config = GenerationConfig(
             pad_token_id=self.tokenizer.pad_token_id,
@@ -148,15 +160,17 @@ class SotopiaPPOTrainer:
             adapter_name="ref_adapter"
         )
         self.ref_policy.generation_config = generation_config
+        self.ref_policy.merge_and_unload()
         
         # For policy - trainable (loaded second)
         self.policy = PeftModelForCausalLM.from_pretrained(
-            base_gen_model,
+            base_gen_model2,
             self.args.policy_adapter_path,
             is_trainable=True,
             adapter_name="policy_adapter" 
         )
         self.policy.generation_config = generation_config
+        self.policy.merge_and_unload()
         
         # Activate the appropriate adapter for each model
         self.ref_policy.active_adapter = "ref_adapter"
@@ -195,6 +209,19 @@ class SotopiaPPOTrainer:
         # Set pad token for classification
         base_cls_model.config.pad_token_id = 0
 
+        base_cls_model2 = AutoModelForSequenceClassification.from_pretrained(
+            self.args.model_name,
+            torch_dtype='auto',
+            num_labels=1,
+            quantization_config=self.quant_config,
+            return_dict=True,
+            device_map=get_kbit_device_map(),
+        )
+        
+        # Set pad token for classification
+        base_cls_model2.config.pad_token_id = 0
+
+
         # For reward model - frozen (loaded first)
         self.reward_model = PeftModelForSequenceClassification.from_pretrained(
             base_cls_model,
@@ -202,14 +229,16 @@ class SotopiaPPOTrainer:
             is_trainable=False,  # Already set as non-trainable
             adapter_name="reward_adapter"
         )
+        self.reward_model.merge_and_unload()
         
         # For value model - trainable (loaded second)
         self.value_model = PeftModelForSequenceClassification.from_pretrained(
-            base_cls_model,
+            base_cls_model2,
             self.args.value_adapter_path,
             is_trainable=True,
             adapter_name="value_adapter"
         )
+        self.value_model.merge_and_unload()
         
         # Activate the appropriate adapter for each model
         self.reward_model.active_adapter = "reward_adapter"
