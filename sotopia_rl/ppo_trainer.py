@@ -120,71 +120,30 @@ class SotopiaPPOTrainer:
             self.args.model_name,
             torch_dtype='auto',
             quantization_config=self.quant_config,
-            return_dict=True,
             device_map=get_kbit_device_map(),
         )
+        base_gen_model.config.pad_token_id = self.tokenizer.pad_token_id
 
-        if base_gen_model.config.pad_token_id is None:
-            base_gen_model.config.pad_token_id = self.tokenizer.pad_token_id
-
-        base_gen_model2 = AutoModelForCausalLM.from_pretrained(
-            self.args.model_name,
-            torch_dtype='auto',
-            quantization_config=self.quant_config,
-            return_dict=True,
-            device_map=get_kbit_device_map(),
-        )
-
-        if base_gen_model2.config.pad_token_id is None:
-            base_gen_model2.config.pad_token_id = self.tokenizer.pad_token_id
-
-
-        # Create generation config
-        generation_config = GenerationConfig(
-            pad_token_id=self.tokenizer.pad_token_id,
-            pad_token=self.tokenizer.pad_token,
-            eos_token_id=self.tokenizer.eos_token_id,
-            max_length=self.args.max_length,
-            do_sample=getattr(self.args, 'do_sample', True),
-            temperature=getattr(self.args, 'temperature', 0.7),
-            top_p=getattr(self.args, 'top_p', 0.9),
-            repetition_penalty=getattr(self.args, 'repetition_penalty', 1.0),
-            no_repeat_ngram_size=getattr(self.args, 'no_repeat_ngram_size', 0)
-        )
-
-        # For reference policy - frozen (loaded first)
         self.ref_policy = PeftModelForCausalLM.from_pretrained(
             base_gen_model,
             self.args.ref_adapter_path,
-            is_trainable=False,  # Already set as non-trainable
-            adapter_name="ref_adapter"
         )
-        self.ref_policy.generation_config = generation_config
         self.ref_policy.merge_and_unload()
+        self.ref_policy.eval()
         
-        # For policy - trainable (loaded second)
-        self.policy = PeftModelForCausalLM.from_pretrained(
-            base_gen_model2,
-            self.args.policy_adapter_path,
-            is_trainable=True,
-            adapter_name="policy_adapter" 
+        self.policy = AutoModelForCausalLM.from_pretrained(
+            self.args.model_name,
+            torch_dtype='auto',
+            quantization_config=self.quant_config,
+            device_map=get_kbit_device_map(),
         )
-        self.policy.generation_config = generation_config
-        self.policy.merge_and_unload()
+        self.policy.config.pad_token_id = self.tokenizer.pad_token_id
+
         
-        # Activate the appropriate adapter for each model
-        self.ref_policy.active_adapter = "ref_adapter"
-        self.policy.active_adapter = "policy_adapter"
-
-        # Properly freeze all parameters in ref_policy
-        for name, param in self.ref_policy.named_parameters():
-            if self.ref_policy.active_adapter in name:
-                param.requires_grad = False
-
         # Count trainable parameters
         requires_grad_num = 0
         for name, param in self.policy.named_parameters():
-            if param.requires_grad and self.policy.active_adapter in name:
+            if param.requires_grad:
                 requires_grad_num += 1
         print(f"Number of trainable parameters in policy: {requires_grad_num}")
 
@@ -196,7 +155,6 @@ class SotopiaPPOTrainer:
         print(f"Number of trainable parameters in ref policy: {requires_grad_num}")
 
     def _setup_classification_models(self):
-        # Load a single base model
         base_cls_model = AutoModelForSequenceClassification.from_pretrained(
             self.args.model_name,
             torch_dtype='auto',
@@ -205,11 +163,17 @@ class SotopiaPPOTrainer:
             return_dict=True,
             device_map=get_kbit_device_map(),
         )
-        
-        # Set pad token for classification
         base_cls_model.config.pad_token_id = 0
+        self.reward_model = PeftModelForSequenceClassification.from_pretrained(
+            base_cls_model,
+            self.args.reward_adapter_path,
+        )
+        self.reward_model.merge_and_unload()
+        for name, param in self.reward_model.named_parameters():
+            if 'score' in name:
+                param.requires_grad = False
 
-        base_cls_model2 = AutoModelForSequenceClassification.from_pretrained(
+        self.value_model = AutoModelForSequenceClassification.from_pretrained(
             self.args.model_name,
             torch_dtype='auto',
             num_labels=1,
@@ -217,37 +181,6 @@ class SotopiaPPOTrainer:
             return_dict=True,
             device_map=get_kbit_device_map(),
         )
-        
-        # Set pad token for classification
-        base_cls_model2.config.pad_token_id = 0
-
-
-        # For reward model - frozen (loaded first)
-        self.reward_model = PeftModelForSequenceClassification.from_pretrained(
-            base_cls_model,
-            self.args.reward_adapter_path,
-            is_trainable=False,  # Already set as non-trainable
-            adapter_name="reward_adapter"
-        )
-        self.reward_model.merge_and_unload()
-        
-        # For value model - trainable (loaded second)
-        self.value_model = PeftModelForSequenceClassification.from_pretrained(
-            base_cls_model2,
-            self.args.value_adapter_path,
-            is_trainable=True,
-            adapter_name="value_adapter"
-        )
-        self.value_model.merge_and_unload()
-        
-        # Activate the appropriate adapter for each model
-        self.reward_model.active_adapter = "reward_adapter"
-        self.value_model.active_adapter = "value_adapter"
-
-        # Properly freeze all parameters in reward_model
-        for name, param in self.reward_model.named_parameters():
-            if self.reward_model.active_adapter in name:
-                param.requires_grad = False
 
         # Count trainable parameters
         requires_grad_num = 0
