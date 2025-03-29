@@ -353,6 +353,8 @@ class PPOv2Trainer(Trainer):
             backup_deepspeed = self.deepspeed
             self.deepspeed = self.model
 
+        print(self.model.policy)
+        import pdb; pdb.set_trace()
         super().save_model(output_dir, _internal_call)
 
         self.model = backup_model

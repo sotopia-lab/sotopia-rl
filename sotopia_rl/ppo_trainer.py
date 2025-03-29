@@ -11,14 +11,14 @@ from transformers import (
     BitsAndBytesConfig,
     GenerationConfig,
 )
-from trl import PPOv2Config
+from trl import PPOv2Config, get_kbit_device_map
 from .ppo_trainer_src import PPOv2Trainer
 from accelerate import Accelerator
 
 import wandb
 from sotopia_rl.data import PPODataset
 os.environ['NCCL_P2P_DISABLE'] = '1' 
-
+os.environ["TORCH_DISTRIBUTED_DEBUG"] = "DETAIL"
 
 class SotopiaPPOTrainer:
     def __init__(self, args, accelerator):
@@ -55,6 +55,8 @@ class SotopiaPPOTrainer:
         self._setup_ppo_trainer()
 
         def save_model(self, output_dir: str, _internal_call: bool = False):
+            print(self.model)
+            print(self.model.policy)
             if hasattr(self.model, "policy"):
                 model_to_save = self.model.policy
             elif hasattr(self.model, "module") and hasattr(self.model.module, "policy"):
@@ -62,6 +64,7 @@ class SotopiaPPOTrainer:
             else:
                 model_to_save = self.model
             model_to_save.save_pretrained(output_dir)
+            self.tokenizer.save_pretrained(output_dir)
             print(f"Model saved to {output_dir}")
 
         self.ppo_trainer.save_model = save_model.__get__(self.ppo_trainer, type(self.ppo_trainer))
@@ -110,90 +113,88 @@ class SotopiaPPOTrainer:
             bnb_4bit_use_double_quant=True,
             bnb_4bit_quant_type="nf4"
         )
-
+    
     def _setup_generation_models(self):
+        # Load a single base model
         base_gen_model = AutoModelForCausalLM.from_pretrained(
             self.args.model_name,
-            torch_dtype=torch.float32, # very important, otherwise NaN for RM
+            torch_dtype='auto',
             quantization_config=self.quant_config,
-            return_dict=True,
-            device_map=None
+            device_map=get_kbit_device_map(),
         )
+        base_gen_model.config.pad_token_id = self.tokenizer.pad_token_id
 
-        if base_gen_model.config.pad_token_id is None:
-            base_gen_model.config.pad_token_id = self.tokenizer.pad_token_id
-
-        # Create generation config
-        generation_config = GenerationConfig(
-            pad_token_id=self.tokenizer.pad_token_id,
-            pad_token=self.tokenizer.pad_token,
-            eos_token_id=self.tokenizer.eos_token_id,
-            max_length=self.args.max_length,
-            do_sample=getattr(self.args, 'do_sample', True),
-            temperature=getattr(self.args, 'temperature', 0.7),
-            top_p=getattr(self.args, 'top_p', 0.9),
-            repetition_penalty=getattr(self.args, 'repetition_penalty', 1.0),
-            no_repeat_ngram_size=getattr(self.args, 'no_repeat_ngram_size', 0)
+        self.ref_policy = PeftModelForCausalLM.from_pretrained(
+            base_gen_model,
+            self.args.ref_adapter_path,
         )
+        self.ref_policy.merge_and_unload()
+        self.ref_policy.eval()
+        
+        self.policy = AutoModelForCausalLM.from_pretrained(
+            self.args.model_name,
+            torch_dtype='auto',
+            quantization_config=self.quant_config,
+            device_map=get_kbit_device_map(),
+        )
+        self.policy.config.pad_token_id = self.tokenizer.pad_token_id
 
-        adapter_path = os.path.join(self.args.policy_adapter_path, 'adapter_model')
-        if os.path.exists(adapter_path + '.safetensors') or os.path.exists(adapter_path + '.bin'):
-            print(f"Loading policy adapter from: {self.args.policy_adapter_path}")
-            self.policy = PeftModelForCausalLM.from_pretrained(
-                base_gen_model,
-                self.args.policy_adapter_path,
-                generation_config=generation_config
-            )
-        else:
-            print(f"No adapter found at {adapter_path})")
+        
+        # Count trainable parameters
+        requires_grad_num = 0
+        for name, param in self.policy.named_parameters():
+            if param.requires_grad:
+                requires_grad_num += 1
+        print(f"Number of trainable parameters in policy: {requires_grad_num}")
 
-        adapter_path = os.path.join(self.args.ref_adapter_path, 'adapter_model')
-        if os.path.exists(adapter_path + '.safetensors') or os.path.exists(adapter_path + '.bin'):
-            print(f"Loading reference policy adapter from: {self.args.ref_adapter_path}")
-            self.ref_policy = PeftModelForCausalLM.from_pretrained(
-                base_gen_model,
-                self.args.ref_adapter_path,
-                generation_config=generation_config
-            )
-            self.ref_policy.eval()
-        else:
-            print(f"No adapter found at {adapter_path}")
-
+        requires_grad_num = 0
+        for name, param in self.ref_policy.named_parameters():
+            if param.requires_grad:
+                requires_grad_num += 1
+                print(name)
+        print(f"Number of trainable parameters in ref policy: {requires_grad_num}")
 
     def _setup_classification_models(self):
         base_cls_model = AutoModelForSequenceClassification.from_pretrained(
             self.args.model_name,
-            torch_dtype=torch.float32, # very important, otherwise NaN
+            torch_dtype='auto',
             num_labels=1,
+            quantization_config=self.quant_config,
             return_dict=True,
-            device_map=None,
+            device_map=get_kbit_device_map(),
         )
-        # VERY VERY IMPORTANT
-        # specifically designed for PPO training, 
-        # based on the get_reward function
-        # it fill the input_ids paddings with 0s
         base_cls_model.config.pad_token_id = 0
+        self.reward_model = PeftModelForSequenceClassification.from_pretrained(
+            base_cls_model,
+            self.args.reward_adapter_path,
+        )
+        self.reward_model.merge_and_unload()
+        for name, param in self.reward_model.named_parameters():
+            if 'score' in name:
+                param.requires_grad = False
 
-        adapter_path = os.path.join(self.args.value_adapter_path, 'adapter_model')
-        if os.path.exists(adapter_path + '.safetensors') or os.path.exists(adapter_path + '.bin'):
-            print(f"Loading value adapter from: {self.args.value_adapter_path}")
-            self.value_model = PeftModelForSequenceClassification.from_pretrained(
-                base_cls_model,
-                self.args.value_adapter_path,
-            )
-        else:
-            raise ValueError(f"No adapter found at {adapter_path}")
+        self.value_model = AutoModelForSequenceClassification.from_pretrained(
+            self.args.model_name,
+            torch_dtype='auto',
+            num_labels=1,
+            quantization_config=self.quant_config,
+            return_dict=True,
+            device_map=get_kbit_device_map(),
+        )
 
-        adapter_path = os.path.join(self.args.reward_adapter_path, 'adapter_model')
-        if os.path.exists(adapter_path + '.safetensors') or os.path.exists(adapter_path + '.bin'):
-            print(f"Loading reward adapter from: {self.args.reward_adapter_path}")
-            self.reward_model = PeftModelForSequenceClassification.from_pretrained(
-                base_cls_model,
-                self.args.reward_adapter_path,
-            )
-            self.reward_model.eval()
-        else:
-            raise ValueError(f"No adapter found at {adapter_path}")
+        # Count trainable parameters
+        requires_grad_num = 0
+        for name, param in self.value_model.named_parameters():
+            if param.requires_grad:
+                requires_grad_num += 1
+        print(f"Number of trainable parameters in value model: {requires_grad_num}")
+
+        requires_grad_num = 0
+        for name, param in self.reward_model.named_parameters():
+            if param.requires_grad:
+                requires_grad_num += 1
+                print(name)
+        print(f"Number of trainable parameters in reward model: {requires_grad_num}")
 
     def _setup_ppo_trainer(self):
         """Configure the PPO trainer"""
@@ -212,7 +213,7 @@ class SotopiaPPOTrainer:
             lam=self.args.lam,
             seed=self.args.seed,
             temperature=self.args.temperature,
-            save_steps=self.args.save_steps,
+            save_steps=5,
             response_length=self.args.response_length, #important
             stop_token_id=198, #very important, 198 is \n, we need to stop at EOS + \n because sequence classification jinja
             missing_eos_penalty=1.0,
@@ -229,7 +230,7 @@ class SotopiaPPOTrainer:
             train_dataset=self.train_dataset,
             eval_dataset=self.val_dataset,
         )
-        print("PPO trainer setup complete")
+        print("PPOtrainer setup complete")
 
     def train(self):
         """Run PPO training loop and save checkpoints"""
