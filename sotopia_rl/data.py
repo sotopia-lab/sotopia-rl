@@ -104,7 +104,7 @@ class RMDataset(Dataset):
                 {"role": "assistant", "content": item["output"]}
             ],
             add_generation_prompt=False
-        ).strip()
+        ).strip() # important
 
         tokenized_input = self.tokenizer(
             rendered_text,

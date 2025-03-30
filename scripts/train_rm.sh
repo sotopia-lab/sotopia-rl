@@ -1,4 +1,52 @@
-CUDA_VISIBLE_DEVICES=1 python -m torch.distributed.run --nproc_per_node=1 --master_port=29501 \
+CUDA_VISIBLE_DEVICES=0 python -m torch.distributed.run --nproc_per_node=1 --master_port=29501 \
+/data/haofeiy2/sotopia-rl/scripts/train_rm.py \
+--model_name /mnt/data_from_server1/models/Qwen2.5-7B-Instruct \
+--learning_rate 1e-4 \
+--max_length 4096 \
+--train_batch_size 2 \
+--val_batch_size 2 \
+--accumulation_steps 16 \
+--num_epochs 40 \
+--evaluation_steps 200 \
+--reward_data_path /data/haofeiy2/sotopia-rl/data/sotopia_pi_bc_episodes_reward_direct_default_no_goal_gpt-4o_without_goal_leak.json \
+--template_path /data/haofeiy2/sotopia-rl/evals/qwen2.5-7b.jinja \
+--checkpoint_dir /data/haofeiy2/sotopia-rl/rm_reward_direct_default_without_that_n_error_as_the_end_lr1e-4 \
+--deepspeed \
+--deepspeed_config /data/haofeiy2/sotopia-rl/scripts/ds_config_rm.json
+
+CUDA_VISIBLE_DEVICES=1 python -m torch.distributed.run --nproc_per_node=1 --master_port=29504 \
+/data/haofeiy2/sotopia-rl/scripts/train_rm.py \
+--model_name /mnt/data_from_server1/models/Qwen2.5-7B-Instruct \
+--learning_rate 1e-4 \
+--max_length 4096 \
+--train_batch_size 2 \
+--val_batch_size 2 \
+--accumulation_steps 16 \
+--num_epochs 40 \
+--evaluation_steps 200 \
+--reward_data_path /data/haofeiy2/sotopia-rl/data/sotopia_pi_bc_episodes_reward_key_utterance_no_goal_gpt-4o.json \
+--template_path /data/haofeiy2/sotopia-rl/evals/qwen2.5-7b.jinja \
+--checkpoint_dir /data/haofeiy2/sotopia-rl/rm_reward_key_utterance_without_that_n_error_as_the_end_lr1e-4 \
+--deepspeed \
+--deepspeed_config /data/haofeiy2/sotopia-rl/scripts/ds_config_rm.json
+
+CUDA_VISIBLE_DEVICES=2 python -m torch.distributed.run --nproc_per_node=1 --master_port=29502 \
+/data/haofeiy2/sotopia-rl/scripts/train_rm.py \
+--model_name /mnt/data_from_server1/models/Qwen2.5-7B-Instruct \
+--learning_rate 1e-4 \
+--max_length 4096 \
+--train_batch_size 2 \
+--val_batch_size 2 \
+--accumulation_steps 16 \
+--num_epochs 40 \
+--evaluation_steps 200 \
+--reward_data_path /data/haofeiy2/sotopia-rl/data/sotopia_pi_bc_episodes_reward_utterance_quality_no_attribution_gpt-4o.json \
+--template_path /data/haofeiy2/sotopia-rl/evals/qwen2.5-7b.jinja \
+--checkpoint_dir /data/haofeiy2/sotopia-rl/rm_reward_utterance_quality_without_that_n_error_as_the_end_lr1e-4 \
+--deepspeed \
+--deepspeed_config /data/haofeiy2/sotopia-rl/scripts/ds_config_rm.json
+
+CUDA_VISIBLE_DEVICES=1 python -m torch.distributed.run --nproc_per_node=4 --master_port=29501 \
 /data/haofeiy2/sotopia-rl/scripts/train_rm.py \
 --model_name /mnt/data_from_server1/models/Qwen2.5-7B-Instruct \
 --learning_rate 8e-5 \
@@ -13,6 +61,7 @@ CUDA_VISIBLE_DEVICES=1 python -m torch.distributed.run --nproc_per_node=1 --mast
 --checkpoint_dir /data/haofeiy2/sotopia-rl/rm_reward_direct_default_without_that_n_error_as_the_end \
 --deepspeed \
 --deepspeed_config /data/haofeiy2/sotopia-rl/scripts/ds_config_rm.json
+
 
 
 CUDA_VISIBLE_DEVICES=0,1,3,4 python -m torch.distributed.run --nproc_per_node=4 --master_port=29503 \
