@@ -1,47 +1,48 @@
-#!/bin/bash
-export VLLM_GPU=4
-export DJANGO_GPU=5
-export VLLM_PORT=8035
-export DJANGO_PORT=8047
-export REJ_SAMPLING_NUM=10
+export SFT_GPU=2
+export ORI_GPU=9
+export SFT_PORT=8060
+export ORI_PORT=8065
 export SFT_MODEL_FOLDER_NAME="sft_qwen25_7b_sft_round_1_bc_data_top_2"
 export SFT_MODEL_CKPT_STEP=1500
-export RM_FOLDER_NAME="rm_reward_direct_5-scale_gpt-4o"
-export REPO_FOLDER_NAME="/data/haofeiy2/sotopia-rl"
-export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-${SFT_MODEL_CKPT_STEP}"
-export RM_MODEL_PATH="${REPO_FOLDER_NAME}/${RM_FOLDER_NAME}/checkpoint-4600"
+export REPO_FOLDER_NAME="/data/haofeiy2/sotopia-rl-0321/sotopia-rl"
+export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-${SFT_MODEL_CKPT_STEP}/"
+export ORI_MODEL_PATH="/data/models/Qwen2.5-7B-Instruct"
+export ENV_MODEL="gpt-4o"
+
+export SFT_GPU=2
+export ORI_GPU=9
+export SFT_PORT=8060
+export ORI_PORT=8065
+export SFT_MODEL_FOLDER_NAME="sft_qwen25_7b_sft_round_1_bc_data_top_2"
+export SFT_MODEL_CKPT_STEP=1500
+export REPO_FOLDER_NAME="/data/haofeiy2/sotopia-rl-0321/sotopia-rl"
+export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-${SFT_MODEL_CKPT_STEP}/"
+export ORI_MODEL_PATH="/data/models/Qwen2.5-7B-Instruct"
 export ENV_MODEL="gpt-4o"
 
 
-export TAG="${RM_FOLDER_NAME}_rej_sampling_num${REJ_SAMPLING_NUM}_vs_${SFT_MODEL_FOLDER_NAME}-0322"
-export SFT_MODEL_NAME="qwen25-7b-instruct-sft-gpu${VLLM_GPU}"
-export MODEL_A=custom/${RM_FOLDER_NAME}_rejsampling_num${REJ_SAMPLING_NUM}@http://localhost:${DJANGO_PORT}/sotopia
-export MODEL_B=custom/${SFT_MODEL_NAME}@http://localhost:${VLLM_PORT}/v1
+export TAG="Qwen2.5-7B-Instruct_vs_${SFT_MODEL_FOLDER_NAME}_step_${SFT_MODEL_CKPT_STEP}-0323_v2"
+export SFT_MODEL_NAME="${SFT_MODEL_FOLDER_NAME}-gpu${SFT_GPU}"
+export ORI_MODEL_NAME="Qwen2.5-7B-Instruct-gpu${ORI_GPU}"
+export MODEL_A=custom/${ORI_MODEL_NAME}@http://localhost:${ORI_PORT}/v1
+export MODEL_B=custom/${SFT_MODEL_NAME}@http://localhost:${SFT_PORT}/v1
 export REDIS_OM_URL="redis://:QzmCUD3C3RdsR@35.232.108.130:6379"
-export SFT_MODEL_VLLM_API_URL="http://localhost:${VLLM_PORT}/v1/completions"
-
 
 # Command 1: Launch the VLLM API server with LoRA enabled.
-CUDA_VISIBLE_DEVICES=$VLLM_GPU python -m vllm.entrypoints.openai.api_server \
-    --model /mnt/data_from_server1/models/Qwen2.5-7B-Instruct \
-    --port "$VLLM_PORT" \
+CUDA_VISIBLE_DEVICES=$SFT_GPU python -m vllm.entrypoints.openai.api_server \
+    --model /data/models/Qwen2.5-7B-Instruct \
+    --port "$SFT_PORT" \
     --chat-template /data/haofeiy2/sotopia-rl/evals/qwen2.5-7b.jinja \
     --served-model-name qwen25-7b-instruct \
     --enable-lora \
     --lora-modules "$SFT_MODEL_NAME=$SFT_MODEL_PATH"
 
-# Command 2: Start the Django server with the specified configuration.
-CUDA_VISIBLE_DEVICES=$DJANGO_GPU python /data/haofeiy2/sotopia-rl/serves/manage.py start_with_config \
-    --sft_model_name "$SFT_MODEL_NAME" \
-    --sft_model_vllm_api_url "$SFT_MODEL_VLLM_API_URL" \
-    --reward_model_path "$RM_MODEL_PATH" \
-    --reward_model_name "/mnt/data_from_server1/models/Qwen2.5-7B-Instruct" \
-    --template_path "/data/haofeiy2/sotopia-rl/evals/qwen2.5-7b.jinja" \
-    --max_responses "$REJ_SAMPLING_NUM" \
-    --max_length 4096 \
-    --port "$DJANGO_PORT" \
-    --sft_batch_size 10 \
-    --rm_batch_size 10
+# Command 2: Launch the VLLM API server with LoRA enabled.
+CUDA_VISIBLE_DEVICES=$ORI_GPU python -m vllm.entrypoints.openai.api_server \
+    --model /data/models/Qwen2.5-7B-Instruct \
+    --port "$ORI_PORT" \
+    --chat-template /data/haofeiy2/sotopia-rl/evals/qwen2.5-7b.jinja \
+    --served-model-name $ORI_MODEL_NAME 
 
 # Command 3: Run experiment evaluations.
 python examples/experiment_eval.py \

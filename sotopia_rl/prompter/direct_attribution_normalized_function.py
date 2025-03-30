@@ -79,12 +79,6 @@ def assign_attributions_for_conversation(
                     print(response)
                     return {}
                 result = json.loads(formatted_response)
-            try:
-                for key in result:
-                    result[key] = int(result[key])
-            except ValueError:
-                print("Failed to convert all values to integers; retrying")
-                continue
         
         if uttr_count != len(result) and i < 4:
             print("Response length does not match the number of agent utterances; retrying")
@@ -94,18 +88,20 @@ def assign_attributions_for_conversation(
             print("Response length does not match the number of agent utterances after 5 attempts; returning original dictionary")
     return result
 
-def calc_reward(utter_attrib: float, attribution_instruction_name: str, goal_score: float) -> float:
-    denominator = {"default": 3, "5-scale": 5, "10-scale": 10}[attribution_instruction_name]
-    if utter_attrib == -1:
-        reward = -1.0
-    else:
-        reward = utter_attrib / denominator * goal_score
+def calc_reward(utter_attrib: float, attribution_instruction_name: str, goal_score: float, total_attributions: float) -> float:
+    if total_attributions == 0:
+        return 0.0
+    reward = utter_attrib / total_attributions * goal_score
     return reward
 
 def calc_attributed_reward(attributed_data: List[Dict[str, float | int]], attribution_instruction_name: str, goal_score: float | int) -> List[Dict[str, Any]]:
     utterance_reward_map = {}
+    total_attributions = 0
     for k, v in attributed_data.items():
-        utterance_reward_map[k] = {"reward": calc_reward(v, attribution_instruction_name, goal_score), "attribution": v}
+        total_attributions += v
+    for k, v in attributed_data.items():
+        utterance_reward_map[k] = {"reward": calc_reward(v, attribution_instruction_name, goal_score, total_attributions), 
+                                    "attribution": v}
     return utterance_reward_map
 
 
