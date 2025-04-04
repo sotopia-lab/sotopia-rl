@@ -12,24 +12,27 @@ from transformers import (
     Trainer,
     TrainingArguments,
 )
+from accelerate import Accelerator
 
 import wandb
 from sotopia_rl.data import RMDataset
+import torch._dynamo
+torch._dynamo.config.suppress_errors = True
 
 os.environ['NCCL_P2P_DISABLE'] = '1'
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 
 
 class SotopiaRMTrainer(Trainer):
-    def __init__(self, args, **kwargs):
+    def __init__(self, args, accelerator, **kwargs):
         self.args = args
-
-        # Setup distributed training
-        self.setup_distributed()
+        self.accelerator = accelerator
+        self.device = accelerator.device
 
         train_dataset, eval_dataset = self.setup_dataset()
 
         # Initialize wandb only on the main process
-        if self.is_main_process:
+        if self.accelerator.is_main_process:
             wandb.init(
                 project=args.wandb_project,
                 name=args.wandb_run_name,
@@ -47,17 +50,15 @@ class SotopiaRMTrainer(Trainer):
         base_model = AutoModelForSequenceClassification.from_pretrained(
             args.model_name,
             num_labels=1,
+            torch_dtype=torch.float32, 
         )
         base_model.enable_input_require_grads() # very important
-
-        if self.args.multi_gpu:
-            # Use device_map="auto" only when not in distributed training
-            base_model = base_model.to(self.device)
-        else:
-            base_model = base_model.to(self.device)
+        base_model.gradient_checkpointing_enable()
 
         model = PeftModelForSequenceClassification(base_model, peft_config)
         model.config.pad_token_id = tokenizer.pad_token_id  # important to set the config pad_token_id
+
+        model = self.accelerator.prepare_model(model)
 
         # Set up the TrainingArguments with DeepSpeed support
         training_args = TrainingArguments(
@@ -74,13 +75,9 @@ class SotopiaRMTrainer(Trainer):
             learning_rate=args.learning_rate,
             warmup_steps=int(len(train_dataset) * args.warmup_epochs),
             optim="adamw_torch",
-            fp16=True,
             remove_unused_columns=False,
             dataloader_num_workers=4,
-            # Distributed training settings
-            local_rank=self.local_rank,
-            # DeepSpeed integration
-            deepspeed=args.deepspeed_config if hasattr(args, 'deepspeed_config') and args.deepspeed_config else None,
+            report_to="none",
             ddp_find_unused_parameters=False,
         )
 
@@ -100,49 +97,13 @@ class SotopiaRMTrainer(Trainer):
         if args.checkpoint_path:
             self.load_lora_checkpoint(args.checkpoint_path)
 
-
-    def setup_distributed(self):
-        """Set up distributed training environment"""
-        # Check if DeepSpeed or distributed training is enabled
-        self.args.multi_gpu = torch.cuda.device_count() > 1 and (
-            (hasattr(self.args, 'deepspeed_config') and self.args.deepspeed_config is not None) or
-            (hasattr(self.args, 'use_distributed') and self.args.use_distributed)
-        )
-
-        if self.args.multi_gpu:
-            # Initialize the distributed environment
-            if 'LOCAL_RANK' in os.environ:
-                self.local_rank = int(os.environ['LOCAL_RANK'])
-            else:
-                self.local_rank = self.args.local_rank if hasattr(self.args, 'local_rank') else 0
-
-            # Initialize the process group if not already initialized
-            if not dist.is_initialized():
-                dist.init_process_group(backend='nccl')
-
-            self.world_size = dist.get_world_size()
-            self.is_main_process = self.local_rank == 0
-            self.device = torch.device(f"cuda:{self.local_rank}")
-
-            # Set the device for this process
-            torch.cuda.set_device(self.local_rank)
-
-            if self.is_main_process:
-                print(f"Distributed training enabled with {self.world_size} GPUs")
-        else:
-            self.local_rank = 0
-            self.is_main_process = True
-            self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-            self.world_size = 1
-            print(f"Training on single {'GPU' if torch.cuda.is_available() else 'CPU'}")
-
     def setup_dataset(self):
         env = Environment(loader=FileSystemLoader("/".join(self.args.template_path.split("/")[:-1])))
         template = env.get_template(self.args.template_path.split("/")[-1])
         tokenizer = AutoTokenizer.from_pretrained(self.args.model_name)
         dataset = RMDataset(self.args.reward_data_path, tokenizer, template, self.args.max_length)
 
-        if self.is_main_process:
+        if self.accelerator.is_main_process:
             print(f"dataset: {len(dataset)}")
 
         train_size = int(len(dataset) * 0.95)
@@ -154,9 +115,9 @@ class SotopiaRMTrainer(Trainer):
         return train_dataset, val_dataset
 
     def compute_loss(self, model, inputs, return_outputs=False, **kwargs):
-        input_ids = inputs["input_ids"].to(self.device)
-        attention_masks = inputs["attention_mask"].to(self.device)
-        true_rewards = inputs["labels"].to(self.device)
+        input_ids = inputs["input_ids"]
+        attention_masks = inputs["attention_mask"]
+        true_rewards = inputs["labels"]
 
         outputs = model(input_ids, attention_mask=attention_masks)
         predicted_rewards = outputs.logits.squeeze(-1)  # Shape: (batch_size,)
@@ -171,24 +132,16 @@ class SotopiaRMTrainer(Trainer):
         return (loss, outputs) if return_outputs else loss
 
     def save_lora_checkpoint(self, output_dir=None, **kwargs):
-        # With DeepSpeed, checkpoint saving is handled by the Trainer
-        # We only need to ensure LoRA adapter is saved properly
-        if self.is_main_process:
+        if self.accelerator.is_main_process:
             self.model.save_pretrained(output_dir)
 
     def load_lora_checkpoint(self, checkpoint_path):
         adapter_model_path = os.path.join(checkpoint_path, 'adapter_model.safetensors')
         peft_config = LoraConfig.from_pretrained(checkpoint_path)
 
-        # For DeepSpeed resuming, check if this is a DeepSpeed checkpoint
-        if os.path.exists(os.path.join(checkpoint_path, 'zero_pp_rank_0_mp_rank_00_model_states.pt')):
-            # DeepSpeed checkpoint will be loaded by Trainer automatically
-            if self.is_main_process:
-                print(f"DeepSpeed checkpoint detected at {checkpoint_path}")
-            return
-
         if os.path.exists(adapter_model_path):
             self.model.load_adapter(checkpoint_path, adapter_name='lora', peft_config=peft_config)
         else:
-            if self.is_main_process:
+            if self.accelerator.is_main_process:
                 print(f"No adapter model found at {adapter_model_path}.")
+                

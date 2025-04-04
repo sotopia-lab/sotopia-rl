@@ -1,6 +1,6 @@
 import argparse
 import os
-
+from accelerate import Accelerator
 from sotopia_rl import SotopiaRMTrainer
 
 if __name__ == '__main__':
@@ -34,31 +34,11 @@ if __name__ == '__main__':
     # Wandb arguments
     parser.add_argument("--wandb_project", type=str, default="reward-model-training", help="Wandb project name")
     parser.add_argument("--wandb_run_name", type=str, default=None, help="Wandb run name")
-
-    # DeepSpeed arguments
-    parser.add_argument("--deepspeed", action="store_true", help="Enable DeepSpeed")
-    parser.add_argument("--deepspeed_config", type=str, default=None,
-                        help="Path to DeepSpeed configuration file")
-    parser.add_argument("--local_rank", type=int, default=-1,
-                        help="Local rank for distributed training (set by DeepSpeed)")
-    parser.add_argument("--use_distributed", action="store_true", help="Enable distributed training")
+    parser.add_argument("--seed", type=int, default=42,
+                        help="Random seed for reproducibility")
 
 
     args = parser.parse_args()
-
-    if args.deepspeed:
-        args.use_distributed = True
-    else:
-        raise ValueError("DeepSpeed Config is required for this script.")
-
-    # Configure local_rank automatically if needed
-    if args.use_distributed and args.local_rank == -1:
-        if 'LOCAL_RANK' in os.environ:
-            args.local_rank = int(os.environ['LOCAL_RANK'])
-        else:
-            print("Warning: --use_distributed is set but no local_rank detected. Setting to 0.")
-            args.local_rank = 0
-
-
-    trainer = SotopiaRMTrainer(args)
+    accelerator = Accelerator()
+    trainer = SotopiaRMTrainer(args, accelerator)
     trainer.train()
