@@ -11,8 +11,7 @@ from transformers import (
     BitsAndBytesConfig,
     GenerationConfig,
 )
-from trl import get_kbit_device_map, PPOConfig
-from .ppo_trainer_src_ori import PPOTrainer
+from trl import get_kbit_device_map, PPOConfig, PPOTrainer
 from accelerate import PartialState, Accelerator
 
 import wandb
