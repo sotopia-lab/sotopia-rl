@@ -100,25 +100,33 @@ class SotopiaPPOTrainer:
         )
     
     def _setup_generation_models(self):
-        base_gen_model = AutoModelForCausalLM.from_pretrained(
+
+        base_gen_policy = AutoModelForCausalLM.from_pretrained(
             self.args.model_name,
             torch_dtype='auto',
             quantization_config=self.quant_config,
             device_map=get_kbit_device_map(),
         )
 
+        base_gen_ref = AutoModelForCausalLM.from_pretrained(
+            self.args.model_name,
+            torch_dtype='auto',
+            quantization_config=self.quant_config,
+            device_map=get_kbit_device_map(),
+        )
+
+        self.policy = PeftModelForCausalLM.from_pretrained(
+            base_gen_policy,
+            self.args.policy_adapter_path,
+            is_trainable=False,
+            adapter_name="policy_adapter"
+        )
+
         self.ref_policy = PeftModelForCausalLM.from_pretrained(
-            base_gen_model,
+            base_gen_ref,
             self.args.ref_adapter_path,
             is_trainable=False,
             adapter_name="ref_adapter"
-        )
-        
-        self.policy = PeftModelForCausalLM.from_pretrained(
-            base_gen_model,
-            self.args.policy_adapter_path,
-            is_trainable=False,
-            adapter_name="policy_adapter" 
         )
         
         self.ref_policy.active_adapter = "ref_adapter"
@@ -141,8 +149,21 @@ class SotopiaPPOTrainer:
                 print(name)
         print(f"Number of trainable parameters in ref policy: {requires_grad_num}")
 
+        trainable = [n for n, p in self.policy.named_parameters() if p.requires_grad]
+        print(f"Trainable policy parameters ({len(trainable)}):")
+        for n in trainable:
+            print(" -", n)
+
     def _setup_classification_models(self):
         base_cls_model = AutoModelForSequenceClassification.from_pretrained(
+            self.args.model_name,
+            torch_dtype='auto',
+            num_labels=1,
+            quantization_config=self.quant_config,
+            device_map=get_kbit_device_map(),
+        )
+
+        base_value_model = AutoModelForSequenceClassification.from_pretrained(
             self.args.model_name,
             torch_dtype='auto',
             num_labels=1,
@@ -158,7 +179,7 @@ class SotopiaPPOTrainer:
         )
         
         self.value_model = PeftModelForSequenceClassification.from_pretrained(
-            base_cls_model,
+            base_value_model,
             self.args.value_adapter_path,
             is_trainable=False,
             adapter_name="value_adapter"
@@ -199,6 +220,7 @@ class SotopiaPPOTrainer:
             lam=self.args.lam,
             save_steps=self.args.save_steps,
             missing_eos_penalty=self.args.missing_eos_penalty,
+            ddp_find_unused_parameters=True,
             response_length=self.args.response_length, #important
             stop_token_id=198, #very important, 198 is \n, we need to stop at EOS + \n because sequence classification jinja
         )
