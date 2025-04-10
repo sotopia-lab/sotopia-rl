@@ -1,18 +1,19 @@
-CUDA_VISIBLE_DEVICES=0,5 accelerate launch \
-  --config_file /data/haofeiy2/sotopia-rl-eval/sotopia-rl/scripts/accelerate_config_ppo.yaml \
-  --main_process_port 29530 \
-  /data/haofeiy2/sotopia-rl-eval/sotopia-rl/scripts/train_rm.py \
-  --model_name /mnt/data_from_server1/models/Qwen2.5-7B-Instruct \
-  --learning_rate 1e-6 \
-  --max_length 4096 \
-  --train_batch_size 1 \
-  --val_batch_size 1 \
-  --accumulation_steps 1 \
-  --num_epochs 30 \
-  --evaluation_steps 200 \
-  --reward_data_path /data/haofeiy2/sotopia-rl/data/sotopia_pi_bc_episodes_reward_all_the_same.json \
-  --template_path /data/haofeiy2/sotopia-rl-eval/sotopia-rl/evals/qwen2.5-7b.jinja \
-  --checkpoint_dir /data/haofeiy2/sotopia-rl-eval/sotopia-rl/rm_test
+CUDA_VISIBLE_DEVICES=3,9 python -m torch.distributed.run --nproc_per_node=1 --master_port=29504 \
+/data/haofeiy2/sotopia-rl/scripts/train_rm_with_valuehead.py \
+--model_name /mnt/data_from_server1/models/Qwen2.5-7B-Instruct \
+--learning_rate 5e-4 \
+--max_length 4096 \
+--train_batch_size 2 \
+--val_batch_size 2 \
+--accumulation_steps 1 \
+--num_epochs 30 \
+--evaluation_steps 200 \
+--reward_data_path /data/haofeiy2/sotopia-rl/data/sotopia_pi_bc_episodes_reward_direct_default_normalized_no_goal_gpt-4o_without_goal_leak.json \
+--template_path /data/haofeiy2/sotopia-rl/evals/qwen2.5-7b.jinja \
+--checkpoint_dir /data/haofeiy2/sotopia-rl/rm_direct_default_with_valuehead \
+--deepspeed \
+--deepspeed_config /data/haofeiy2/sotopia-rl/scripts/ds_config_rm.json
+
 
 
 CUDA_VISIBLE_DEVICES=1,3,4,5 python -m torch.distributed.run --nproc_per_node=4 --master_port=29502 \
@@ -65,7 +66,7 @@ CUDA_VISIBLE_DEVICES=5,6,7,8,9 python -m torch.distributed.run --nproc_per_node=
 --deepspeed \
 --deepspeed_config /data/haofeiy2/sotopia-rl-0321/sotopia-rl/scripts/ds_config_rm.json
 
-CUDA_VISIBLE_DEVICES=1 python -m torch.distributed.run --nproc_per_node=2 --master_port=29501 \
+CUDA_VISIBLE_DEVICES=8,9 python -m torch.distributed.run --nproc_per_node=2 --master_port=29501 \
 /data/haofeiy2/sotopia-rl/scripts/train_rm.py \
 --model_name /mnt/data_from_server1/models/Qwen2.5-7B-Instruct \
 --learning_rate 8e-4 \
