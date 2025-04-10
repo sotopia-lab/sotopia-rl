@@ -104,7 +104,7 @@ class RMDataset(Dataset):
                 {"role": "assistant", "content": item["output"]}
             ],
             add_generation_prompt=False
-        )
+        ).strip() # important
 
         tokenized_input = self.tokenizer(
             rendered_text,
@@ -112,6 +112,8 @@ class RMDataset(Dataset):
             max_length=self.max_length,
             truncation=True
         )
+        # make sure there is no \n at the end of the inputs
+        assert tokenized_input['input_ids'][0][-1] == self.tokenizer.eos_token_id
 
         return {
             "input_ids": tokenized_input["input_ids"].squeeze(),

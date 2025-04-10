@@ -6,10 +6,10 @@ export DJANGO_PORT=8047
 export REJ_SAMPLING_NUM=10
 export SFT_MODEL_FOLDER_NAME="sft_qwen25_7b_sft_round_1_bc_data_top_2"
 export SFT_MODEL_CKPT_STEP=1500
-export RM_FOLDER_NAME="rm_reward_direct_5-scale_gpt-4o"
+export RM_FOLDER_NAME="rm_reward_direct_default_without_that_n_error_as_the_end"
 export REPO_FOLDER_NAME="/data/haofeiy2/sotopia-rl"
 export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-${SFT_MODEL_CKPT_STEP}"
-export RM_MODEL_PATH="${REPO_FOLDER_NAME}/${RM_FOLDER_NAME}/checkpoint-4600"
+export RM_MODEL_PATH="${REPO_FOLDER_NAME}/${RM_FOLDER_NAME}/checkpoint-4000"
 export ENV_MODEL="gpt-4o"
 
 
@@ -156,3 +156,5 @@ python examples/experiment_eval.py \
   "--gin.AGENT2_MODEL='${MODEL_A}'" \
   "--gin.AGENT1_MODEL='${MODEL_B}'" \
   "--gin.TAG='${TAG}'"
+
+# rm_reward_direct_default_without_that_n_error_as_the_end

@@ -66,10 +66,16 @@ class RejectionSampler:
 
     def format_prompt(self, messages, add_generation_prompt=True):
         """Format the prompt using the template."""
-        return self.template.render(
-            messages=messages,
-            add_generation_prompt=add_generation_prompt,
-        )
+        if add_generation_prompt is True:
+            return self.template.render(
+                messages=messages,
+                add_generation_prompt=add_generation_prompt,
+            )
+        elif add_generation_prompt is False:
+            return self.template.render(
+                messages=messages,
+                add_generation_prompt=add_generation_prompt,
+            ).strip()
 
     def inference(self, messages, temperature, top_p, max_new_tokens):
         """Generate responses using vLLM API and select the best one based on reward model scores."""
@@ -138,6 +144,9 @@ class RejectionSampler:
             inputs = self.tokenizer(
                 prompts, return_tensors="pt", padding=True, truncation=True, max_length=self.max_length
             ).to(self.reward_device)
+
+            # check that there is no \n at the end of reward model inputs
+            assert inputs['input_ids'][0][-1] == self.tokenizer.eos_token_id
 
             with torch.no_grad():
                 outputs = self.reward_model(**inputs, return_dict=True)
