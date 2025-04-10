@@ -129,4 +129,4 @@ def analyze_episodes_with_positions(tag):
     }
 
 # Run the analysis
-results = analyze_episodes_with_positions("ppo_qwen25_7b_reward_only_response_gpt-4o_step_1500_vs_sft_qwen25_7b_step_1000-0323")
+results = analyze_episodes_with_positions("Qwen2.5-7B-Instruct_vs_sft_qwen25_7b_bigtom_step_1500-bigtom_0402")

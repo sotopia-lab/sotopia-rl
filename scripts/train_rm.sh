@@ -65,7 +65,7 @@ CUDA_VISIBLE_DEVICES=5,6,7,8,9 python -m torch.distributed.run --nproc_per_node=
 --deepspeed \
 --deepspeed_config /data/haofeiy2/sotopia-rl-0321/sotopia-rl/scripts/ds_config_rm.json
 
-CUDA_VISIBLE_DEVICES=8,9 python -m torch.distributed.run --nproc_per_node=2 --master_port=29501 \
+CUDA_VISIBLE_DEVICES=1 python -m torch.distributed.run --nproc_per_node=2 --master_port=29501 \
 /data/haofeiy2/sotopia-rl/scripts/train_rm.py \
 --model_name /mnt/data_from_server1/models/Qwen2.5-7B-Instruct \
 --learning_rate 8e-4 \
