@@ -28,18 +28,8 @@ class SotopiaPPOTrainer:
         self._setup_tokenizer()
         self._setup_dataset()
         self._create_quantization_config()
-
         self._setup_generation_models()
         self._setup_classification_models()
-
-        self.policy, self.ref_policy, self.reward_model, self.value_model = self.accelerator.prepare(
-            self.policy, self.ref_policy, self.reward_model, self.value_model
-        )
-        self.policy = self.accelerator.unwrap_model(self.policy)
-        self.ref_policy = self.accelerator.unwrap_model(self.ref_policy)
-        self.reward_model = self.accelerator.unwrap_model(self.reward_model)
-        self.value_model = self.accelerator.unwrap_model(self.value_model)
-
         self._setup_ppo_trainer()
 
         def save_model(self, output_dir: str, _internal_call: bool = False):
@@ -90,19 +80,19 @@ class SotopiaPPOTrainer:
             print(f"Dataset split: {len(self.train_dataset)} train, {len(self.val_dataset)} validation")
 
     def _create_quantization_config(self):
-        self.quant_config = BitsAndBytesConfig(
-            load_in_4bit=True,
-            bnb_4bit_compute_dtype=torch.bfloat16,
-            bnb_4bit_use_double_quant=True,
-            bnb_4bit_quant_type="nf4"
+        self.model_dtype = torch.bfloat16
+        self.bit_quant_config = BitsAndBytesConfig(
+            load_in_8bit=True,
+            llm_int8_threshold=6.0,
+            llm_int8_has_fp16_weight=False,
         )
+
     
     def _setup_generation_models(self):
         base_gen_ref = AutoModelForCausalLM.from_pretrained(
             self.args.model_name,
-            torch_dtype='auto',
+            torch_dtype=self.model_dtype,
             quantization_config=self.quant_config,
-            device_map=get_kbit_device_map(),
         )
         self.ref_policy = PeftModelForCausalLM.from_pretrained(
             base_gen_ref,
@@ -114,9 +104,8 @@ class SotopiaPPOTrainer:
         if self.args.use_lora_train_ppo:
             base_gen_policy = AutoModelForCausalLM.from_pretrained(
                 self.args.model_name,
-                torch_dtype='auto',
+                torch_dtype=self.model_dtype,
                 quantization_config=self.quant_config,
-                device_map=get_kbit_device_map(),
             )
             self.policy = PeftModelForCausalLM.from_pretrained(
                 base_gen_policy,
@@ -127,7 +116,7 @@ class SotopiaPPOTrainer:
         else:
             self.policy = AutoModelForCausalLM.from_pretrained(
                 self.args.model_name,
-                torch_dtype='auto',
+                torch_dtype=self.model_dtype,
             )
 
         requires_grad_num = 0
@@ -146,10 +135,9 @@ class SotopiaPPOTrainer:
     def _setup_classification_models(self):
         base_reward_model = AutoModelForSequenceClassification.from_pretrained(
             self.args.model_name,
-            torch_dtype='auto',
+            torch_dtype=self.model_dtype,
             num_labels=1,
             quantization_config=self.quant_config,
-            device_map=get_kbit_device_map(),
         )
         self.reward_model = PeftModelForSequenceClassification.from_pretrained(
             base_reward_model,
@@ -164,10 +152,9 @@ class SotopiaPPOTrainer:
         if self.args.use_lora_train_ppo:
             base_value_model = AutoModelForSequenceClassification.from_pretrained(
                 self.args.model_name,
-                torch_dtype='auto',
+                torch_dtype=self.model_dtype,
                 num_labels=1,
                 quantization_config=self.quant_config,
-                device_map=get_kbit_device_map(),
             )
             self.value_model = PeftModelForSequenceClassification.from_pretrained(
                 base_value_model,
@@ -178,7 +165,7 @@ class SotopiaPPOTrainer:
         else:
             self.value_model = AutoModelForSequenceClassification.from_pretrained(
                 self.args.model_name,
-                torch_dtype='auto',
+                torch_dtype=self.model_dtype,
                 num_labels=1,
             )
         
