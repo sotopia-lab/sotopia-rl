@@ -118,7 +118,7 @@ class SotopiaPPOTrainer:
         self.policy = PeftModelForCausalLM.from_pretrained(
             base_gen_policy,
             self.args.policy_adapter_path,
-            is_trainable=False,
+            is_trainable=True,
             adapter_name="policy_adapter"
         )
 
@@ -132,9 +132,6 @@ class SotopiaPPOTrainer:
         self.ref_policy.active_adapter = "ref_adapter"
         self.policy.active_adapter = "policy_adapter"
 
-        for name, param in self.policy.named_parameters():
-            if self.policy.active_adapter in name:
-                param.requires_grad = True
 
         requires_grad_num = 0
         for name, param in self.policy.named_parameters():
@@ -148,13 +145,8 @@ class SotopiaPPOTrainer:
                 requires_grad_num += 1
         print(f"Number of trainable parameters in ref policy: {requires_grad_num}")
 
-        trainable = [n for n, p in self.policy.named_parameters() if p.requires_grad]
-        print(f"Trainable policy parameters ({len(trainable)}):")
-        for n in trainable:
-            print(" -", n)
-
     def _setup_classification_models(self):
-        base_cls_model = AutoModelForSequenceClassification.from_pretrained(
+        base_reward_model = AutoModelForSequenceClassification.from_pretrained(
             self.args.model_name,
             torch_dtype='auto',
             num_labels=1,
@@ -169,9 +161,16 @@ class SotopiaPPOTrainer:
             quantization_config=self.quant_config,
             device_map=get_kbit_device_map(),
         )
+
+        # VERY VERY IMPORTANT
+        # specifically designed for PPO training, 
+        # based on the get_reward function
+        # it fill the input_ids paddings with 0s
+        base_reward_model.config.pad_token_id = 0
+        base_value_model.config.pad_token_id = 0
         
         self.reward_model = PeftModelForSequenceClassification.from_pretrained(
-            base_cls_model,
+            base_reward_model,
             self.args.reward_adapter_path,
             is_trainable=False,
             adapter_name="reward_adapter"
@@ -180,16 +179,12 @@ class SotopiaPPOTrainer:
         self.value_model = PeftModelForSequenceClassification.from_pretrained(
             base_value_model,
             self.args.value_adapter_path,
-            is_trainable=False,
+            is_trainable=True,
             adapter_name="value_adapter"
         )
         
         self.reward_model.active_adapter = "reward_adapter"
         self.value_model.active_adapter = "value_adapter"
-
-        for name, param in self.value_model.named_parameters():
-            if self.value_model.active_adapter in name:
-                param.requires_grad = True
         
         for name, param in self.reward_model.named_parameters():
             if self.reward_model.active_adapter in name:
@@ -205,7 +200,6 @@ class SotopiaPPOTrainer:
         for name, param in self.reward_model.named_parameters():
             if param.requires_grad:
                 requires_grad_num += 1
-                print(name)
         print(f"Number of trainable parameters in reward model: {requires_grad_num}")
 
     def _setup_ppo_trainer(self):
