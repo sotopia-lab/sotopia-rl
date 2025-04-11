@@ -43,8 +43,6 @@ class SotopiaPPOTrainer:
         self._setup_ppo_trainer()
 
         def save_model(self, output_dir: str, _internal_call: bool = False):
-            print(self.model)
-            print(self.model.policy)
             if hasattr(self.model, "policy"):
                 model_to_save = self.model.policy
             elif hasattr(self.model, "module") and hasattr(self.model.module, "policy"):
@@ -100,41 +98,41 @@ class SotopiaPPOTrainer:
         )
     
     def _setup_generation_models(self):
-
-        base_gen_policy = AutoModelForCausalLM.from_pretrained(
-            self.args.model_name,
-            torch_dtype='auto',
-            quantization_config=self.quant_config,
-            device_map=get_kbit_device_map(),
-        )
-
         base_gen_ref = AutoModelForCausalLM.from_pretrained(
             self.args.model_name,
             torch_dtype='auto',
             quantization_config=self.quant_config,
             device_map=get_kbit_device_map(),
         )
-
-        self.policy = PeftModelForCausalLM.from_pretrained(
-            base_gen_policy,
-            self.args.policy_adapter_path,
-            is_trainable=True,
-            adapter_name="policy_adapter"
-        )
-
         self.ref_policy = PeftModelForCausalLM.from_pretrained(
             base_gen_ref,
             self.args.ref_adapter_path,
             is_trainable=False,
             adapter_name="ref_adapter"
         )
-        
-        self.ref_policy.active_adapter = "ref_adapter"
-        self.policy.active_adapter = "policy_adapter"
 
+        if self.args.use_lora_train_ppo:
+            base_gen_policy = AutoModelForCausalLM.from_pretrained(
+                self.args.model_name,
+                torch_dtype='auto',
+                quantization_config=self.quant_config,
+                device_map=get_kbit_device_map(),
+            )
+            self.policy = PeftModelForCausalLM.from_pretrained(
+                base_gen_policy,
+                self.args.policy_adapter_path,
+                is_trainable=True,
+                adapter_name="policy_adapter"
+            )
+        else:
+            self.policy = AutoModelForCausalLM.from_pretrained(
+                self.args.model_name,
+                torch_dtype='auto',
+            )
 
         requires_grad_num = 0
         for name, param in self.policy.named_parameters():
+            print(name, param.requires_grad)
             if param.requires_grad:
                 requires_grad_num += 1
         print(f"Number of trainable parameters in policy: {requires_grad_num}")
@@ -153,43 +151,44 @@ class SotopiaPPOTrainer:
             quantization_config=self.quant_config,
             device_map=get_kbit_device_map(),
         )
-
-        base_value_model = AutoModelForSequenceClassification.from_pretrained(
-            self.args.model_name,
-            torch_dtype='auto',
-            num_labels=1,
-            quantization_config=self.quant_config,
-            device_map=get_kbit_device_map(),
-        )
-
-        # VERY VERY IMPORTANT
-        # specifically designed for PPO training, 
-        # based on the get_reward function
-        # it fill the input_ids paddings with 0s
-        base_reward_model.config.pad_token_id = 0
-        base_value_model.config.pad_token_id = 0
-        
         self.reward_model = PeftModelForSequenceClassification.from_pretrained(
             base_reward_model,
             self.args.reward_adapter_path,
             is_trainable=False,
             adapter_name="reward_adapter"
         )
-        
-        self.value_model = PeftModelForSequenceClassification.from_pretrained(
-            base_value_model,
-            self.args.value_adapter_path,
-            is_trainable=True,
-            adapter_name="value_adapter"
-        )
-        
-        self.reward_model.active_adapter = "reward_adapter"
-        self.value_model.active_adapter = "value_adapter"
-        
         for name, param in self.reward_model.named_parameters():
             if self.reward_model.active_adapter in name:
                 param.requires_grad = False
 
+        if self.args.use_lora_train_ppo:
+            base_value_model = AutoModelForSequenceClassification.from_pretrained(
+                self.args.model_name,
+                torch_dtype='auto',
+                num_labels=1,
+                quantization_config=self.quant_config,
+                device_map=get_kbit_device_map(),
+            )
+            self.value_model = PeftModelForSequenceClassification.from_pretrained(
+                base_value_model,
+                self.args.value_adapter_path,
+                is_trainable=True,
+                adapter_name="value_adapter"
+            )
+        else:
+            self.value_model = AutoModelForSequenceClassification.from_pretrained(
+                self.args.model_name,
+                torch_dtype='auto',
+                num_labels=1,
+            )
+        
+        # VERY VERY IMPORTANT
+        # specifically designed for PPO training, 
+        # based on the get_reward function
+        # it fill the input_ids paddings with 0s
+        self.value_model.config.pad_token_id = 0
+        self.reward_model.config.pad_token_id = 0
+        
         requires_grad_num = 0
         for name, param in self.value_model.named_parameters():
             if param.requires_grad:
@@ -218,8 +217,8 @@ class SotopiaPPOTrainer:
             save_steps=self.args.save_steps,
             missing_eos_penalty=self.args.missing_eos_penalty,
             ddp_find_unused_parameters=True,
-            response_length=self.args.response_length, #important
-            stop_token_id=198, #very important, 198 is \n, we need to stop at EOS + \n because sequence classification jinja
+            response_length=self.args.response_length,
+            stop_token='eos',
         )
 
         self.ppo_trainer = PPOTrainer(
