@@ -18,13 +18,13 @@ pandas-stubs = "^2.2.0"
 msgpack = "^1.0.8"
 setuptools = "^74.1.1"
 torch = "^2.4.0"
-trl = ">=0.9.6"
+trl = "*"
 peft = ">=0.11.1"
 datasets = "2.20.0"
 sentencepiece = "*"
 bitsandbytes = "*"
 wandb = "*"
-deepspeed = "0.15.4"
+accelerate = "*"
 
 ruff = {version = "*", optional = true}
 vllm = {version = "=0.6.2", optional = true}
