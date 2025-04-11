@@ -110,30 +110,31 @@ class SotopiaPPOTrainer:
             is_trainable=False,
             adapter_name="ref_adapter"
         )
-        self.ref_policy.active_adapter = "ref_adapter"
 
-        base_gen_policy = AutoModelForCausalLM.from_pretrained(
-            self.args.model_name,
-            torch_dtype='auto',
-            quantization_config=self.quant_config,
-            device_map=get_kbit_device_map(),
-        )
         if self.args.use_lora_train_ppo:
+            base_gen_policy = AutoModelForCausalLM.from_pretrained(
+                self.args.model_name,
+                torch_dtype='auto',
+                quantization_config=self.quant_config,
+                device_map=get_kbit_device_map(),
+            )
             self.policy = PeftModelForCausalLM.from_pretrained(
                 base_gen_policy,
                 self.args.policy_adapter_path,
                 is_trainable=True,
                 adapter_name="policy_adapter"
             )
-            self.policy.active_adapter = "policy_adapter"
         else:
-            self.policy = base_gen_policy
+            self.policy = AutoModelForCausalLM.from_pretrained(
+                self.args.model_name,
+                torch_dtype='auto',
+            )
 
         requires_grad_num = 0
         for name, param in self.policy.named_parameters():
+            print(name, param.requires_grad)
             if param.requires_grad:
                 requires_grad_num += 1
-                print(name)
         print(f"Number of trainable parameters in policy: {requires_grad_num}")
 
         requires_grad_num = 0
@@ -156,35 +157,37 @@ class SotopiaPPOTrainer:
             is_trainable=False,
             adapter_name="reward_adapter"
         )
-        self.reward_model.active_adapter = "reward_adapter"
         for name, param in self.reward_model.named_parameters():
             if self.reward_model.active_adapter in name:
                 param.requires_grad = False
 
-        base_value_model = AutoModelForSequenceClassification.from_pretrained(
-            self.args.model_name,
-            torch_dtype='auto',
-            num_labels=1,
-            quantization_config=self.quant_config,
-            device_map=get_kbit_device_map(),
-        )
-        # VERY VERY IMPORTANT
-        # specifically designed for PPO training, 
-        # based on the get_reward function
-        # it fill the input_ids paddings with 0s
-        base_reward_model.config.pad_token_id = 0
-        base_value_model.config.pad_token_id = 0
-
         if self.args.use_lora_train_ppo:
+            base_value_model = AutoModelForSequenceClassification.from_pretrained(
+                self.args.model_name,
+                torch_dtype='auto',
+                num_labels=1,
+                quantization_config=self.quant_config,
+                device_map=get_kbit_device_map(),
+            )
             self.value_model = PeftModelForSequenceClassification.from_pretrained(
                 base_value_model,
                 self.args.value_adapter_path,
                 is_trainable=True,
                 adapter_name="value_adapter"
             )
-            self.value_model.active_adapter = "value_adapter"
         else:
-            self.value_model = base_value_model
+            self.value_model = AutoModelForSequenceClassification.from_pretrained(
+                self.args.model_name,
+                torch_dtype='auto',
+                num_labels=1,
+            )
+        
+        # VERY VERY IMPORTANT
+        # specifically designed for PPO training, 
+        # based on the get_reward function
+        # it fill the input_ids paddings with 0s
+        self.value_model.config.pad_token_id = 0
+        self.reward_model.config.pad_token_id = 0
         
         requires_grad_num = 0
         for name, param in self.value_model.named_parameters():
