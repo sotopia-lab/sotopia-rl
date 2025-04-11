@@ -1,5 +1,5 @@
-CUDA_VISIBLE_DEVICES=6,7,8,9 accelerate launch \
-  --config_file /data/haofeiy2/sotopia-rl/scripts/accelerate_config_ppo.yaml \
+CUDA_VISIBLE_DEVICES=1,7,8 accelerate launch \
+  --config_file /data/haofeiy2/sotopia-rl/scripts/accelerate_config.yaml \
   --main_process_port 29511 \
   /data/haofeiy2/sotopia-rl/scripts/train_ppo.py \
   --model_name /mnt/data_from_server1/models/Qwen2.5-7B-Instruct \
