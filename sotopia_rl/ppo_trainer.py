@@ -124,6 +124,7 @@ class SotopiaPPOTrainer:
 
         requires_grad_num = 0
         for name, param in self.policy.named_parameters():
+            print(name, param.requires_grad)
             if param.requires_grad:
                 requires_grad_num += 1
         print(f"Number of trainable parameters in policy: {requires_grad_num}")

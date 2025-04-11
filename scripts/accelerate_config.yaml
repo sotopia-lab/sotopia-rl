@@ -8,6 +8,11 @@ deepspeed_config:
   zero3_save_16bit_model: true
   zero_stage: 3
   communication_data_type: "bfloat16"
+dynamo_config:
+  dynamo_backend: EAGER
+  dynamo_mode: default
+  dynamo_use_dynamic: false
+  dynamo_use_fullgraph: false
 distributed_type: DEEPSPEED
 downcast_bf16: 'no'
 machine_rank: 0
