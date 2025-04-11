@@ -148,13 +148,8 @@ class SotopiaPPOTrainer:
                 requires_grad_num += 1
         print(f"Number of trainable parameters in ref policy: {requires_grad_num}")
 
-        trainable = [n for n, p in self.policy.named_parameters() if p.requires_grad]
-        print(f"Trainable policy parameters ({len(trainable)}):")
-        for n in trainable:
-            print(" -", n)
-
     def _setup_classification_models(self):
-        base_cls_model = AutoModelForSequenceClassification.from_pretrained(
+        base_reward_model = AutoModelForSequenceClassification.from_pretrained(
             self.args.model_name,
             torch_dtype='auto',
             num_labels=1,
@@ -169,9 +164,16 @@ class SotopiaPPOTrainer:
             quantization_config=self.quant_config,
             device_map=get_kbit_device_map(),
         )
+
+        # VERY VERY IMPORTANT
+        # specifically designed for PPO training, 
+        # based on the get_reward function
+        # it fill the input_ids paddings with 0s
+        base_reward_model.config.pad_token_id = 0
+        base_value_model.config.pad_token_id = 0
         
         self.reward_model = PeftModelForSequenceClassification.from_pretrained(
-            base_cls_model,
+            base_reward_model,
             self.args.reward_adapter_path,
             is_trainable=False,
             adapter_name="reward_adapter"
@@ -205,7 +207,6 @@ class SotopiaPPOTrainer:
         for name, param in self.reward_model.named_parameters():
             if param.requires_grad:
                 requires_grad_num += 1
-                print(name)
         print(f"Number of trainable parameters in reward model: {requires_grad_num}")
 
     def _setup_ppo_trainer(self):
