@@ -81,11 +81,12 @@ class SotopiaPPOTrainer:
 
     def _create_quantization_config(self):
         self.model_dtype = torch.bfloat16
-        self.quant_config = BitsAndBytesConfig(
+        self.bit_quant_config = BitsAndBytesConfig(
             load_in_8bit=True,
             llm_int8_threshold=6.0,
             llm_int8_has_fp16_weight=False,
         )
+
     
     def _setup_generation_models(self):
         base_gen_ref = AutoModelForCausalLM.from_pretrained(
