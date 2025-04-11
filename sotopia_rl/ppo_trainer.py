@@ -146,7 +146,6 @@ class SotopiaPPOTrainer:
         for name, param in self.ref_policy.named_parameters():
             if param.requires_grad:
                 requires_grad_num += 1
-                print(name)
         print(f"Number of trainable parameters in ref policy: {requires_grad_num}")
 
         trainable = [n for n, p in self.policy.named_parameters() if p.requires_grad]
@@ -191,6 +190,10 @@ class SotopiaPPOTrainer:
         for name, param in self.value_model.named_parameters():
             if self.value_model.active_adapter in name:
                 param.requires_grad = True
+        
+        for name, param in self.reward_model.named_parameters():
+            if self.reward_model.active_adapter in name:
+                param.requires_grad = False
 
         requires_grad_num = 0
         for name, param in self.value_model.named_parameters():
