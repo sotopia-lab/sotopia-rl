@@ -2,20 +2,16 @@ compute_environment: LOCAL_MACHINE
 debug: true
 distributed_type: MULTI_GPU
 downcast_bf16: 'no'
-dynamo_config:
-  dynamo_backend: EAGER
-  dynamo_mode: default
-  dynamo_use_dynamic: false
-  dynamo_use_fullgraph: false
-enable_cpu_affinity: true
+enable_cpu_affinity: false
 gpu_ids: all
 machine_rank: 0
 main_training_function: main
 mixed_precision: bf16
 num_machines: 1
-num_processes: 3
-rdzv_backend: static  # Keep this unless running multi-node
+num_processes: 1
+rdzv_backend: static
 same_network: true
 tpu_env: []
 tpu_use_cluster: false
 tpu_use_sudo: false
+use_cpu: false
