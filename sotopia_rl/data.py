@@ -382,3 +382,29 @@ class PPODataset(Dataset):
         )
         return {"input_ids": input_ids}
         
+class GRPODataset(Dataset):
+    def __init__(self, data_path: str, tokenizer, template, max_length: int):
+        self.data = self.load_sft_data(data_path)
+        self.tokenizer = tokenizer 
+        self.max_length = max_length
+        self.template = template
+
+    def load_sft_data(self, file_path: str):
+        with open(file_path, "r") as f:
+            return json.load(f)
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, idx: int) -> Dict[str, Any]:
+        item = self.data[idx]
+
+        rendered_prompt = self.template.render(
+            messages=[{"role": "user", "content": item["input"]}],
+            add_generation_prompt=True
+        )
+
+        return {
+            "prompt": rendered_prompt,
+            "completion": item["output"] 
+        }
