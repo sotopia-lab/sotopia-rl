@@ -1,21 +1,19 @@
 import os
-import json
 import torch
 import wandb
-from torch.utils.data import random_split, Dataset
+from torch.utils.data import random_split
 from transformers import (
     AutoModelForCausalLM,
-    AutoModelForSequenceClassification,
     AutoTokenizer,
     BitsAndBytesConfig,
 )
-from peft import PeftModelForCausalLM, PeftModelForSequenceClassification
+from peft import PeftModelForCausalLM
 from jinja2 import Environment, FileSystemLoader
-from trl import get_kbit_device_map, GRPOConfig, GRPOTrainer, get_peft_config
-from accelerate import PartialState, Accelerator
+from trl import get_kbit_device_map, GRPOConfig, GRPOTrainer
+from accelerate import Accelerator
 from sotopia_rl.data import GRPODataset
-from peft import LoraConfig, TaskType, get_peft_model
 
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 os.environ['NCCL_P2P_DISABLE'] = '1'
 os.environ['TORCH_DISTRIBUTED_DEBUG'] = 'DETAIL'
 
@@ -28,51 +26,23 @@ class SotopiaGRPOTrainer:
         self._setup_tokenizer()
         self._setup_dataset()
         self._create_quantization_config()
-
         self._setup_generation_models()
-        self._setup_classification_models()
 
-        self.policy, self.ref_policy, self.reward_model, self.value_model = self.accelerator.prepare(
-            self.policy, self.ref_policy, self.reward_model, self.value_model
+        self.policy, self.ref_policy = self.accelerator.prepare(
+            self.policy, self.ref_policy
         )
         self.policy = self.accelerator.unwrap_model(self.policy)
         self.ref_policy = self.accelerator.unwrap_model(self.ref_policy)
-        self.reward_model = self.accelerator.unwrap_model(self.reward_model)
-        self.value_model = self.accelerator.unwrap_model(self.value_model)
-        print("\n=== Trainable parameters in policy ===")
-        for name, param in self.policy.named_parameters():
-            if param.requires_grad:
-                print(f"{name}: {param.shape}")
-        
-        print("\n=== Trainable parameters in reward model ===")
-        for name, param in self.reward_model.named_parameters():
-            if param.requires_grad:
-                print(f"{name}: {param.shape}")
-
-        print("\n=== Trainable parameters in value model ===")
-        for name, param in self.value_model.named_parameters():
-            if param.requires_grad:
-                print(f"{name}: {param.shape}")
-
-        num_params = sum(p.numel() for p in self.policy.parameters() if p.requires_grad)
-        print(f"Total trainable parameters in policy: {num_params}")
 
         self._setup_grpo_trainer()
 
         def save_model(self, output_dir: str, _internal_call: bool = False):
-            print(self.model)
-            print(self.model.policy)
-            if hasattr(self.model, "policy"):
-                model_to_save = self.model.policy
-            elif hasattr(self.model, "module") and hasattr(self.model.module, "policy"):
-                model_to_save = self.model.module.policy
-            else:
-                model_to_save = self.model
-            model_to_save.save_pretrained(output_dir)
+            self.model.save_pretrained(output_dir)
             self.tokenizer.save_pretrained(output_dir)
-            print(f"Model saved to {output_dir}")
+            print(f"Saved PEFT model to {output_dir}")
 
         self.grpo_trainer.save_model = save_model.__get__(self.grpo_trainer, type(self.grpo_trainer))
+
     def _init_wandb(self):
         wandb.init(
             project=self.args.wandb_project,
@@ -93,14 +63,14 @@ class SotopiaGRPOTrainer:
             template=template,
             max_length=self.args.max_length
         )
-        
+
         generator = torch.Generator().manual_seed(42)
         val_ratio = getattr(self.args, 'val_ratio', 0.05)
         train_size = min(int(len(dataset) * (1 - val_ratio)), len(dataset) - 2)
         val_size = len(dataset) - train_size
         self.train_dataset, self.val_dataset = random_split(dataset, [train_size, val_size], generator=generator)
         print(f"Dataset split: {len(self.train_dataset)} train, {len(self.val_dataset)} validation")
-    
+
     def _create_quantization_config(self):
         self.quant_config = BitsAndBytesConfig(
             load_in_4bit=True,
@@ -137,7 +107,7 @@ class SotopiaGRPOTrainer:
             is_trainable=False,
             adapter_name="ref_adapter"
         )
-        
+
         self.ref_policy.active_adapter = "ref_adapter"
         self.policy.active_adapter = "policy_adapter"
 
@@ -145,85 +115,11 @@ class SotopiaGRPOTrainer:
             if self.policy.active_adapter in name:
                 param.requires_grad = True
 
-        requires_grad_num = 0
-        for name, param in self.policy.named_parameters():
-            if param.requires_grad:
-                requires_grad_num += 1
-        print(f"Number of trainable parameters in policy: {requires_grad_num}")
-
-        requires_grad_num = 0
-        for name, param in self.ref_policy.named_parameters():
-            if param.requires_grad:
-                requires_grad_num += 1
-                print(name)
-        print(f"Number of trainable parameters in ref policy: {requires_grad_num}")
-
-        trainable = [n for n, p in self.policy.named_parameters() if p.requires_grad]
-        print(f"Trainable policy parameters ({len(trainable)}):")
-        for n in trainable:
-            print(" -", n)
-
-    def _setup_classification_models(self):
-        base_cls_model = AutoModelForSequenceClassification.from_pretrained(
-            self.args.model_name,
-            torch_dtype='auto',
-            num_labels=1,
-            quantization_config=self.quant_config,
-            device_map=get_kbit_device_map(),
-        )
-
-        base_value_model = AutoModelForSequenceClassification.from_pretrained(
-            self.args.model_name,
-            torch_dtype='auto',
-            num_labels=1,
-            quantization_config=self.quant_config,
-            device_map=get_kbit_device_map(),
-        )
-        
-        self.reward_model = PeftModelForSequenceClassification.from_pretrained(
-            base_cls_model,
-            self.args.reward_adapter_path,
-            is_trainable=False,
-            adapter_name="reward_adapter"
-        )
-        
-        self.value_model = PeftModelForSequenceClassification.from_pretrained(
-            base_value_model,
-            self.args.value_adapter_path,
-            is_trainable=False,
-            adapter_name="value_adapter"
-        )
-        
-        self.reward_model.active_adapter = "reward_adapter"
-        self.value_model.active_adapter = "value_adapter"
-
-        for name, param in self.value_model.named_parameters():
-            if self.value_model.active_adapter in name:
-                param.requires_grad = True
-
-        requires_grad_num = 0
-        for name, param in self.value_model.named_parameters():
-            if param.requires_grad:
-                requires_grad_num += 1
-        print(f"Number of trainable parameters in value model: {requires_grad_num}")
-
-        requires_grad_num = 0
-        for name, param in self.reward_model.named_parameters():
-            if param.requires_grad:
-                requires_grad_num += 1
-                print(name)
-        print(f"Number of trainable parameters in reward model: {requires_grad_num}")
-
     def _setup_grpo_trainer(self):
-
         num_processes = self.accelerator.num_processes
         global_batch_size = self.args.per_device_train_batch_size * num_processes
 
-        possible_values = [n for n in range(2, global_batch_size + 1) if global_batch_size % n == 0]
-        if not possible_values:
-            raise ValueError(f"Global batch size {global_batch_size} is too small. Increase batch size or GPUs.")
-        
-        num_generations = possible_values[0]
+        num_generations = 4  # manually chosen value
         print(f"Using num_generations = {num_generations} (global_batch_size = {global_batch_size})")
 
         training_args = GRPOConfig(
@@ -234,7 +130,6 @@ class SotopiaGRPOTrainer:
             learning_rate=self.args.learning_rate,
             output_dir=self.args.output_dir,
             save_steps=self.args.save_steps,
-            ddp_find_unused_parameters=True,
             num_generations=num_generations
         )
 
@@ -256,7 +151,3 @@ class SotopiaGRPOTrainer:
         except Exception as e:
             print(f"Training error: {str(e)}")
             raise
-
-    
-
-

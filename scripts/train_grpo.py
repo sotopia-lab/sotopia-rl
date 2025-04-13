@@ -47,7 +47,7 @@ if __name__ == '__main__':
                         help="Path to the Jinja template file")
     parser.add_argument("--output_dir", type=str, default="checkpoints",
                         help="Directory to save the best LoRA checkpoint")
-    parser.add_argument("--save_steps", type=int, default=5,
+    parser.add_argument("--save_steps", type=int, default=10,
                         help="Number of steps between saving checkpoints")
 
     # Logging parameters
