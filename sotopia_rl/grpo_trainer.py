@@ -1,0 +1,215 @@
+import os
+import torch
+import wandb
+from torch.utils.data import random_split
+from transformers import (
+    AutoModelForCausalLM,
+    AutoModelForSequenceClassification,
+    AutoTokenizer,
+    BitsAndBytesConfig,
+    GenerationConfig,
+)
+from peft import PeftModelForCausalLM, PeftModelForSequenceClassification
+from jinja2 import Environment, FileSystemLoader
+from trl import get_kbit_device_map, GRPOConfig, GRPOTrainer
+from accelerate import Accelerator
+from sotopia_rl.data import GRPODataset
+from functools import partial
+
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
+os.environ['NCCL_P2P_DISABLE'] = '1'
+os.environ['TORCH_DISTRIBUTED_DEBUG'] = 'DETAIL'
+
+class SotopiaGRPOTrainer:
+    def __init__(self, args, accelerator: Accelerator):
+        self.args = args
+        self.accelerator = accelerator
+
+        self._init_wandb()
+        self._setup_tokenizer()
+        self._setup_dataset()
+        self._create_quantization_config()
+        self._setup_generation_models()
+        self._setup_classification_models()
+
+        self.policy, self.ref_policy = self.accelerator.prepare(
+            self.policy, self.ref_policy
+        )
+        self.policy = self.accelerator.unwrap_model(self.policy)
+        self.ref_policy = self.accelerator.unwrap_model(self.ref_policy)
+
+        self.policy.config.pad_token_id = self.tokenizer.pad_token_id
+        self.ref_policy.config.pad_token_id = self.tokenizer.pad_token_id
+        self.reward_model.config.pad_token_id = self.tokenizer.pad_token_id
+        self.value_model.config.pad_token_id = self.tokenizer.pad_token_id
+
+        self._setup_grpo_trainer()
+
+        def save_model(self, output_dir: str, _internal_call: bool = False):
+            self.model.save_pretrained(output_dir)
+            self.tokenizer.save_pretrained(output_dir)
+            print(f"Saved PEFT model to {output_dir}")
+
+        self.grpo_trainer.save_model = save_model.__get__(self.grpo_trainer, type(self.grpo_trainer))
+
+    def _init_wandb(self):
+        wandb.init(
+            project=self.args.wandb_project,
+            name=self.args.wandb_run_name,
+            config={k: v for k, v in vars(self.args).items() if isinstance(v, (int, float, str))}
+        )
+
+    def _setup_tokenizer(self):
+        self.tokenizer = AutoTokenizer.from_pretrained(self.args.model_name, padding_side="left")
+        self.tokenizer.add_special_tokens({'pad_token': '[PAD]'})
+        self.tokenizer.pad_token_id = self.tokenizer.convert_tokens_to_ids('[PAD]')
+
+
+    def _setup_dataset(self):
+        env = Environment(loader=FileSystemLoader("/".join(self.args.template_path.split("/")[:-1])))
+        template = env.get_template(self.args.template_path.split("/")[-1])
+        dataset = GRPODataset(
+            data_path=self.args.grpo_data_path,
+            tokenizer=self.tokenizer,
+            template=template,
+            max_length=self.args.max_length
+        )
+
+        generator = torch.Generator().manual_seed(42)
+        val_ratio = getattr(self.args, 'val_ratio', 0.05)
+        train_size = min(int(len(dataset) * (1 - val_ratio)), len(dataset) - 2)
+        val_size = len(dataset) - train_size
+        self.train_dataset, self.val_dataset = random_split(dataset, [train_size, val_size], generator=generator)
+        print(f"Dataset split: {len(self.train_dataset)} train, {len(self.val_dataset)} validation")
+
+    def _create_quantization_config(self):
+        self.quant_config = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_compute_dtype=torch.bfloat16,
+            bnb_4bit_use_double_quant=True,
+            bnb_4bit_quant_type="nf4"
+        )
+
+    def _setup_generation_models(self):
+        base_gen_ref = AutoModelForCausalLM.from_pretrained(
+            self.args.model_name,
+            torch_dtype='auto',
+            quantization_config=self.quant_config,
+            device_map=get_kbit_device_map(),
+        )
+        self.ref_policy = PeftModelForCausalLM.from_pretrained(
+            base_gen_ref,
+            self.args.ref_adapter_path,
+            is_trainable=False,
+            adapter_name="ref_adapter"
+        )
+
+        if self.args.use_lora_train_grpo:
+            base_gen_policy = AutoModelForCausalLM.from_pretrained(
+                self.args.model_name,
+                torch_dtype='auto',
+                quantization_config=self.quant_config,
+                device_map=get_kbit_device_map(),
+            )
+            self.policy = PeftModelForCausalLM.from_pretrained(
+                base_gen_policy,
+                self.args.policy_adapter_path,
+                is_trainable=True,
+                adapter_name="policy_adapter"
+            )
+        else:
+            self.policy = AutoModelForCausalLM.from_pretrained(
+                self.args.model_name,
+                torch_dtype='auto',
+            )
+
+        requires_grad_num = 0
+        for name, param in self.policy.named_parameters():
+            print(name, param.requires_grad)
+            if param.requires_grad:
+                requires_grad_num += 1
+        print(f"Number of trainable parameters in policy: {requires_grad_num}")
+
+        requires_grad_num = 0
+        for name, param in self.ref_policy.named_parameters():
+            if param.requires_grad:
+                requires_grad_num += 1
+        print(f"Number of trainable parameters in ref policy: {requires_grad_num}")
+
+    def _setup_classification_models(self):
+        base_reward_model = AutoModelForSequenceClassification.from_pretrained(
+            self.args.model_name,
+            torch_dtype='auto',
+            num_labels=1,
+            quantization_config=self.quant_config,
+            device_map=get_kbit_device_map(),
+        )
+        self.reward_model = PeftModelForSequenceClassification.from_pretrained(
+            base_reward_model,
+            self.args.reward_adapter_path,
+            is_trainable=False,
+            adapter_name="reward_adapter"
+        )
+        for name, param in self.reward_model.named_parameters():
+            if self.reward_model.active_adapter in name:
+                param.requires_grad = False
+
+        if self.args.use_lora_train_grpo:
+            base_value_model = AutoModelForSequenceClassification.from_pretrained(
+                self.args.model_name,
+                torch_dtype='auto',
+                num_labels=1,
+                quantization_config=self.quant_config,
+                device_map=get_kbit_device_map(),
+            )
+            self.value_model = PeftModelForSequenceClassification.from_pretrained(
+                base_value_model,
+                self.args.value_adapter_path,
+                is_trainable=True,
+                adapter_name="value_adapter"
+            )
+        else:
+            self.value_model = AutoModelForSequenceClassification.from_pretrained(
+                self.args.model_name,
+                torch_dtype='auto',
+                num_labels=1,
+            )
+
+    def _setup_grpo_trainer(self):
+        num_processes = self.accelerator.num_processes
+        global_batch_size = self.args.per_device_train_batch_size * num_processes
+
+        num_generations = 4  # manually chosen value
+        print(f"Using num_generations = {num_generations} (global_batch_size = {global_batch_size})")
+        
+
+        training_args = GRPOConfig(
+            per_device_train_batch_size=self.args.per_device_train_batch_size,
+            per_device_eval_batch_size=self.args.per_device_eval_batch_size,
+            gradient_accumulation_steps=self.args.gradient_accumulation_steps,
+            num_train_epochs=self.args.num_train_epochs,
+            learning_rate=self.args.learning_rate,
+            output_dir=self.args.output_dir,
+            save_steps=self.args.save_steps,
+            num_generations=num_generations
+        )
+
+        self.grpo_trainer = GRPOTrainer(
+            args=training_args,
+            model=self.policy,
+            reward_funcs=self.value_model,
+            processing_class=self.tokenizer,
+            reward_processing_classes=self.tokenizer,
+            train_dataset=self.train_dataset,
+            eval_dataset=self.val_dataset,
+        )
+        print("GRPOtrainer setup complete")
+
+    def train(self):
+        try:
+            print("Starting GRPO training...")
+            train_stats = self.grpo_trainer.train()
+            return train_stats
+        except Exception as e:
+            print(f"Training error: {str(e)}")
+            raise
