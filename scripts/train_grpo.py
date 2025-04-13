@@ -55,6 +55,8 @@ if __name__ == '__main__':
                         help="Wandb project name")
     parser.add_argument("--wandb_run_name", type=str, default=None,
                         help="Wandb run name")
+    parser.add_argument("--use_lora_train_grpo", action="store_true",
+                        help="Use LoRA for training GRPO")
  
     args = parser.parse_args()
     accelerator = Accelerator()
