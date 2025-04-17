@@ -16,4 +16,3 @@ CUDA_VISIBLE_DEVICES=0,1,2,3,4,5 accelerate launch \
   --use_lora_train_grpo \
   --num_generations 4 \
   --output_dir /data/disk0/sotopia-rl/grpo_rm_reward_direct_default
-

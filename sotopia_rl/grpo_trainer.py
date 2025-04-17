@@ -75,7 +75,6 @@ class SotopiaGRPOTrainer:
         self.train_dataset, self.val_dataset = random_split(dataset, [train_size, val_size], generator=generator)
         print(f"Dataset split: {len(self.train_dataset)} train, {len(self.val_dataset)} validation")
 
-
     def _create_quantization_config(self):
         self.quant_config = BitsAndBytesConfig(
             load_in_4bit=True,
