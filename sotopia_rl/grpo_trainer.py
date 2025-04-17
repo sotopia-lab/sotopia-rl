@@ -1,6 +1,7 @@
 import os
 import torch
 import wandb
+from datasets import load_dataset
 from torch.utils.data import random_split
 from transformers import (
     AutoModelForCausalLM,
@@ -9,16 +10,19 @@ from transformers import (
     BitsAndBytesConfig,
     GenerationConfig,
 )
+from accelerate import PartialState
 from peft import PeftModelForCausalLM, PeftModelForSequenceClassification
 from jinja2 import Environment, FileSystemLoader
 from trl import get_kbit_device_map, GRPOConfig, GRPOTrainer
 from accelerate import Accelerator
 from sotopia_rl.data import GRPODataset
 from functools import partial
+from typing import List
 
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 os.environ['NCCL_P2P_DISABLE'] = '1'
 os.environ['TORCH_DISTRIBUTED_DEBUG'] = 'DETAIL'
+
 
 class SotopiaGRPOTrainer:
     def __init__(self, args, accelerator: Accelerator):
@@ -29,19 +33,8 @@ class SotopiaGRPOTrainer:
         self._setup_tokenizer()
         self._setup_dataset()
         self._create_quantization_config()
-        self._setup_generation_models()
+        self._setup_policy_models()
         self._setup_classification_models()
-
-        self.policy, self.ref_policy = self.accelerator.prepare(
-            self.policy, self.ref_policy
-        )
-        self.policy = self.accelerator.unwrap_model(self.policy)
-        self.ref_policy = self.accelerator.unwrap_model(self.ref_policy)
-
-        self.policy.config.pad_token_id = self.tokenizer.pad_token_id
-        self.ref_policy.config.pad_token_id = self.tokenizer.pad_token_id
-        self.reward_model.config.pad_token_id = self.tokenizer.pad_token_id
-        self.value_model.config.pad_token_id = self.tokenizer.pad_token_id
 
         self._setup_grpo_trainer()
 
@@ -90,20 +83,7 @@ class SotopiaGRPOTrainer:
             bnb_4bit_quant_type="nf4"
         )
 
-    def _setup_generation_models(self):
-        base_gen_ref = AutoModelForCausalLM.from_pretrained(
-            self.args.model_name,
-            torch_dtype='auto',
-            quantization_config=self.quant_config,
-            device_map=get_kbit_device_map(),
-        )
-        self.ref_policy = PeftModelForCausalLM.from_pretrained(
-            base_gen_ref,
-            self.args.ref_adapter_path,
-            is_trainable=False,
-            adapter_name="ref_adapter"
-        )
-
+    def _setup_policy_models(self):
         if self.args.use_lora_train_grpo:
             base_gen_policy = AutoModelForCausalLM.from_pretrained(
                 self.args.model_name,
@@ -122,68 +102,41 @@ class SotopiaGRPOTrainer:
                 self.args.model_name,
                 torch_dtype='auto',
             )
-
-        requires_grad_num = 0
-        for name, param in self.policy.named_parameters():
-            print(name, param.requires_grad)
-            if param.requires_grad:
-                requires_grad_num += 1
-        print(f"Number of trainable parameters in policy: {requires_grad_num}")
-
-        requires_grad_num = 0
-        for name, param in self.ref_policy.named_parameters():
-            if param.requires_grad:
-                requires_grad_num += 1
-        print(f"Number of trainable parameters in ref policy: {requires_grad_num}")
+        self.policy.config.pad_token_id = self.tokenizer.pad_token_id
 
     def _setup_classification_models(self):
-        base_reward_model = AutoModelForSequenceClassification.from_pretrained(
-            self.args.model_name,
-            torch_dtype='auto',
-            num_labels=1,
-            quantization_config=self.quant_config,
-            device_map=get_kbit_device_map(),
-        )
-        self.reward_model = PeftModelForSequenceClassification.from_pretrained(
-            base_reward_model,
-            self.args.reward_adapter_path,
-            is_trainable=False,
-            adapter_name="reward_adapter"
-        )
-        for name, param in self.reward_model.named_parameters():
-            if self.reward_model.active_adapter in name:
-                param.requires_grad = False
-
         if self.args.use_lora_train_grpo:
-            base_value_model = AutoModelForSequenceClassification.from_pretrained(
+            base_reward_model = AutoModelForSequenceClassification.from_pretrained(
                 self.args.model_name,
                 torch_dtype='auto',
                 num_labels=1,
                 quantization_config=self.quant_config,
                 device_map=get_kbit_device_map(),
             )
-            self.value_model = PeftModelForSequenceClassification.from_pretrained(
-                base_value_model,
-                self.args.value_adapter_path,
+            self.reward_model = PeftModelForSequenceClassification.from_pretrained(
+                base_reward_model,
+                self.args.reward_adapter_path,
                 is_trainable=True,
                 adapter_name="value_adapter"
             )
         else:
-            self.value_model = AutoModelForSequenceClassification.from_pretrained(
+            self.reward_model = AutoModelForSequenceClassification.from_pretrained(
                 self.args.model_name,
                 torch_dtype='auto',
                 num_labels=1,
             )
+        self.reward_model.config.pad_token_id = self.tokenizer.pad_token_id
 
     def _setup_grpo_trainer(self):
         num_processes = self.accelerator.num_processes
         global_batch_size = self.args.per_device_train_batch_size * num_processes
 
-        num_generations = 4  # manually chosen value
+        num_generations = self.args.num_generations
         print(f"Using num_generations = {num_generations} (global_batch_size = {global_batch_size})")
-        
 
         training_args = GRPOConfig(
+            logging_steps = 1,
+            report_to = "wandb",
             per_device_train_batch_size=self.args.per_device_train_batch_size,
             per_device_eval_batch_size=self.args.per_device_eval_batch_size,
             gradient_accumulation_steps=self.args.gradient_accumulation_steps,
@@ -197,7 +150,7 @@ class SotopiaGRPOTrainer:
         self.grpo_trainer = GRPOTrainer(
             args=training_args,
             model=self.policy,
-            reward_funcs=self.value_model,
+            reward_funcs=self.reward_model,
             processing_class=self.tokenizer,
             reward_processing_classes=self.tokenizer,
             train_dataset=self.train_dataset,
