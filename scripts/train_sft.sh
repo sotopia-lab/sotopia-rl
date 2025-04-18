@@ -1,8 +1,8 @@
-CUDA_VISIBLE_DEVICES=0,1 accelerate launch \
-  --config_file /data/haofeiy2/sotopia-rl/scripts/accelerate_config.yaml \
+CUDA_VISIBLE_DEVICES=7,8 accelerate launch \
+  --config_file /data/haofeiy2/sotopia-rl/scripts/accelerate_config_sft.yaml \
   --main_process_port 29512 \
     /data/haofeiy2/sotopia-rl/scripts/train_sft.py \
-    --model_name /data/models/Qwen2.5-7B-Instruct \
+    --model_name /mnt/data_from_server1/models/Qwen2.5-7B-Instruct \
     --learning_rate 1e-4 \
     --max_length 4096 \
     --train_batch_size 1 \

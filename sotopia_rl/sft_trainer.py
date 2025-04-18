@@ -14,8 +14,10 @@ from transformers import (
 from trl import SFTTrainer
 import wandb
 from sotopia_rl.data import SFTDataset
+from datasets import Dataset
 
 os.environ['NCCL_P2P_DISABLE'] = '1'
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 class SotopiaSFTTrainer:
     def __init__(self, args, accelerator):
@@ -33,8 +35,8 @@ class SotopiaSFTTrainer:
         config = AutoConfig.from_pretrained(args.model_name)
         config.use_cache = False
 
-        self.tokenizer = AutoTokenizer.from_pretrained(args.model_name)
-        self.tokenizer.model_max_length = args.max_length
+        tokenizer = AutoTokenizer.from_pretrained(args.model_name)
+        tokenizer.model_max_length = args.max_length
 
         quantization_config = BitsAndBytesConfig(
             load_in_4bit=True,
@@ -75,7 +77,7 @@ class SotopiaSFTTrainer:
         env = Environment(loader=FileSystemLoader(os.path.dirname(args.template_path)))
         self.template = env.get_template(os.path.basename(args.template_path))
 
-        self.setup_dataset()
+        train_dataset, val_dataset = self.setup_dataset(tokenizer)
 
         training_args = TrainingArguments(
             output_dir=args.checkpoint_dir,
@@ -85,7 +87,6 @@ class SotopiaSFTTrainer:
             gradient_accumulation_steps=args.accumulation_steps,
             learning_rate=args.learning_rate,
             weight_decay=args.weight_decay,
-            evaluation_strategy="steps",
             eval_steps=args.evaluation_steps,
             save_steps=args.evaluation_steps,
             logging_dir="./logs",
@@ -96,29 +97,39 @@ class SotopiaSFTTrainer:
             bf16=True,
             fp16=False,
             dataloader_num_workers=4,
+            ddp_find_unused_parameters=False,
         )
 
-        self.collate_fn = self.train_dataset.dataset.collate_fn if hasattr(self.train_dataset, 'dataset') else None
+        collate_fn = train_dataset.dataset.collate_fn if hasattr(train_dataset, 'dataset') else None
 
         self.trainer = SFTTrainer(
             model=self.model,
             args=training_args,
-            train_dataset=self.train_dataset,
-            eval_dataset=self.val_dataset,
-            tokenizer=self.tokenizer,
-            data_collator=self.collate_fn,
+            train_dataset=train_dataset,
+            eval_dataset=val_dataset,
+            processing_class=tokenizer,
+            data_collator=collate_fn,
         )
         
 
-    def setup_dataset(self):
-        dataset = SFTDataset(self.args.sft_data_path, self.tokenizer, max_length=self.args.max_length, template=self.template)
-        train_size = int(0.95 * len(dataset))
-        val_size = len(dataset) - train_size
-        generator = torch.Generator().manual_seed(42)
-        self.train_dataset, self.val_dataset = random_split(dataset, [train_size, val_size], generator=generator)
+    def setup_dataset(self, tokenizer):
+        env = Environment(loader=FileSystemLoader("/".join(self.args.template_path.split("/")[:-1])))
+        template = env.get_template(self.args.template_path.split("/")[-1])
+        dataset = SFTDataset(self.args.sft_data_path, tokenizer, template, self.args.max_length)
 
-        print(f"Training dataset size: {len(self.train_dataset)}")
-        print(f"Validation dataset size: {len(self.val_dataset)}")
+        if self.accelerator.is_main_process:
+            print(f"dataset: {len(dataset)}")
+
+        train_size = int(len(dataset) * 0.95)
+        val_size = len(dataset) - train_size
+
+        # Use deterministic splitter with seed to ensure same split across processes
+        generator = torch.Generator().manual_seed(42)
+        train_dataset, val_dataset = random_split(dataset, [train_size, val_size], generator=generator)
+        train_dataset = Dataset.from_list([train_dataset[i] for i in range(len(train_dataset))])
+        val_dataset = Dataset.from_list([val_dataset[i] for i in range(len(val_dataset))])
+
+        return train_dataset, val_dataset
 
     def train(self):
         self.trainer.train()

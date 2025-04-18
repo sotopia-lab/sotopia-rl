@@ -29,7 +29,8 @@ class SotopiaRMTrainer(Trainer):
         self.accelerator = accelerator
         self.device = accelerator.device
 
-        train_dataset, eval_dataset = self.setup_dataset()
+        tokenizer = AutoTokenizer.from_pretrained(args.model_name)
+        train_dataset, eval_dataset = self.setup_dataset(tokenizer)
 
         # Initialize wandb only on the main process
         if self.accelerator.is_main_process:
@@ -45,7 +46,6 @@ class SotopiaRMTrainer(Trainer):
             lora_dropout=args.lora_dropout,
             target_modules=args.target_modules.split(",")
         )
-        tokenizer = AutoTokenizer.from_pretrained(args.model_name)
 
         base_model = AutoModelForSequenceClassification.from_pretrained(
             args.model_name,
@@ -83,7 +83,7 @@ class SotopiaRMTrainer(Trainer):
         super().__init__(
             model=model,
             args=training_args,
-            tokenizer=tokenizer,
+            processing_class=tokenizer,
             train_dataset=train_dataset,
             eval_dataset=eval_dataset,
             data_collator=collate_fn,
@@ -94,10 +94,9 @@ class SotopiaRMTrainer(Trainer):
         if args.checkpoint_path:
             self.load_lora_checkpoint(args.checkpoint_path)
 
-    def setup_dataset(self):
+    def setup_dataset(self, tokenizer):
         env = Environment(loader=FileSystemLoader("/".join(self.args.template_path.split("/")[:-1])))
         template = env.get_template(self.args.template_path.split("/")[-1])
-        tokenizer = AutoTokenizer.from_pretrained(self.args.model_name)
         dataset = RMDataset(self.args.reward_data_path, tokenizer, template, self.args.max_length)
 
         if self.accelerator.is_main_process:
