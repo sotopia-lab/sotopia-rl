@@ -7,7 +7,7 @@ from transformers import PreTrainedTokenizer
 
 
 class SFTDataset(Dataset):
-    def __init__(self, data_path: str, tokenizer: PreTrainedTokenizer, max_length: int, template):
+    def __init__(self, data_path: str, tokenizer: PreTrainedTokenizer, template, max_length: int, ):
         self.data = self.load_sft_data(data_path)
         self.tokenizer = tokenizer
         self.max_length = max_length
