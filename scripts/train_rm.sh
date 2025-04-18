@@ -9,7 +9,7 @@ CUDA_VISIBLE_DEVICES=0,1,2,3,4,5 accelerate launch \
   --val_batch_size 1 \
   --accumulation_steps 8 \
   --num_epochs 30 \
-  --evaluation_steps 5 \
+  --evaluation_steps 100 \
   --reward_data_path /data/haofeiy2/sotopia-rl/data/sotopia_pi_bc_episodes_reward_token_length.json \
   --template_path /data/haofeiy2/sotopia-rl/evals/qwen2.5-7b.jinja \
   --checkpoint_dir /data/haofeiy2/sotopia-rl/rm_token_length
