@@ -50,9 +50,8 @@ class SotopiaRMTrainer(Trainer):
         base_model = AutoModelForSequenceClassification.from_pretrained(
             args.model_name,
             num_labels=1,
-            torch_dtype=torch.float32, 
+            torch_dtype='auto', 
         )
-        base_model.enable_input_require_grads() # very important
 
         model = PeftModelForSequenceClassification(base_model, peft_config)
         model.config.pad_token_id = tokenizer.pad_token_id  # important to set the config pad_token_id
