@@ -53,7 +53,6 @@ class SotopiaRMTrainer(Trainer):
             torch_dtype=torch.float32, 
         )
         base_model.enable_input_require_grads() # very important
-        base_model.gradient_checkpointing_enable()
 
         model = PeftModelForSequenceClassification(base_model, peft_config)
         model.config.pad_token_id = tokenizer.pad_token_id  # important to set the config pad_token_id
@@ -66,7 +65,6 @@ class SotopiaRMTrainer(Trainer):
             per_device_train_batch_size=args.train_batch_size,
             per_device_eval_batch_size=args.val_batch_size,
             num_train_epochs=args.num_epochs,
-            evaluation_strategy="steps",
             logging_steps=1,
             save_steps=args.evaluation_steps,
             eval_steps=args.evaluation_steps,
@@ -122,12 +120,6 @@ class SotopiaRMTrainer(Trainer):
         outputs = model(input_ids, attention_mask=attention_masks)
         predicted_rewards = outputs.logits.squeeze(-1)  # Shape: (batch_size,)
         loss = self.loss_fn(predicted_rewards, true_rewards)
-
-        # Only print from the main process to avoid log flooding
-        #if self.is_main_process:
-        #    print(self.model.training)
-        #    print("predicted_rewards", predicted_rewards)
-        #    print("true_rewards", true_rewards)
 
         return (loss, outputs) if return_outputs else loss
 
