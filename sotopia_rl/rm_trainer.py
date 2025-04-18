@@ -3,7 +3,7 @@ import os
 import torch
 import torch.distributed as dist
 from jinja2 import Environment, FileSystemLoader
-from peft import LoraConfig, PeftModelForSequenceClassification
+from peft import LoraConfig, get_peft_model
 from torch.nn import MSELoss
 from torch.utils.data import random_split
 from transformers import (
@@ -53,7 +53,7 @@ class SotopiaRMTrainer(Trainer):
             torch_dtype='auto', 
         )
 
-        model = PeftModelForSequenceClassification(base_model, peft_config)
+        model = get_peft_model(base_model, peft_config)
         model.config.pad_token_id = tokenizer.pad_token_id  # important to set the config pad_token_id
 
         model = self.accelerator.prepare_model(model)
@@ -74,7 +74,7 @@ class SotopiaRMTrainer(Trainer):
             optim="adamw_torch",
             remove_unused_columns=False,
             dataloader_num_workers=4,
-            report_to="none",
+            report_to="wandb",
             ddp_find_unused_parameters=False,
         )
 
