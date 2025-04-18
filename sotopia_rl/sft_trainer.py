@@ -15,7 +15,6 @@ from trl import SFTTrainer
 import wandb
 from sotopia_rl.data import SFTDataset
 
-
 os.environ['NCCL_P2P_DISABLE'] = '1'
 
 class SotopiaSFTTrainer:
@@ -24,11 +23,12 @@ class SotopiaSFTTrainer:
         self.accelerator = accelerator
         self.device = accelerator.device
 
-        wandb.init(
-            project=args.wandb_project,
-            name=args.wandb_run_name,
-            config={k: v for k, v in vars(args).items() if isinstance(v, (int, float, str))}
-        )
+        if self.accelerator.is_main_process:
+            wandb.init(
+                project=args.wandb_project,
+                name=args.wandb_run_name,
+                config={k: v for k, v in vars(args).items() if isinstance(v, (int, float, str))}
+            )
 
         config = AutoConfig.from_pretrained(args.model_name)
         config.use_cache = False
@@ -51,8 +51,6 @@ class SotopiaSFTTrainer:
             )
         else:
             base_model = AutoModelForCausalLM.from_pretrained(args.model_name).to(self.device)
-        base_model.enable_input_require_grads()
-
         
         if args.use_lora:
             peft_config = LoraConfig(
@@ -61,7 +59,6 @@ class SotopiaSFTTrainer:
                 lora_dropout=args.lora_dropout,
                 target_modules=args.target_modules.split(",")
             )
-            #base_model.enable_input_require_grads()
             self.model = get_peft_model(base_model, peft_config)
             if not args.use_qlora:
                 self.model = self.model.to(self.device)
