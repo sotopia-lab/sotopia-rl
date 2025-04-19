@@ -82,7 +82,6 @@ class SotopiaRMTrainer(Trainer):
             ddp_find_unused_parameters=False,
         )
 
-        print("Trainable parameters:")
 
         collate_fn = (
             train_dataset.dataset.collate_fn
@@ -100,9 +99,6 @@ class SotopiaRMTrainer(Trainer):
             **kwargs,
         )
         self.loss_fn = MSELoss()
-        for name, param in self.model.named_parameters():
-            if param.requires_grad:
-                print(f"{name} shape={param.shape}")
 
     def setup_dataset(self, tokenizer):
         env = Environment(
