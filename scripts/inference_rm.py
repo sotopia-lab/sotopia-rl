@@ -39,26 +39,12 @@ def load_model_and_tokenizer(args):
     print("Using full precision model")
     model = AutoModelForSequenceClassification.from_pretrained(
         args.adapter_path,
-        # torch_dtype=torch.float32, #important
-        torch_dtype="auto",
+        torch_dtype=torch.float32,  # important
         device_map="auto",
         num_labels=1,  # For regression task
         pad_token_id=tokenizer.pad_token_id,  # very important to add this
     )
 
-    # adapter_path = os.path.join(args.adapter_path, 'adapter_model')
-    # # model = PeftModelForSequenceClassification.from_pretrained(base_model, args.adapter_path)
-    # if os.path.exists(adapter_path + '.safetensors') or os.path.exists(adapter_path + '.bin'):
-    #     print(f"Loading adapter from: {args.adapter_path}")
-    #     model = PeftModelForSequenceClassification.from_pretrained(base_model, args.adapter_path)
-    # else:
-    #     print(f"No adapter found at {adapter_path}, using base model")
-    #     model = base_model
-    # print("Active adapters:", model.active_adapters)
-    # score_weights = model.base_model.model.score.weight.data.view(-1)
-    # print("Mean of score.weight:", score_weights.mean().item())
-    # print("Std of score.weight:", score_weights.std().item())
-    # print("Model weight:", model.score.weight)
     def print_named_parameters(model, keyword="score"):
         for name, param in model.named_parameters():
             if keyword in name:
