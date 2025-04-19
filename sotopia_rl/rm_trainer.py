@@ -35,14 +35,14 @@ class SotopiaRMTrainer(Trainer):
         train_dataset, eval_dataset = self.setup_dataset(tokenizer)
 
         # Initialize wandb only on the main process
-        # if self.accelerator.is_main_process:
-        wandb.init(
-            project=args.wandb_project,
-            name=args.wandb_run_name,
-            config={
-                k: v for k, v in vars(args).items() if isinstance(v, (int, float, str))
-            },
-        )
+        if self.accelerator.is_main_process:
+            wandb.init(
+                project=args.wandb_project,
+                name=args.wandb_run_name,
+                config={
+                    k: v for k, v in vars(args).items() if isinstance(v, (int, float, str))
+                },
+            )
 
         peft_config = LoraConfig(
             r=args.lora_r,
@@ -59,20 +59,7 @@ class SotopiaRMTrainer(Trainer):
 
         # self.model = get_peft_model(base_model, peft_config)
         self.model = PeftModelForSequenceClassification(base_model, peft_config)
-        param_check = self.model.base_model.model.score.weight
-        print(
-            f"whether score.weight is trainable: {param_check.requires_grad}, shape: {param_check.shape}"
-        )
-        print(f"mean={param_check.data.mean():.4f}, std={param_check.data.std():.4f}")
-        count = 0
-        for name, param in self.model.named_parameters():
-            if param.requires_grad:
-                count += 1
-                print(f"{name} shape={param.shape}")
-        print(f"Total trainable parameters: {count}")
-        self.model.config.pad_token_id = (
-            tokenizer.pad_token_id
-        )  # important to set the config pad_token_id
+        self.model.config.pad_token_id = tokenizer.pad_token_id
 
         # Set up the TrainingArguments with DeepSpeed support
         training_args = TrainingArguments(
@@ -113,19 +100,6 @@ class SotopiaRMTrainer(Trainer):
             **kwargs,
         )
         self.loss_fn = MSELoss()
-
-        self.model.base_model.model.score.weight.register_hook(
-            lambda grad: print(
-                f"[HOOK] Gradient norm for score.weight: {grad.norm().item()}"
-            )
-        )
-        self.model.base_model.model.model.layers[
-            3
-        ].self_attn.v_proj.lora_B.default.weight.register_hook(
-            lambda grad: print(
-                f"[HOOK] base_model.model.model.layers.3.self_attn.v_proj.lora_B.default.weight: {grad.norm().item()}"
-            )
-        )
         for name, param in self.model.named_parameters():
             if param.requires_grad:
                 print(f"{name} shape={param.shape}")
@@ -159,40 +133,6 @@ class SotopiaRMTrainer(Trainer):
 
         outputs = model(input_ids, attention_mask=attention_masks)
         predicted_rewards = outputs.logits.squeeze(-1)  # Shape: (batch_size,)
-        print(">>> Predicted:", predicted_rewards.detach().cpu().numpy())
-        print(">>> GroundTruth:", true_rewards.detach().cpu().numpy())
         loss = self.loss_fn(predicted_rewards, true_rewards)
 
         return (loss, outputs) if return_outputs else loss
-
-    def save_model(
-        self, output_dir: Optional[str] = None, _internal_call: bool = False
-    ):
-        """
-        Override the default save_model to save merged full model (LoRA merged + score.weight).
-        """
-        print("[Custom save_model] Called.")
-        if output_dir is None:
-            output_dir = self.args.output_dir
-
-        if not self.accelerator.is_main_process:
-            return
-        print("[Custom save_model] Saving model...")
-
-        os.makedirs(output_dir, exist_ok=True)
-
-        try:
-            from copy import deepcopy
-
-            param_check = self.model.base_model.model.score.weight
-            print(
-                f"mean={param_check.data.mean():.4f}, std={param_check.data.std():.4f}"
-            )
-            model_copy = deepcopy(self.model)
-            merged_model = model_copy.merge_and_unload()
-            merged_model.save_pretrained(output_dir)
-            if hasattr(self, "tokenizer"):
-                self.tokenizer.save_pretrained(output_dir)
-            print(f"[Custom save_model] Full model saved to: {output_dir}")
-        except Exception as e:
-            print(f"[Custom save_model] Failed to merge and save full model: {str(e)}")

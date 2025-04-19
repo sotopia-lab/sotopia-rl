@@ -1,4 +1,4 @@
-CUDA_VISIBLE_DEVICES=0,1,2,3,4,5 accelerate launch \
+CUDA_VISIBLE_DEVICES=5,6,7,8,9 accelerate launch \
   --config_file /data/haofeiy2/sotopia-rl/scripts/accelerate_config_rm.yaml \
   --main_process_port 29500 \
   /data/haofeiy2/sotopia-rl/scripts/train_rm.py \

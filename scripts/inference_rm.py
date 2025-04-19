@@ -39,7 +39,6 @@ def load_model_and_tokenizer(args):
     print("Using full precision model")
     model = AutoModelForSequenceClassification.from_pretrained(
         args.adapter_path,
-        torch_dtype=torch.float32,  # important
         device_map="auto",
         num_labels=1,  # For regression task
         pad_token_id=tokenizer.pad_token_id,  # very important to add this
@@ -77,6 +76,7 @@ def evaluate_prompt(model, tokenizer, prompt, index=None):
     print(f"\n[DEBUG] Prompt [{index}]:")
     print(prompt)
     print("[DEBUG] Decoded Input IDs:")
+    prompt = prompt.strip()
     encoded = tokenizer(prompt, return_tensors="pt", truncation=True)
     print(tokenizer.decode(encoded["input_ids"][0], skip_special_tokens=False))
 
