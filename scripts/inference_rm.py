@@ -6,8 +6,6 @@ import torch
 from jinja2 import Environment, FileSystemLoader
 from peft import PeftModelForSequenceClassification
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
-from safetensors.torch import load_file
-from safetensors import safe_open
 
 
 def parse_args():
