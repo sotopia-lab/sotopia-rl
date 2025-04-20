@@ -12,6 +12,7 @@ from transformers import (
     GenerationConfig,
 )
 from trl import get_kbit_device_map, PPOConfig, PPOTrainer
+from trl.trainer.utils import disable_dropout_in_model
 from accelerate import PartialState, Accelerator
 
 import wandb
@@ -100,6 +101,7 @@ class SotopiaPPOTrainer:
             is_trainable=False,
             adapter_name="ref_adapter"
         )
+        disable_dropout_in_model(self.ref_policy)
 
         if self.args.use_lora_train_ppo:
             base_gen_policy = AutoModelForCausalLM.from_pretrained(
@@ -119,6 +121,7 @@ class SotopiaPPOTrainer:
                 self.args.model_name,
                 torch_dtype='auto',
             )
+        disable_dropout_in_model(self.policy)
 
         requires_grad_num = 0
         for name, param in self.policy.named_parameters():
@@ -147,6 +150,8 @@ class SotopiaPPOTrainer:
             is_trainable=False,
             adapter_name="reward_adapter"
         )
+        disable_dropout_in_model(self.reward_model)
+
         for name, param in self.reward_model.named_parameters():
             if self.reward_model.active_adapter in name:
                 param.requires_grad = False
@@ -171,6 +176,7 @@ class SotopiaPPOTrainer:
                 torch_dtype='auto',
                 num_labels=1,
             )
+        disable_dropout_in_model(self.value_model)
         
         # VERY VERY IMPORTANT
         # specifically designed for PPO training, 
