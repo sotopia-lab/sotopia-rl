@@ -24,11 +24,11 @@ def load_model_and_tokenizer(args):
     print("Using full precision model")
     base_model = AutoModelForSequenceClassification.from_pretrained(
         args.model_path,
-        torch_dtype=torch.float32, #important
         device_map="auto",
         num_labels=1,  # For regression task
         pad_token_id=tokenizer.pad_token_id # very important to add this
     )
+
 
     adapter_path = os.path.join(args.adapter_path, 'adapter_model')
     if os.path.exists(adapter_path + '.safetensors') or os.path.exists(adapter_path + '.bin'):
@@ -39,7 +39,6 @@ def load_model_and_tokenizer(args):
         model = base_model
 
     model.eval()
-
     return model, tokenizer
 
 def load_template(template_path):
@@ -85,7 +84,7 @@ def main():
                 {"role": "assistant", "content": example['output']},
             ],
             add_generation_prompt=False
-        )
+        ).strip()
 
         reward = evaluate_prompt(model, tokenizer, rendered_prompt)
         gth_reward = example.get('value')
