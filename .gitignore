@@ -23,4 +23,3 @@ data/episode_utterances/
 **/saves_qwen/*
 !**/*_overfit.json
 data/notebooks/*
-Untitled/**
