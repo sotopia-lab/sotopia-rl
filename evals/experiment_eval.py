@@ -9,8 +9,6 @@ from typing import Any, Generator, List, cast
 import gin
 from absl import flags
 from rich.logging import RichHandler
-from tqdm import tqdm
-
 from sotopia.agents import LLMAgent
 from sotopia.database import (
     AgentProfile,
@@ -27,13 +25,10 @@ from sotopia.envs.evaluators import (
 from sotopia.envs.parallel import ParallelSotopiaEnv
 from sotopia.generation_utils.generate import LLM_Name
 from sotopia.messages import AgentAction, Observation
-from sotopia.samplers import (
-    BaseSampler,
-    ConstraintBasedSampler,
-    EnvAgentCombo,
-)
+from sotopia.samplers import BaseSampler, ConstraintBasedSampler, EnvAgentCombo
 from sotopia.server import run_async_server
 from sotopia_conf.gin_utils import parse_gin_flags, run
+from tqdm import tqdm
 
 _DEFAULT_GIN_SEARCH_PATHS = [
     os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -111,7 +106,7 @@ def _iterate_env_agent_combo_not_in_db(
     """We iterate over each environment and return the **first** env-agent combo that is not in the database."""
     if not env_ids:
         env_ids = list(EnvironmentProfile.all_pks())
-    
+
     all_env_agent_combo_storage_list: List[EnvAgentComboStorage] = []
     for env_id in env_ids:
         assert env_id is not None, "env_id should not be None"
@@ -130,18 +125,7 @@ def _iterate_env_agent_combo_not_in_db(
             env_agent_combo_storage_list, key=lambda x: x.pk
         )[:1]
 
-        # switch position for agent1 and agent2 in every env agent combo
-        switched_env_agent_combo_storage_list = []
         for env_agent_combo_storage in env_agent_combo_storage_list:
-            new_env_agent_combo_storage = EnvAgentComboStorage(
-                env_id=env_agent_combo_storage.env_id,
-                agent_ids=[env_agent_combo_storage.agent_ids[1], env_agent_combo_storage.agent_ids[0]],
-            )
-            switched_env_agent_combo_storage_list.append(new_env_agent_combo_storage)
-        
-        double_side_env_agent_combo_storage_list = env_agent_combo_storage_list + switched_env_agent_combo_storage_list
-            
-        for env_agent_combo_storage in double_side_env_agent_combo_storage_list:
             env_agent_combo_storage = cast(
                 EnvAgentComboStorage, env_agent_combo_storage
             )
@@ -155,8 +139,9 @@ def _iterate_env_agent_combo_not_in_db(
             else:
                 all_env_agent_combo_storage_list.append(env_agent_combo_storage)
     print(f"Number of env agent combos to run: {len(all_env_agent_combo_storage_list)}")
+
     for env_agent_combo_storage in all_env_agent_combo_storage_list:
-        env_profile = EnvironmentProfile.get(env_id)
+        env_profile = EnvironmentProfile.get(env_agent_combo_storage.env_id)
         env = ParallelSotopiaEnv(
             env_profile=env_profile,
             model_name=model_names["env"],
@@ -171,7 +156,7 @@ def _iterate_env_agent_combo_not_in_db(
                 ),
             ],
         )
-        agent_profiles = [AgentProfile.get(id) for id in agent_ids]
+        agent_profiles = [AgentProfile.get(id) for id in env_agent_combo_storage.agent_ids]
 
         agents = [
             LLMAgent(agent_profile=agent_profile, model_name=agent_model)
