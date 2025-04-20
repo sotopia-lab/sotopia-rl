@@ -31,15 +31,6 @@ class SotopiaPPOTrainer:
 
         self._setup_generation_models()
         self._setup_classification_models()
-
-        self.policy, self.ref_policy, self.reward_model, self.value_model = self.accelerator.prepare(
-            self.policy, self.ref_policy, self.reward_model, self.value_model
-        )
-        self.policy = self.accelerator.unwrap_model(self.policy)
-        self.ref_policy = self.accelerator.unwrap_model(self.ref_policy)
-        self.reward_model = self.accelerator.unwrap_model(self.reward_model)
-        self.value_model = self.accelerator.unwrap_model(self.value_model)
-
         self._setup_ppo_trainer()
 
         def save_model(self, output_dir: str, _internal_call: bool = False):
@@ -84,7 +75,7 @@ class SotopiaPPOTrainer:
             
             generator = torch.Generator().manual_seed(42)
             val_ratio = getattr(self.args, 'val_ratio', 0.05)
-            train_size = min(int(len(dataset) * (1 - val_ratio)), len(dataset) - 2)
+            train_size = min(int(len(dataset) * (1 - val_ratio)), len(dataset) - 10)
             val_size = len(dataset) - train_size
             self.train_dataset, self.val_dataset = random_split(dataset, [train_size, val_size], generator=generator)
             print(f"Dataset split: {len(self.train_dataset)} train, {len(self.val_dataset)} validation")
