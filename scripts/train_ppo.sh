@@ -1,4 +1,4 @@
-CUDA_VISIBLE_DEVICES=5 accelerate launch \
+CUDA_VISIBLE_DEVICES=5,6,7 accelerate launch \
   --config_file /data/haofeiy2/sotopia-rl/scripts/accelerate_config_ppo.yaml \
   --main_process_port 29519 \
  /data/haofeiy2/sotopia-rl/scripts/train_ppo.py \
@@ -16,5 +16,6 @@ CUDA_VISIBLE_DEVICES=5 accelerate launch \
   --template_path /data/haofeiy2/sotopia-rl/evals/qwen2.5-7b.jinja \
   --num_train_epochs 5 \
   --max_length 4096 \
+  --num_ppo_epochs 1 \
   --use_lora_train_ppo \
   --output_dir /data/haofeiy2/sotopia-rl/ppo_token_length

@@ -129,4 +129,4 @@ def analyze_episodes_with_positions(tag):
     }
 
 # Run the analysis
-results = analyze_episodes_with_positions("Qwen2.5-7B-Instruct_vs_sft_qwen25_7b_bigtom_step_1500-bigtom_0402")
+results = analyze_episodes_with_positions("grpo_direct_step_400_vs_sft_qwen25_7b_sft_round_1_bc_data_top_2_step_1500-0420")
