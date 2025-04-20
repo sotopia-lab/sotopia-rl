@@ -22,7 +22,8 @@ os.environ['NCCL_P2P_DISABLE'] = '1'
 os.environ["TORCH_DISTRIBUTED_DEBUG"] = "DETAIL"
 
 class SotopiaPPOTrainer:
-    def __init__(self, args):
+    def __init__(self, args, accelerator: Accelerator):
+        self.accelerator = accelerator
         self.args = args
 
         self._init_wandb()
@@ -48,11 +49,12 @@ class SotopiaPPOTrainer:
         self.ppo_trainer.save_model = save_model.__get__(self.ppo_trainer, type(self.ppo_trainer))
 
     def _init_wandb(self):
-        wandb.init(
-            project=self.args.wandb_project,
-            name=self.args.wandb_run_name,
-            config={k: v for k, v in vars(self.args).items() if isinstance(v, (int, float, str))}
-        )
+        if self.accelerator.is_main_process:
+            wandb.init(
+                project=self.args.wandb_project,
+                name=self.args.wandb_run_name,
+                config={k: v for k, v in vars(self.args).items() if isinstance(v, (int, float, str))}
+            )
 
     def _setup_tokenizer(self):
         self.tokenizer = AutoTokenizer.from_pretrained(self.args.model_name, padding_side="left")
