@@ -12,6 +12,7 @@ from transformers import (
     GenerationConfig,
 )
 from trl import get_kbit_device_map, PPOConfig, PPOTrainer
+from peft import prepare_model_for_kbit_training
 from trl.trainer.utils import disable_dropout_in_model
 from accelerate import PartialState, Accelerator
 
@@ -95,6 +96,7 @@ class SotopiaPPOTrainer:
             quantization_config=self.quant_config,
             device_map=get_kbit_device_map(),
         )
+        base_gen_ref = prepare_model_for_kbit_training(base_gen_ref)
         self.ref_policy = PeftModelForCausalLM.from_pretrained(
             base_gen_ref,
             self.args.ref_adapter_path,
@@ -110,6 +112,7 @@ class SotopiaPPOTrainer:
                 quantization_config=self.quant_config,
                 device_map=get_kbit_device_map(),
             )
+            base_gen_policy = prepare_model_for_kbit_training(base_gen_policy)
             self.policy = PeftModelForCausalLM.from_pretrained(
                 base_gen_policy,
                 self.args.policy_adapter_path,
@@ -144,6 +147,7 @@ class SotopiaPPOTrainer:
             quantization_config=self.quant_config,
             device_map=get_kbit_device_map(),
         )
+        base_reward_model = prepare_model_for_kbit_training(base_reward_model)
         self.reward_model = PeftModelForSequenceClassification.from_pretrained(
             base_reward_model,
             self.args.reward_adapter_path,
@@ -164,6 +168,7 @@ class SotopiaPPOTrainer:
                 quantization_config=self.quant_config,
                 device_map=get_kbit_device_map(),
             )
+            base_value_model = prepare_model_for_kbit_training(base_value_model) # important for qlora
             self.value_model = PeftModelForSequenceClassification.from_pretrained(
                 base_value_model,
                 self.args.value_adapter_path,

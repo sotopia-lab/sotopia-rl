@@ -1,6 +1,6 @@
 CUDA_VISIBLE_DEVICES=5 accelerate launch \
   --config_file /data/haofeiy2/sotopia-rl/scripts/accelerate_config_ppo.yaml \
-  --main_process_port 29511 \
+  --main_process_port 29519 \
  /data/haofeiy2/sotopia-rl/scripts/train_ppo.py \
   --model_name /mnt/data_from_server1/models/Qwen2.5-7B-Instruct \
   --policy_adapter_path /data/haofeiy2/sotopia-rl/sft_qwen25_7b_sft_round_1_bc_data_top_2/checkpoint-1500 \
@@ -11,7 +11,7 @@ CUDA_VISIBLE_DEVICES=5 accelerate launch \
   --per_device_train_batch_size 1 \
   --per_device_eval_batch_size 4 \
   --gradient_accumulation_steps 1 \
-  --num_mini_batches 1 \
+  --num_mini_batches 4 \
   --ppo_data_path /data/haofeiy2/sotopia-rl/data/sotopia_pi_round1_qwen_sft_all_with_instruct_string.json \
   --template_path /data/haofeiy2/sotopia-rl/evals/qwen2.5-7b.jinja \
   --num_train_epochs 5 \
