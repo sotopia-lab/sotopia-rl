@@ -4,10 +4,11 @@ from typing import Any, Dict, List
 
 import transformers
 from episode_utils import FakeEpisodeLog, jsonl_to_episodes
+
 # PROMPT_PREFIX = "Prompt after formatting:\n"
 MAX_TOKEN = 2048  # 5000
 
-PROMPT_TEMPLATE = """Prompt after formatting:\nImagine you are {agent}, your task is to act/speak as {agent} would, keeping in mind {agent}'s social goal.
+PROMPT_TEMPLATE = """Imagine you are {agent}, your task is to act/speak as {agent} would, keeping in mind {agent}'s social goal.
 You can find {agent}'s background and goal in the 'Here is the context of the interaction' field.
 Note that {agent}'s secret and goal is only visible to you.
 You should try your best to achieve {agent}'s goal in a way that align with their character traits.
@@ -185,6 +186,7 @@ def reverse_episode_log(
             turn_dic["result"] = str_result
             turn_dic["history"] = list(history[1:])
             turn_dic["speaker"] = speaker
+            turn_dic["episode_id"] = epilog.pk
             prompt_result_instances.append(turn_dic)
 
     return prompt_result_instances
@@ -235,4 +237,4 @@ def run_reverse_by_pk_agent(episode_pk: str, agent_side: bool, save_dir: str) ->
     episode = EPISODE_DICT.get(episode_pk, None)
     if not episode:
         raise Exception(f"Episode {episode_pk} not found")
-    parse_prompt_to_json(episode, save_dir, agent_side, False)
+    parse_prompt_to_json(episode, save_dir, agent_side, True)

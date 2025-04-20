@@ -24,7 +24,6 @@ def load_model_and_tokenizer(args):
 
     # Set up tokenizer
     tokenizer = AutoTokenizer.from_pretrained(args.model_path)
-    tokenizer.pad_token = tokenizer.eos_token
 
     # With QLoRA, we automatically use 4-bit quantization as per the training logic
     if args.use_qlora:
@@ -87,8 +86,8 @@ def generate_response(model, tokenizer, prompt, max_length=512):
             input_ids=inputs.input_ids,
             attention_mask=inputs.attention_mask,
             max_length=max_length,
-            do_sample=True,
-            temperature=0.7,
+            do_sample=False,
+            temperature=0.0,
         )
 
     response = tokenizer.decode(output[0], skip_special_tokens=False)

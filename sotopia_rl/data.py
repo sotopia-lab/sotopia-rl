@@ -7,12 +7,11 @@ from transformers import PreTrainedTokenizer
 
 
 class SFTDataset(Dataset):
-    def __init__(self, data_path: str, tokenizer: PreTrainedTokenizer, max_length: int, template):
+    def __init__(self, data_path: str, tokenizer: PreTrainedTokenizer, template, max_length: int, ):
         self.data = self.load_sft_data(data_path)
         self.tokenizer = tokenizer
         self.max_length = max_length
         self.template = template
-        self.tokenizer.pad_token_id = self.tokenizer.eos_token_id
 
     def load_sft_data(self, file_path):
         with open(file_path, "r") as f:
@@ -86,7 +85,6 @@ class RMDataset(Dataset):
         self.tokenizer = tokenizer
         self.template = template
         self.max_length = max_length
-        self.tokenizer.pad_token_id = self.tokenizer.eos_token_id
 
     def load_reward_data(self, file_path):
         with open(file_path, "r") as f:
@@ -106,7 +104,7 @@ class RMDataset(Dataset):
                 {"role": "assistant", "content": item["output"]}
             ],
             add_generation_prompt=False
-        )
+        ).strip() # important
 
         tokenized_input = self.tokenizer(
             rendered_text,
@@ -114,6 +112,8 @@ class RMDataset(Dataset):
             max_length=self.max_length,
             truncation=True
         )
+        # make sure there is no \n at the end of the inputs
+        assert tokenized_input['input_ids'][0][-1] == self.tokenizer.eos_token_id
 
         return {
             "input_ids": tokenized_input["input_ids"].squeeze(),
@@ -143,7 +143,6 @@ class PPODataset(Dataset):
         self.tokenizer = tokenizer
         self.max_length = max_length
         self.template = template
-        self.tokenizer.pad_token_id = self.tokenizer.eos_token_id
 
     def load_sft_data(self, file_path):
         with open(file_path, "r") as f:
@@ -173,3 +172,30 @@ class PPODataset(Dataset):
             [item["input_ids"] for item in batch], batch_first=True, padding_value=self.tokenizer.pad_token_id
         )
         return {"input_ids": input_ids}
+        
+class GRPODataset(Dataset):
+    def __init__(self, data_path: str, tokenizer, template, max_length: int):
+        self.data = self.load_sft_data(data_path)
+        self.tokenizer = tokenizer 
+        self.max_length = max_length
+        self.template = template
+
+    def load_sft_data(self, file_path: str):
+        with open(file_path, "r") as f:
+            return json.load(f)
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, idx: int) -> Dict[str, Any]:
+        item = self.data[idx]
+
+        rendered_prompt = self.template.render(
+            messages=[{"role": "user", "content": item["input"]}],
+            add_generation_prompt=True
+        )
+
+        return {
+            "prompt": rendered_prompt,
+            "completion": item["output"] 
+        }

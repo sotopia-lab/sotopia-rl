@@ -4,7 +4,7 @@ import os
 import subprocess
 from datetime import datetime
 from logging import FileHandler
-from typing import Any, Generator, cast
+from typing import Any, Generator, List, cast
 
 import gin
 from absl import flags

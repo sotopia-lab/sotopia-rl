@@ -1,14 +1,18 @@
 import sys
-import asyncio
+
 sys.path.append("../../")
 import argparse
-from sotopia_rl.prompter.attribution_prompting import generate_reward_attribution, parallel_generate_reward_attribution
+
+from sotopia_rl.prompter.attribution_prompting import (
+    parallel_generate_reward_attribution,
+)
 from sotopia_rl.utils.preprocess import add_score
 
-def main(data_dir: str, 
-        llm_name: str, 
-        input_file: str, 
-        output_file: str, 
+
+def main(data_dir: str,
+        llm_name: str,
+        input_file: str,
+        output_file: str,
         attribution_method_name: str,
         attribution_instruction_name: str,
         max_concurrency: int = 1
@@ -75,14 +79,14 @@ if __name__ == "__main__":
         default=1,
         help="Maximum number of concurrent episodes",
     )
-    
+
 
     args = parser.parse_args()
 
-    main(args.data_dir, 
-        args.llm_name, 
-        args.input_file, 
-        args.output_file, 
+    main(args.data_dir,
+        args.llm_name,
+        args.input_file,
+        args.output_file,
         args.attribution_method_name,
         args.attribution_instruction_name,
         args.max_concurrency

@@ -20,13 +20,13 @@ def assign_attributions_for_conversation(
 def calc_attributed_reward(attributed_data: List[Dict[str, float | int]], attribution_instruction_name: str, goal_score: float | int) -> List[Dict[str, Any]]:
     utterance_reward_map = {}
     for k, v in attributed_data.items():
-        utterance_reward_map[k] = v * goal_score
+        utterance_reward_map[k] = {"reward": v * goal_score, "attribution_instruction_name": attribution_instruction_name}
     return utterance_reward_map
 
 # unified function
 def get_attribution_single_conv(conversation, agent, goals, episode, llm_name, attribution_instruction_name):
     attribution_scores = assign_attributions_for_conversation(
-        agent, conversation, discounting_factor=0.9
+        agent, conversation, discounting_factor=1.0
     )
     attribution_rewards = calc_attributed_reward(attribution_scores, attribution_instruction_name, episode["scores"][agent])
     return attribution_rewards

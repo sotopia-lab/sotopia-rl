@@ -8,7 +8,7 @@ from episode_utils import FakeEpisodeLog, jsonl_to_episodes
 # PROMPT_PREFIX = "Prompt after formatting:\n"
 MAX_TOKEN = 2048  # 5000
 
-PROMPT_TEMPLATE = """Prompt after formatting:\nImagine you are {agent}, your task is to act/speak as {agent} would, keeping in mind {agent}'s social goal.
+PROMPT_TEMPLATE = """Imagine you are {agent}, your task is to act/speak as {agent} would, keeping in mind {agent}'s social goal.
 You can find {agent}'s background and goal in the 'Here is the context of the interaction' field.
 Note that {agent}'s secret and goal is only visible to you.
 You should try your best to achieve {agent}'s goal in a way that align with their character traits.

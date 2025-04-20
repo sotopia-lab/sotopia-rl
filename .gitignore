@@ -12,6 +12,7 @@ saves/*
 **/*.err
 **/*.log
 **/data/**.json
+**/data/**/**.json
 **/wandb/*
 **/sft/*
 data/episode_utterances/
@@ -20,3 +21,5 @@ data/episode_utterances/
 **/data/models
 **/.vscode/**
 **/saves_qwen/*
+!**/*_overfit.json
+data/notebooks/*

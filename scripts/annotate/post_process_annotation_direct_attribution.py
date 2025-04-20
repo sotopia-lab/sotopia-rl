@@ -71,7 +71,7 @@ def main(data_dir: str, input_file: str, reward_output_file: str, sft_output_fil
     for d in tqdm(attributed_data):
         sotopia_pi_utterance_reward.append(
             {
-                "instruction": d['prompt'],
+                "input": d['prompt'],
                 "output": d['result'],
                 "value": calc_reward(d['attribution'], d['goal_score']),
             }
@@ -84,8 +84,7 @@ def main(data_dir: str, input_file: str, reward_output_file: str, sft_output_fil
     for d in tqdm(attributed_data):
         sotopia_pi_utterance_sft.append(
             {
-                "instruction": d['prompt'],
-                "input": "",
+                "input": d['prompt'],
                 "output": d["result"],
             }
         )

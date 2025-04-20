@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 T = TypeVar("T", bound=BaseModel)
 
 # DEFAULT_PROMPT = """
-# Two agents are in a conversation. For now, you are the judge of the utterance of one of the agents. You are given the utterance or action of that agent and the immediate response it recieves. Your task is to judge how successful the utterance is and give a score between 0 and 10. 0 means the utterance is not successful at all, and 10 means the utterance is fully successful.
+# Two agents are in a conversation. For now, you are the judge of the utterance of one of the agents. You are given the utterance or action of that agent at a certain point and the conversation before it. Your task is to judge how much would the utterance contribute to the final goal in a scale of 0 to 10. 0 means the utterance is not contributing at all, and 10 means the utterance is fully contributing to the final goal.
 
 # You will also be provided with the agent's final goal achieving score, which would help you in making the decision better. Note, the goal achieving score is between 0 and 10, where 0 means the goal is not achieved at all, and 10 means that the goal is fully achieved.
 
@@ -17,10 +17,10 @@ T = TypeVar("T", bound=BaseModel)
 # {goal}
 # ### Final Goal Achieving Score out of 10:
 # {score}
+# ### Conversation History:
+# {conversation}
 # ### Your Agent's Utterance:
 # {utterance}
-# ### Immediate Response:
-# {response}
 # """
 
 ONLY_RESPONSE_DIRECT_INSTRUCTIONS = """
@@ -29,12 +29,11 @@ ONLY_RESPONSE_DIRECT_INSTRUCTIONS = """
 Two agents are in a conversation. For now, you are the judge of the utterance of one of the agents. 
 
 1. Input Context:
-   - You will receive the utterance or action of an agent in one turn of the conversation.
-   - You will recieve the immediate response it receives after the utterance/action.
+   - You will recieve the utterance or action of an agent at a certain point and the conversation before it.
    - You will also be provided with the social goal of the agent and its final goal achievement score.
 
 2. Objective:
-   - Assign an importance value to the utterance based on its contribution to the final goal achievement score, judging from how postive or negative the response is. Note, you should only consider the immediate response it recieves, not the quality of the utterance itself. The agent's utterance is provided only for context.
+   - Assign an importance value to the utterance based on its contribution to the final goal achievement score, judging from how good/bad the quality of the utterance is. Note, you should only consider the chosen utterance, not the quality of the conversation history.
 
 3. Scoring Based on Outcome:
    - Failure (Final Score < 5):
@@ -62,8 +61,6 @@ Two agents are in a conversation. For now, you are the judge of the utterance of
 {conversation}
 ### Your Agent's Utterance:
 {utterance}
-### Immediate Response recieved:
-{response}
 """
 
 DEFAULT_PROMPT = """
@@ -72,12 +69,11 @@ DEFAULT_PROMPT = """
 Two agents are in a conversation. For now, you are the judge of the utterance of one of the agents. 
 
 1. Input Context:
-   - You will receive the utterance or action of an agent in one turn of the conversation and the conversation before it.
-   - You will recieve the immediate response it receives after the utterance/action.
+   - You will recieve the utterance or action of an agent at a certain point and the conversation before it.
    - You will also be provided with the social goal of the agent.
 
 2. Objective:
-   - Assign an importance value to the utterance based on its contribution to the final goal achievement, judging from how postive or negative the response is. Note, you should only consider the immediate response it recieves, not the quality of the utterance itself. The agent's utterance and the conversation history are provided only for context.
+   - Assign an importance value to the utterance based on its contribution to the final goal achievement score, judging from how good/bad the quality of the utterance is. Note, you should only consider the chosen utterance, not the quality of the conversation history. The conversation history is only provided for context.
 
 3. Additional Reward Guidelines:
    - If an utterance has no impact on the final goal achievement, assign it an importance of 0.
@@ -95,11 +91,9 @@ Two agents are in a conversation. For now, you are the judge of the utterance of
 {conversation}
 ### Your Agent's Utterance:
 {utterance}
-### Immediate Response recieved:
-{response}
 """
 
-class GoalAchievingScore(BaseModel):
+class UtteranceScore(BaseModel):
     score: int = Field(ge=0, le=10)
     reasoning: str
 
@@ -157,10 +151,9 @@ def assign_attributions_for_conversation(
                 goal=goal,
                 score=final_goal_score,
                 conversation="\n".join([f"{s}: {u}" for s, u in conversation[:i]]),
-                utterance=utterance,
-                response=conversation[i + 1][-1] if i + 1 < len(conversation) else ""
+                utterance=utterance
             )
-            response = openai_call_with_response_model(prompt, llm_name, GoalAchievingScore)
+            response = openai_call_with_response_model(prompt, llm_name, UtteranceScore)
             score = response.score if response else prev_score
             attribution_dict[f"Utterance {i//2} by {speaker}"] = score
             prev_score = score
