@@ -20,8 +20,7 @@ os.environ['NCCL_P2P_DISABLE'] = '1'
 os.environ["TORCH_DISTRIBUTED_DEBUG"] = "DETAIL"
 
 class SotopiaPPOTrainer:
-    def __init__(self, args, accelerator: Accelerator):
-        self.accelerator = accelerator
+    def __init__(self, args):
         self.args = args
 
         self._init_wandb()
