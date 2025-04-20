@@ -30,7 +30,8 @@ class SotopiaGRPOTrainer:
         self.args = args
         self.accelerator = accelerator
 
-        self._init_wandb()
+        if accelerator.is_main_process:
+            self._init_wandb()
         self._setup_tokenizer()
         self._setup_dataset()
         self._create_quantization_config()
@@ -117,10 +118,20 @@ class SotopiaGRPOTrainer:
                 self.args.model_name,
                 torch_dtype="auto",
             )
+            self.policy = prepare_model_for_kbit_training(self.policy)
         self.policy.config.pad_token_id = self.tokenizer.pad_token_id
 
+        requires_grad_num = 0
+        for name, param in self.policy.named_parameters():
+            print(name, param.requires_grad)
+            if param.requires_grad:
+                requires_grad_num += 1
+        print(f"Number of trainable parameters in policy: {requires_grad_num}")
+
     def _setup_classification_models(self):
+
         if self.args.use_lora_train_grpo:
+            print("using lora for reward model")
             base_reward_model = AutoModelForSequenceClassification.from_pretrained(
                 self.args.model_name,
                 torch_dtype="auto",
@@ -132,7 +143,7 @@ class SotopiaGRPOTrainer:
             self.reward_model = PeftModelForSequenceClassification.from_pretrained(
                 base_reward_model,
                 self.args.reward_adapter_path,
-                is_trainable=True,
+                is_trainable=False,
                 adapter_name="value_adapter",
             )
         else:
@@ -141,18 +152,54 @@ class SotopiaGRPOTrainer:
                 torch_dtype="auto",
                 num_labels=1,
             )
+            self.reward_model = prepare_model_for_kbit_training(self.reward_model)
         self.reward_model.config.pad_token_id = self.tokenizer.pad_token_id
+
+        def wrapped_reward(
+            prompts: list[str], completions: list[str], **kwargs
+        ) -> list[float]:
+            eos = self.tokenizer.eos_token
+            completions = [c + eos for c in completions]
+
+            texts = [p + c for p, c in zip(prompts, completions)]
+
+            inputs = self.tokenizer(
+                text=texts,
+                return_tensors="pt",
+                padding=True,
+                truncation=True,
+                max_length=4096,
+            ).to(self.accelerator.device)
+
+            with torch.inference_mode():
+                logits = self.reward_model(**inputs).logits[:, 0]
+            return logits.cpu().tolist()
+
+        self.wrapped_reward = wrapped_reward
+        for p in self.reward_model.parameters():
+            p.requires_grad = False
+        requires_grad_num = 0
+        for name, param in self.reward_model.named_parameters():
+            print(name, param.requires_grad)
+            if param.requires_grad:
+                requires_grad_num += 1
+        print(f"Number of trainable parameters in reward: {requires_grad_num}")
 
     def _setup_grpo_trainer(self):
         num_processes = self.accelerator.num_processes
-        global_batch_size = self.args.per_device_train_batch_size * num_processes
+        global_batch_size = (
+            self.args.per_device_train_batch_size
+            * num_processes
+            * self.args.gradient_accumulation_steps
+        )
 
-        num_generations = self.args.num_generations
         print(
-            f"Using num_generations = {num_generations} (global_batch_size = {global_batch_size})"
+            f"Using num_generations = {self.args.num_generations} (global_batch_size = {global_batch_size})"
         )
 
         training_args = GRPOConfig(
+            disable_dropout=True,
+            max_prompt_length=4096,
             logging_steps=1,
             report_to="wandb",
             per_device_train_batch_size=self.args.per_device_train_batch_size,
@@ -162,13 +209,15 @@ class SotopiaGRPOTrainer:
             learning_rate=self.args.learning_rate,
             output_dir=self.args.output_dir,
             save_steps=self.args.save_steps,
-            num_generations=num_generations,
+            num_generations=self.args.num_generations,
+            log_completions=True,
+            wandb_log_unique_prompts=True,
         )
 
         self.grpo_trainer = GRPOTrainer(
             args=training_args,
             model=self.policy,
-            reward_funcs=self.reward_model,
+            reward_funcs=self.wrapped_reward,
             processing_class=self.tokenizer,
             reward_processing_classes=self.tokenizer,
             train_dataset=self.train_dataset,
@@ -180,6 +229,9 @@ class SotopiaGRPOTrainer:
         try:
             print("Starting GRPO training...")
             train_stats = self.grpo_trainer.train()
+            if self.accelerator.is_main_process:
+                print("Saving final model checkpoint...")
+                self.grpo_trainer.save_model(self.args.output_dir)
             return train_stats
         except Exception as e:
             print(f"Training error: {str(e)}")
