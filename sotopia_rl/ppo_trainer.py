@@ -15,6 +15,7 @@ from trl import get_kbit_device_map, PPOConfig, PPOTrainer
 from peft import prepare_model_for_kbit_training
 from trl.trainer.utils import disable_dropout_in_model
 from accelerate import PartialState, Accelerator
+import copy
 
 import wandb
 from sotopia_rl.data import PPODataset
@@ -104,6 +105,7 @@ class SotopiaPPOTrainer:
             quantization_config=self.quant_config,
             device_map=get_kbit_device_map(),
         )
+        base_gen_ref = prepare_model_for_kbit_training(base_gen_ref)
         self.ref_policy = PeftModelForCausalLM.from_pretrained(
             base_gen_ref,
             self.args.ref_adapter_path,
@@ -113,14 +115,15 @@ class SotopiaPPOTrainer:
 
         
         if self.args.use_lora_train_ppo:
-            base_gen_policy = AutoModelForCausalLM.from_pretrained(
+            self.base_gen_policy = AutoModelForCausalLM.from_pretrained(
                 self.args.model_name,
                 torch_dtype='auto',
                 quantization_config=self.quant_config,
                 device_map=get_kbit_device_map(),
             )
+            self.base_gen_policy = prepare_model_for_kbit_training(self.base_gen_policy)
             self.policy = PeftModelForCausalLM.from_pretrained(
-                base_gen_policy,
+                self.base_gen_policy,
                 self.args.policy_adapter_path,
                 is_trainable=True,
                 adapter_name="policy_adapter"
@@ -173,6 +176,7 @@ class SotopiaPPOTrainer:
                 quantization_config=self.quant_config,
                 device_map=get_kbit_device_map(),
             )
+            base_value_model = prepare_model_for_kbit_training(base_value_model)
             self.value_model = PeftModelForSequenceClassification.from_pretrained(
                 base_value_model,
                 self.args.value_adapter_path,
@@ -204,7 +208,6 @@ class SotopiaPPOTrainer:
 
     def _setup_ppo_trainer(self):
         training_args = PPOConfig(
-            vf_coef=0.5,
             per_device_train_batch_size=self.args.per_device_train_batch_size,
             per_device_eval_batch_size=self.args.per_device_eval_batch_size,
             num_mini_batches=self.args.num_mini_batches,
@@ -226,8 +229,8 @@ class SotopiaPPOTrainer:
         self.ppo_trainer = PPOTrainer(
             args=training_args,
             model=self.policy,
+            ref_model=self.base_gen_policy,
             processing_class=self.tokenizer,
-            ref_model=self.ref_policy,
             reward_model=self.reward_model,
             value_model=self.value_model,
             train_dataset=self.train_dataset,
