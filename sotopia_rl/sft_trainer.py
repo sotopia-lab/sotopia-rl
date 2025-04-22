@@ -51,7 +51,6 @@ class SotopiaSFTTrainer:
                 torch_dtype=torch.float16,
                 quantization_config=quantization_config,
             )
-            base_model = prepare_model_for_kbit_training(base_model)
         else:
             base_model = AutoModelForCausalLM.from_pretrained(args.model_name).to(self.device)
         
