@@ -69,6 +69,5 @@ if __name__ == '__main__':
                         help="Use LoRA for training PPO")
  
     args = parser.parse_args()
-    accelerator = Accelerator()
-    trainer = SotopiaPPOTrainer(args, accelerator)
+    trainer = SotopiaPPOTrainer(args)
     trainer.train()
