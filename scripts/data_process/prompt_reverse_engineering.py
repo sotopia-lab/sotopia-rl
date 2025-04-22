@@ -1,14 +1,22 @@
-import json
+import argparse
 import os
-from typing import Any, Dict, List
-
+from collections import defaultdict
+from typing import Any, Dict, List, Tuple, Union, cast
 import transformers
-from episode_utils import FakeEpisodeLog, jsonl_to_episodes
+import pandas as pd
+import rich
+from rich.console import Console
+from rich.terminal_theme import MONOKAI
+
+from sotopia.database.logs import EpisodeLog
+from sotopia.messages.message_classes import ActionType
+import numpy as np
+import json
 
 # PROMPT_PREFIX = "Prompt after formatting:\n"
 MAX_TOKEN = 2048  # 5000
 
-PROMPT_TEMPLATE = """Imagine you are {agent}, your task is to act/speak as {agent} would, keeping in mind {agent}'s social goal.
+PROMPT_TEMPLATE = """Prompt after formatting:\nImagine you are {agent}, your task is to act/speak as {agent} would, keeping in mind {agent}'s social goal.
 You can find {agent}'s background and goal in the 'Here is the context of the interaction' field.
 Note that {agent}'s secret and goal is only visible to you.
 You should try your best to achieve {agent}'s goal in a way that align with their character traits.
@@ -34,15 +42,18 @@ ACTION_LIST = "none action speak non-verbal communication leave"  # " ".join(Act
 ACTION_REVERSE_MAP = {"left ": "leave", "did n": "none", "said:": "speak"}
 
 MODEL_CHECKPOINT = "meta-llama/Llama-2-13b-chat-hf"
+HF_TOKEN = "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"
+
 
 TOKENIZER = transformers.AutoTokenizer.from_pretrained(
     MODEL_CHECKPOINT,
     padding=False,
     truncation=False,
+    token=HF_TOKEN,
 )
 
 
-def to_natural_language(self: Any) -> str:
+def to_natural_language(self) -> str:
     match self.action_type:
         case "none":
             return "did nothing"
@@ -54,13 +65,12 @@ def to_natural_language(self: Any) -> str:
             return f"[{self.action_type}] {self.argument}"
         case "leave":
             return "left the conversation"
-    return "did nothing"
 
 
 SELECTED_TAG = ["gpt-4_gpt-4_v0.0.1_clean"]
 
 
-def detect_action(msg: str) -> str:
+def detect_action(msg):
     # first detect what action type is, default at none
     if msg.startswith("said:"):
         action = "speak"
@@ -76,7 +86,7 @@ def detect_action(msg: str) -> str:
     return action
 
 
-def generate_result(msg: str) -> str:
+def generate_result(msg):
     action = detect_action(msg)
     result = {}
     result["action_type"] = action
@@ -96,12 +106,12 @@ def generate_result(msg: str) -> str:
     return str_result
 
 
-def surpass_max_token_check(string: str, max_token: int=MAX_TOKEN, tokenizer: transformers.AutoTokenizer=TOKENIZER) -> int:
+def surpass_max_token_check(string, max_token=MAX_TOKEN, tokenizer=TOKENIZER):
     prompt_tokens = len(tokenizer(string)["input_ids"])
     return max(prompt_tokens - max_token, 0)
 
 
-def truncate_prompt_to_length(dia_his: str, surpass_num: int, tokenizer: transformers.AutoTokenizer=TOKENIZER) -> str:
+def truncate_prompt_to_length(dia_his, surpass_num, tokenizer=TOKENIZER):
     # context_len = len(tokenizer(context)['input_ids'])
     dia_sen = dia_his.split("\n")
     remove_len = 0
@@ -114,13 +124,10 @@ def truncate_prompt_to_length(dia_his: str, surpass_num: int, tokenizer: transfo
 
 
 def reverse_episode_log(
-    epilog: FakeEpisodeLog, later_speak: bool=False, include_format: bool=True, max_token: int=MAX_TOKEN
-) -> List[Dict[str, Any]]:
+    epilog, later_speak=False, include_format=True, max_token=MAX_TOKEN
+):
     episode_msg = epilog.messages
     # per episode
-    if not epilog.models:
-        raise Exception("No models recorded in the episode log")
-
     agent_model = epilog.models[1] if not later_speak else epilog.models[2]
     promt_template = PROMPT_TEMPLATE
 
@@ -137,12 +144,12 @@ def reverse_episode_log(
 
     prompt_result_instances = []
     dial_history = ""
-    history = []
+
     for i in range(0, len(episode_msg)):
         msg = episode_msg[i]
         if (len(msg) != 4) and i < (len(episode_msg) - 1):
             continue
-        turn_dic = {"model": agent_model, "env_id": epilog.environment, "agent_ids": epilog.agents}
+        turn_dic = {"model": agent_model}
         for tpl in msg:
             if tpl[0] == "Environment" and (tpl[1] == speaker):
                 if i > 0:
@@ -151,12 +158,6 @@ def reverse_episode_log(
                     # for the first context, we don't need \n
                     context = tpl[2]
                     dial_history += context
-
-            if tpl[0] == speaker and i % 2 == turn_div:
-                history.append(f"Utterance {(i - 1) // 2} by {tpl[0]} " + tpl[2])
-
-            if tpl[0] != "Environment" and tpl[0] != speaker and i % 2 != turn_div:
-                history.append(f"Utterance {(i - 1) // 2} by {tpl[0]} " + tpl[2])
 
             if tpl[0] == speaker:  # if speaker is the agent, use what he said as result
                 str_result = generate_result(tpl[2])
@@ -170,6 +171,7 @@ def reverse_episode_log(
             over_tokens = surpass_max_token_check(prompt, max_token)
             if over_tokens > 0:
                 all_dial = dial_history[len(context) :]
+                # print(all_dial)
                 trun_dial = truncate_prompt_to_length(all_dial, over_tokens)
                 prompt = promt_template.format(
                     agent=speaker,
@@ -180,14 +182,12 @@ def reverse_episode_log(
                 prompt += FORMAT_TEMPLATE
             turn_dic["prompt"] = prompt
             turn_dic["result"] = str_result
-            turn_dic["history"] = list(history[1:])
-            turn_dic["speaker"] = speaker
             prompt_result_instances.append(turn_dic)
 
     return prompt_result_instances
 
 
-def concat_episode_msg(epilog: FakeEpisodeLog) -> str:
+def concat_episode_msg(epilog):
     episode_msg = epilog.messages
     # per episode
 
@@ -212,7 +212,7 @@ def concat_episode_msg(epilog: FakeEpisodeLog) -> str:
     return dial_history
 
 
-def parse_prompt_to_json(episode: FakeEpisodeLog, dir: str, init_speak: bool, include_format: bool=False) -> None:
+def parse_prompt_to_json(episode, dir, init_speak, include_format=False):
     prompt_result_instances = reverse_episode_log(episode, init_speak, include_format)
 
     if not os.path.exists(dir):
@@ -221,17 +221,25 @@ def parse_prompt_to_json(episode: FakeEpisodeLog, dir: str, init_speak: bool, in
     for i in range(len(prompt_result_instances)):
         instance = prompt_result_instances[i]
         todump = json.dumps(instance, indent=4)
-        with open(dir + "/{}-{}-{}.json".format(episode.pk, instance['speaker'], i), "w") as f:
+        with open(dir + "/{}-{}-{}.json".format(episode.pk, init_speak, i), "w") as f:
             f.write(todump)
 
 
-def run_reverse_by_pk_agent(episode_pk: str, agent_side: bool, save_dir: str, episodes_file: str = "../../data/sotopia_pi_episodes.jsonl") -> None:
+def run_reverse_by_pk_agent(episode_pk, agent_side, save_dir):
     """
     Entry function if you want to reverse engineer given a pk, not a episode
     """
-    EPISODES = jsonl_to_episodes(episodes_file)
-    EPISODE_DICT = {ep.pk: ep for ep in EPISODES}
-    episode = EPISODE_DICT.get(episode_pk, None)
-    if not episode:
-        raise Exception(f"Episode {episode_pk} not found")
+    episode = EpisodeLog.find(EpisodeLog.pk == episode_pk).all()[0]
     parse_prompt_to_json(episode, save_dir, agent_side, False)
+
+
+def run_all_tag_reverse(filter_env_dic, dir):
+    # tag_episodes = get_clean_episodes(selected_tags=[tag])[tag]
+    for k, v in filter_env_dic.items():
+        cutoff = len(v) // 2
+        for i in range(len(v)):
+            episode = v[i]
+            if i < cutoff:
+                parse_prompt_to_json(episode, dir, False)
+            else:
+                parse_prompt_to_json(episode, dir, True)
