@@ -30,7 +30,12 @@ def parse_conversation(
     """Extract and parse conversation and goals from the episode."""
     conversation = episode["social_interactions"].split("\n\n")
     goals = episode["social_goals"]
+    rewards_1, rewards_2 = episode["rewards"][0][1], episode["rewards"][1][1]
     agent1, agent2 = list(goals.keys())
+    rewards = {
+        agent1: rewards_1,
+        agent2: rewards_2,
+    }
     parsed_conversation = []
     for utterance in conversation:
         if utterance.startswith(agent1):
@@ -42,7 +47,7 @@ def parse_conversation(
         parsed_conversation.append(
             (speaker, utterance[len(speaker) + 1 :].strip())
         )  # Strip the speaker from the utterance
-    return parsed_conversation, goals
+    return parsed_conversation, goals, rewards
 
 
 def get_key_utterance_dict(conversation: List[Tuple[str, str]]) -> Dict[str, List[Any]]:
@@ -96,11 +101,14 @@ def generate_reward_attribution(
             print(f"Incomplete episode. Rerun episode {episode['episode_id']}")
 
         # starting from here
-        conversation, goals = parse_conversation(episode)
+        conversation, goals, rewards = parse_conversation(episode)
         agents = list(goals.keys())
         for agent in agents:
             key_utterance_dict = get_key_utterance_dict(conversation)
-            attribution_rewards = get_attribution_single_conv(conversation, agent, goals, episode, llm_name, attribution_instruction_name)
+            if not attribution_method_name.endswith("generic"):
+                attribution_rewards = get_attribution_single_conv(conversation, agent, goals, episode, llm_name, attribution_instruction_name)
+            else:
+                attribution_rewards = get_attribution_single_conv(conversation, agent, goals, episode, llm_name)
 
             for key in key_utterance_dict:
                 if agent in key and key in attribution_rewards:
@@ -113,7 +121,6 @@ def generate_reward_attribution(
                     "goal": goals[agent],
                     "attributed_utterances": key_utterance_dict,
                     "is_first_speaker": agent == agents[0],
-                    "goal_score": episode["scores"][agent],
                 }
             )
             with open(os.path.join(data_dir, output_file), "a") as f:
@@ -123,13 +130,14 @@ async def process_episode(
     episode,
     get_attribution_single_conv,
     llm_name,
+    attribution_method_name,
     attribution_instruction_name,
     data_dir,
     output_file,
     file_lock
 ):
     # Parse conversation and goals for the current episode.
-    conversation, goals = parse_conversation(episode)
+    conversation, goals, rewards = parse_conversation(episode)
     agents = list(goals.keys())
 
     # Create a list to store all agent results for batch writing
@@ -139,15 +147,27 @@ async def process_episode(
     for agent in agents:
         key_utterance_dict = get_key_utterance_dict(conversation)
         # Run the (potentially blocking) attribution function in a separate thread.
-        attribution_rewards = await asyncio.to_thread(
-            get_attribution_single_conv,
-            conversation,
-            agent,
-            goals,
-            episode,
-            llm_name,
-            attribution_instruction_name
-        )
+        if not attribution_method_name.endswith("generic"):
+            attribution_rewards = await asyncio.to_thread(
+                get_attribution_single_conv,
+                conversation,
+                agent,
+                goals,
+                episode,
+                llm_name,
+                attribution_instruction_name
+            )
+        else:
+            attribution_rewards = await asyncio.to_thread(
+                get_attribution_single_conv,
+                conversation,
+                agent,
+                goals,
+                episode,
+                rewards,
+                llm_name,
+                attribution_instruction_name
+            )
         # Update the key_utterance_dict with the attribution rewards.
         for key in key_utterance_dict:
             if agent in key and key in attribution_rewards:
@@ -223,6 +243,7 @@ def parallel_generate_reward_attribution(
                 episode,
                 get_attribution_single_conv,
                 llm_name,
+                attribution_method_name,
                 attribution_instruction_name,
                 data_dir,
                 output_file,
