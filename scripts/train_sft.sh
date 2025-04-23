@@ -11,7 +11,6 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch \
     --num_epochs 20 \
     --use_lora \
     --evaluation_steps 50 \
-    --sft_data_path /data/disk0/sotopia-rl/data/sotopia_pi_round1_qwen_sft_pi_with_instruct_string.json \
+    --sft_data_path /data/disk0/sotopia-rl/data/sotopia_pi_bc_episodes_sft.json \
     --template_path /data/disk0/sotopia-rl/evals/qwen2.5-7b.jinja \
-    --checkpoint_dir /data/disk0/sotopia-rl/sft_qwen25_7b_pi_round1_qwen_sft_pi \
-    --use_qlora 
+    --checkpoint_dir /data/disk0/sotopia-rl/sft_qwen25_7b_bc

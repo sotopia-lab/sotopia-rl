@@ -199,7 +199,6 @@ class SotopiaPPOTrainer:
 
     def _setup_ppo_trainer(self):
         training_args = PPOConfig(
-            max_grad_norm=0.5,
             per_device_train_batch_size=self.args.per_device_train_batch_size,
             per_device_eval_batch_size=self.args.per_device_eval_batch_size,
             num_mini_batches=self.args.num_mini_batches,
@@ -217,6 +216,7 @@ class SotopiaPPOTrainer:
             response_length=self.args.response_length,
             stop_token='eos',
             kl_estimator='k3',
+            kl_coef=1e-5,
         )
 
         self.ppo_trainer = PPOTrainer(
