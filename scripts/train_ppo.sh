@@ -10,7 +10,7 @@ CUDA_VISIBLE_DEVICES=3 accelerate launch \
   --learning_rate 1e-6 \
   --per_device_train_batch_size 1 \
   --per_device_eval_batch_size 4 \
-  --gradient_accumulation_steps 1 \
+  --gradient_accumulation_steps 32 \
   --num_mini_batches 1 \
   --ppo_data_path /data/disk0/sotopia-rl/data/sotopia_pi_round1_qwen_sft_all_with_instruct_string.json \
   --template_path /data/disk0/sotopia-rl/evals/qwen2.5-7b.jinja \
