@@ -1,14 +1,14 @@
-CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 accelerate launch \
+CUDA_VISIBLE_DEVICES=0,1,2,3 accelerate launch \
   --config_file /data/disk0/sotopia-rl/scripts/accelerate_config_ppo.yaml \
-  --main_process_port 29529 \
+  --main_process_port 29509 \
  /data/disk0/sotopia-rl/scripts/train_ppo.py \
   --model_name /data/disk0/models/Qwen2.5-7B-Instruct \
-  --policy_adapter_path /data/disk0/sotopia-rl/sft_qwen25_7b_sft_round_1_bc_data_top_2/checkpoint-1500 \
-  --ref_adapter_path /data/disk0/sotopia-rl/sft_qwen25_7b_sft_round_1_bc_data_top_2/checkpoint-1500 \
-  --reward_adapter_path /data/disk0/sotopia-rl/rm_token_length_normalized/checkpoint-350 \
-  --value_adapter_path /data/disk0/sotopia-rl/ppo_token_length_normalized_checkpoint_510_value_adapter \
-  --learning_rate 5e-5 \
-  --per_device_train_batch_size 6 \
+  --policy_adapter_path /data/disk0/sotopia-rl/sft_qwen25_7b_pi_round1_qwen_sft_pi/checkpoint-50 \
+  --ref_adapter_path /data/disk0/sotopia-rl/sft_qwen25_7b_pi_round1_qwen_sft_pi/checkpoint-50 \
+  --reward_adapter_path /data/disk0/sotopia-rl/rm_token_length_normalized/checkpoint-500 \
+  --value_adapter_path /data/disk0/sotopia-rl/ppo_token_length_normalized/checkpoint-630 \
+  --learning_rate 1e-5 \
+  --per_device_train_batch_size 1 \
   --per_device_eval_batch_size 4 \
   --gradient_accumulation_steps 1 \
   --num_mini_batches 1 \

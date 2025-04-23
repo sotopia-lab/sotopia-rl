@@ -102,10 +102,7 @@ class SotopiaPPOTrainer:
         base_gen_ref = AutoModelForCausalLM.from_pretrained(
             self.args.model_name,
             torch_dtype='auto',
-            quantization_config=self.quant_config,
-            device_map=get_kbit_device_map(),
         )
-        base_gen_ref = prepare_model_for_kbit_training(base_gen_ref)
         self.ref_policy = PeftModelForCausalLM.from_pretrained(
             base_gen_ref,
             self.args.ref_adapter_path,
@@ -118,10 +115,7 @@ class SotopiaPPOTrainer:
             self.base_gen_policy = AutoModelForCausalLM.from_pretrained(
                 self.args.model_name,
                 torch_dtype='auto',
-                quantization_config=self.quant_config,
-                device_map=get_kbit_device_map(),
             )
-            self.base_gen_policy = prepare_model_for_kbit_training(self.base_gen_policy)
             self.policy = PeftModelForCausalLM.from_pretrained(
                 self.base_gen_policy,
                 self.args.policy_adapter_path,
@@ -173,10 +167,7 @@ class SotopiaPPOTrainer:
                 self.args.model_name,
                 torch_dtype='auto',
                 num_labels=1,
-                quantization_config=self.quant_config,
-                device_map=get_kbit_device_map(),
             )
-            base_value_model = prepare_model_for_kbit_training(base_value_model)
             self.value_model = PeftModelForSequenceClassification.from_pretrained(
                 base_value_model,
                 self.args.value_adapter_path,
@@ -208,6 +199,7 @@ class SotopiaPPOTrainer:
 
     def _setup_ppo_trainer(self):
         training_args = PPOConfig(
+            max_grad_norm=0.5,
             per_device_train_batch_size=self.args.per_device_train_batch_size,
             per_device_eval_batch_size=self.args.per_device_eval_batch_size,
             num_mini_batches=self.args.num_mini_batches,
@@ -224,12 +216,13 @@ class SotopiaPPOTrainer:
             ddp_find_unused_parameters=True,
             response_length=self.args.response_length,
             stop_token='eos',
+            kl_estimator='k3',
         )
 
         self.ppo_trainer = PPOTrainer(
             args=training_args,
             model=self.policy,
-            ref_model=self.base_gen_policy,
+            ref_model=self.ref_policy,
             processing_class=self.tokenizer,
             reward_model=self.reward_model,
             value_model=self.value_model,
