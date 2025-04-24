@@ -216,7 +216,6 @@ class SotopiaPPOTrainer:
             response_length=self.args.response_length,
             stop_token='eos',
             kl_estimator='k3',
-            kl_coef=1e-5,
         )
 
         self.ppo_trainer = PPOTrainer(
