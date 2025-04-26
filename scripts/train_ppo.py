@@ -32,7 +32,7 @@ if __name__ == '__main__':
                         help="Number of steps to accumulate gradients before performing an update")
     parser.add_argument("--val_ratio", type=float, default=0.05,
                         help="Ratio of validation data")
-    parser.add_argument("--response_length", type=int, default=128,
+    parser.add_argument("--response_length", type=int, default=256,
                         help="Maximum length of generated responses")
     parser.add_argument("--local_rollout_forward_batch_size", type=int, default=16,
                         help="Batch size for local rollout forward pass")

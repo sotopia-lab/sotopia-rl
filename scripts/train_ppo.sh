@@ -4,23 +4,47 @@ CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 accelerate launch \
   --main_process_port 29439 \
  /data/disk0/sotopia-rl/scripts/train_ppo.py \
   --model_name /data/disk0/models/Qwen2.5-7B-Instruct \
-  --policy_adapter_path /data/disk0/sotopia-rl/sft_round_1_bc_data_top_2_only_1_epoch/checkpoint-160 \
-  --ref_adapter_path /data/disk0/sotopia-rl/sft_round_1_bc_data_top_2_only_1_epoch/checkpoint-160 \
-  --reward_adapter_path /data/disk0/sotopia-rl/rm_reward_direct_default_without_that_n_error_as_the_end/checkpoint-4480 \
-  --value_adapter_path /data/disk0/sotopia-rl/rm_reward_direct_default_without_that_n_error_as_the_end/checkpoint-4480 \
-  --learning_rate 1e-6 \
+  --policy_adapter_path /data/disk0/sotopia-rl/sft_qwen25_7b_sft_round_1_bc_data_top_2/checkpoint-1500 \
+  --ref_adapter_path /data/disk0/sotopia-rl/sft_qwen25_7b_sft_round_1_bc_data_top_2/checkpoint-1500 \
+  --reward_adapter_path /data/disk0/sotopia-rl/rm_goal_w_conversation_behavior_4_23/checkpoint-9400 \
+  --value_adapter_path /data/disk0/sotopia-rl/ppo_top_2_sft_1_epoch_step160_default_kl_with_pretrained_value_model_with_conv_constrain_rm_pretrain_value_model/checkpoint-100 \
+  --learning_rate 5e-6 \
   --per_device_train_batch_size 1 \
   --per_device_eval_batch_size 4 \
   --gradient_accumulation_steps 4 \
   --num_mini_batches 1 \
   --ppo_data_path /data/disk0/sotopia-rl/data/sotopia_pi_round1_qwen_sft_all_with_instruct_string.json \
   --template_path /data/disk0/sotopia-rl/evals/qwen2.5-7b.jinja \
-  --num_train_epochs 5 \
+  --num_train_epochs 30 \
   --max_length 4096 \
   --num_ppo_epochs 2 \
   --gamma 1.00 \
   --use_lora_train_ppo \
-  --output_dir /data/disk0/sotopia-rl/ppo_top_2_sft_1_epoch_step160_default_kl
+  --output_dir /data/disk0/sotopia-rl/ppo_top_2_sft_1_epoch_step160_default_kl_with_pretrained_value_model_with_conv_constrain_rm_with_1e-4_vf_coef_0425
+
+# param for pretrain value adapter
+CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 accelerate launch \
+  --config_file /data/disk0/sotopia-rl/scripts/accelerate_config_ppo.yaml \
+  --main_process_port 29439 \
+ /data/disk0/sotopia-rl/scripts/train_ppo.py \
+  --model_name /data/disk0/models/Qwen2.5-7B-Instruct \
+  --policy_adapter_path /data/disk0/sotopia-rl/sft_qwen25_7b_sft_round_1_bc_data_top_2/checkpoint-1500 \
+  --ref_adapter_path /data/disk0/sotopia-rl/sft_qwen25_7b_sft_round_1_bc_data_top_2/checkpoint-1500 \
+  --reward_adapter_path /data/disk0/sotopia-rl/rm_goal_w_conversation_behavior_4_23/checkpoint-9400 \
+  --value_adapter_path /data/disk0/sotopia-rl/rm_goal_w_conversation_behavior_4_23/checkpoint-9400 \
+  --learning_rate 1e-4 \
+  --per_device_train_batch_size 1 \
+  --per_device_eval_batch_size 4 \
+  --gradient_accumulation_steps 4 \
+  --num_mini_batches 1 \
+  --ppo_data_path /data/disk0/sotopia-rl/data/sotopia_pi_round1_qwen_sft_all_with_instruct_string.json \
+  --template_path /data/disk0/sotopia-rl/evals/qwen2.5-7b.jinja \
+  --num_train_epochs 30 \
+  --max_length 4096 \
+  --num_ppo_epochs 2 \
+  --gamma 1.00 \
+  --use_lora_train_ppo \
+  --output_dir /data/disk0/sotopia-rl/ppo_top_2_sft_1_epoch_step160_default_kl_with_pretrained_value_model_with_conv_constrain_rm_pretrain_value_model
 
 
 
@@ -29,14 +53,14 @@ CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 accelerate launch \
   --main_process_port 29439 \
  /data/disk0/sotopia-rl/scripts/train_ppo.py \
   --model_name /data/disk0/models/Qwen2.5-7B-Instruct \
-  --policy_adapter_path /data/disk0/sotopia-rl/sft_round_1_bc_data_top_2_only_1_epoch/checkpoint-160 \
-  --ref_adapter_path /data/disk0/sotopia-rl/sft_round_1_bc_data_top_2_only_1_epoch/checkpoint-160 \
-  --reward_adapter_path /data/disk0/sotopia-rl/rm_token_length_normalized/checkpoint-500 \
-  --value_adapter_path /data/disk0/sotopia-rl/rm_token_length_normalized/checkpoint-500 \
-  --learning_rate 1e-6 \
+  --policy_adapter_path /data/disk0/sotopia-rl/sft_qwen25_7b_sft_round_1_bc_data_top_2/checkpoint-1500 \
+  --ref_adapter_path /data/disk0/sotopia-rl/sft_qwen25_7b_sft_round_1_bc_data_top_2/checkpoint-1500 \
+  --reward_adapter_path /data/disk0/sotopia-rl/rm_token_length_checkpoint-800 \
+  --value_adapter_path /data/disk0/sotopia-rl/ppo_top_2_sft_1_epoch_step160_default_kl_token_length_pretrained_value_model \
+  --learning_rate 1e-5 \
   --per_device_train_batch_size 1 \
   --per_device_eval_batch_size 4 \
-  --gradient_accumulation_steps 4 \
+  --gradient_accumulation_steps 2 \
   --num_mini_batches 1 \
   --ppo_data_path /data/disk0/sotopia-rl/data/sotopia_pi_round1_qwen_sft_all_with_instruct_string.json \
   --template_path /data/disk0/sotopia-rl/evals/qwen2.5-7b.jinja \
@@ -45,9 +69,9 @@ CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 accelerate launch \
   --num_ppo_epochs 2 \
   --gamma 1.00 \
   --use_lora_train_ppo \
-  --output_dir /data/disk0/sotopia-rl/ppo_top_2_sft_1_epoch_step104_default_kl
+  --output_dir /data/disk0/sotopia-rl/ppo_top_2_sft_1_epoch_step160_default_kl_token_length_with_pretrained_value_model
 
-CUDA_VISIBLE_DEVICES=4,5 accelerate launch \
+CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 accelerate launch \
   --config_file /data/disk0/sotopia-rl/scripts/accelerate_config_ppo.yaml \
   --main_process_port 29449 \
  /data/disk0/sotopia-rl/scripts/train_ppo.py \

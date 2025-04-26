@@ -1,4 +1,4 @@
-CUDA_VISIBLE_DEVICES=4,5,6,7 accelerate launch \
+CUDA_VISIBLE_DEVICES=7 accelerate launch \
   --config_file /data/disk0/sotopia-rl/scripts/accelerate_config_grpo.yaml \
   --main_process_port 29511 \
   /data/disk0/sotopia-rl/scripts/train_grpo.py \

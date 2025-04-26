@@ -99,15 +99,9 @@ class SotopiaPPOTrainer:
         )
     
     def _setup_generation_models(self):
-        base_gen_ref = AutoModelForCausalLM.from_pretrained(
+        self.ref_policy = AutoModelForCausalLM.from_pretrained(
             self.args.model_name,
             torch_dtype='auto',
-        )
-        self.ref_policy = PeftModelForCausalLM.from_pretrained(
-            base_gen_ref,
-            self.args.ref_adapter_path,
-            is_trainable=False,
-            adapter_name="ref_adapter"
         )
 
         
@@ -216,6 +210,7 @@ class SotopiaPPOTrainer:
             response_length=self.args.response_length,
             stop_token='eos',
             kl_estimator='k3',
+            vf_coef=1e-4,
         )
 
         self.ppo_trainer = PPOTrainer(
