@@ -8,7 +8,7 @@ CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 accelerate launch \
   --ref_adapter_path /data/disk0/sotopia-rl/sft_qwen25_7b_sft_round_1_bc_data_top_2/checkpoint-1500 \
   --reward_adapter_path /data/disk0/sotopia-rl/rm_goal_w_conversation_behavior_4_23/checkpoint-9400 \
   --value_adapter_path /data/disk0/sotopia-rl/ppo_top_2_sft_1_epoch_step160_default_kl_with_pretrained_value_model_with_conv_constrain_rm_pretrain_value_model/checkpoint-100 \
-  --learning_rate 5e-6 \
+  --learning_rate 4e-6 \
   --per_device_train_batch_size 1 \
   --per_device_eval_batch_size 4 \
   --gradient_accumulation_steps 4 \
@@ -20,7 +20,7 @@ CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 accelerate launch \
   --num_ppo_epochs 2 \
   --gamma 1.00 \
   --use_lora_train_ppo \
-  --output_dir /data/disk0/sotopia-rl/ppo_top_2_sft_1_epoch_step160_default_kl_with_pretrained_value_model_with_conv_constrain_rm_with_1e-4_vf_coef_0425
+  --output_dir /data/disk0/sotopia-rl/ppo_top_2_sft_step1500_with_pretrained_value_model
 
 # param for pretrain value adapter
 CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 accelerate launch \
@@ -44,7 +44,7 @@ CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 accelerate launch \
   --num_ppo_epochs 2 \
   --gamma 1.00 \
   --use_lora_train_ppo \
-  --output_dir /data/disk0/sotopia-rl/ppo_top_2_sft_1_epoch_step160_default_kl_with_pretrained_value_model_with_conv_constrain_rm_pretrain_value_model
+  --output_dir /data/disk0/sotopia-rl/ppo_top_2_sft_step1500_for_pretrained_value_model
 
 
 

@@ -211,6 +211,8 @@ class SotopiaPPOTrainer:
             stop_token='eos',
             kl_estimator='k3',
             vf_coef=1e-4,
+            kl_coef=1e-2,
+            max_grad_norm=0.5,
         )
 
         self.ppo_trainer = PPOTrainer(
