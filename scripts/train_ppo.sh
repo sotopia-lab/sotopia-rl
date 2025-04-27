@@ -6,9 +6,9 @@ CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 accelerate launch \
   --model_name /data/disk0/models/Qwen2.5-7B-Instruct \
   --policy_adapter_path /data/disk0/sotopia-rl/sft_qwen25_7b_sft_round_1_bc_data_top_2/checkpoint-1500 \
   --ref_adapter_path /data/disk0/sotopia-rl/sft_qwen25_7b_sft_round_1_bc_data_top_2/checkpoint-1500 \
-  --reward_adapter_path /data/disk0/sotopia-rl/rm_goal_w_conversation_behavior_4_23/checkpoint-9400 \
-  --value_adapter_path /data/disk0/sotopia-rl/ppo_top_2_sft_1_epoch_step160_default_kl_with_pretrained_value_model_with_conv_constrain_rm_pretrain_value_model/checkpoint-100 \
-  --learning_rate 4e-6 \
+  --reward_adapter_path /data/disk0/sotopia-rl/rm_reward_direct_default_without_that_n_error_as_the_end/checkpoint-4480 \
+  --value_adapter_path /data/disk0/sotopia-rl/ppo_top_2_sft_step1500_for_pretrained_value_model_direct_rm/checkpoint-90 \
+  --learning_rate 3e-6 \
   --per_device_train_batch_size 1 \
   --per_device_eval_batch_size 4 \
   --gradient_accumulation_steps 4 \
@@ -20,10 +20,10 @@ CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 accelerate launch \
   --num_ppo_epochs 2 \
   --gamma 1.00 \
   --use_lora_train_ppo \
-  --output_dir /data/disk0/sotopia-rl/ppo_top_2_sft_step1500_with_pretrained_value_model
+  --output_dir /data/disk0/sotopia-rl/ppo_top_2_sft_step1500_with_pretrained_value_model_gamma_099_direct_rm
 
 # param for pretrain value adapter
-CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 accelerate launch \
+CUDA_VISIBLE_DEVICES=4,5,6,7 accelerate launch \
   --config_file /data/disk0/sotopia-rl/scripts/accelerate_config_ppo.yaml \
   --main_process_port 29439 \
  /data/disk0/sotopia-rl/scripts/train_ppo.py \
@@ -32,7 +32,7 @@ CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 accelerate launch \
   --ref_adapter_path /data/disk0/sotopia-rl/sft_qwen25_7b_sft_round_1_bc_data_top_2/checkpoint-1500 \
   --reward_adapter_path /data/disk0/sotopia-rl/rm_goal_w_conversation_behavior_4_23/checkpoint-9400 \
   --value_adapter_path /data/disk0/sotopia-rl/rm_goal_w_conversation_behavior_4_23/checkpoint-9400 \
-  --learning_rate 1e-4 \
+  --learning_rate 5e-5 \
   --per_device_train_batch_size 1 \
   --per_device_eval_batch_size 4 \
   --gradient_accumulation_steps 4 \
@@ -44,7 +44,7 @@ CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 accelerate launch \
   --num_ppo_epochs 2 \
   --gamma 1.00 \
   --use_lora_train_ppo \
-  --output_dir /data/disk0/sotopia-rl/ppo_top_2_sft_step1500_for_pretrained_value_model
+  --output_dir /data/disk0/sotopia-rl/ppo_top_2_sft_step1500_for_pretrained_value_model_direct_rm
 
 
 

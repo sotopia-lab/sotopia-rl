@@ -35,7 +35,7 @@ class SotopiaPPOTrainer:
         self._setup_classification_models()
         self._setup_ppo_trainer()
 
-        for m in [self.policy, self.ref_policy]:
+        for m in [self.policy]:
             m.config.use_cache = False
         for m in [self.value_model, self.reward_model]:
             m.config.use_cache = False
@@ -131,11 +131,15 @@ class SotopiaPPOTrainer:
                 requires_grad_num += 1
         print(f"Number of trainable parameters in policy: {requires_grad_num}")
 
-        requires_grad_num = 0
-        for name, param in self.ref_policy.named_parameters():
-            if param.requires_grad:
-                requires_grad_num += 1
-        print(f"Number of trainable parameters in ref policy: {requires_grad_num}")
+
+        #for name, param in self.policy.named_parameters():
+        #    if self.policy.active_adapter in name:
+        #        param.requires_grad = False
+        #requires_grad_num = 0
+        #for name, param in self.ref_policy.named_parameters():
+        #    if param.requires_grad:
+        #        requires_grad_num += 1
+        #print(f"Number of trainable parameters in ref policy: {requires_grad_num}")
 
     def _setup_classification_models(self):
         base_reward_model = AutoModelForSequenceClassification.from_pretrained(
@@ -210,9 +214,8 @@ class SotopiaPPOTrainer:
             response_length=self.args.response_length,
             stop_token='eos',
             kl_estimator='k3',
-            vf_coef=1e-4,
-            kl_coef=1e-2,
-            max_grad_norm=0.5,
+            vf_coef=1e-3,
+            kl_coef=0.05,
         )
 
         self.ppo_trainer = PPOTrainer(
