@@ -14,5 +14,9 @@ CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 accelerate launch \
   --num_grpo_epochs 2 \
   --use_lora_train_grpo \
   --num_generations 16 \
+<<<<<<< HEAD
   --beta 0.04 \
   --output_dir /data/disk0/sotopia-rl/grpo_rm_reward_direct_default_beta_004
+=======
+  --output_dir /data/disk0/sotopia-rl/grpo_rm_reward_direct_default
+>>>>>>> 6a5e62f4de6e9b376b6ed3f56e6745b8bb0f86bf

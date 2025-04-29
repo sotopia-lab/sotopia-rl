@@ -18,6 +18,7 @@ from accelerate import Accelerator
 from sotopia_rl.data import GRPODataset
 from functools import partial
 from typing import List
+from peft import prepare_model_for_kbit_training
 
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 os.environ["NCCL_P2P_DISABLE"] = "1"
@@ -105,6 +106,7 @@ class SotopiaGRPOTrainer:
                 quantization_config=self.quant_config,
                 device_map=get_kbit_device_map(),
             )
+            base_gen_policy = prepare_model_for_kbit_training(base_gen_policy)
             self.policy = PeftModelForCausalLM.from_pretrained(
                 base_gen_policy,
                 self.args.policy_adapter_path,
@@ -116,6 +118,7 @@ class SotopiaGRPOTrainer:
                 self.args.model_name,
                 torch_dtype="auto",
             )
+            self.policy = prepare_model_for_kbit_training(self.policy)
         self.policy.config.pad_token_id = self.tokenizer.pad_token_id
 
         requires_grad_num = 0
@@ -136,6 +139,7 @@ class SotopiaGRPOTrainer:
                 quantization_config=self.quant_config,
                 device_map=get_kbit_device_map(),
             )
+            base_reward_model = prepare_model_for_kbit_training(base_reward_model)
             self.reward_model = PeftModelForSequenceClassification.from_pretrained(
                 base_reward_model,
                 self.args.reward_adapter_path,
@@ -148,6 +152,7 @@ class SotopiaGRPOTrainer:
                 torch_dtype="auto",
                 num_labels=1,
             )
+            self.reward_model = prepare_model_for_kbit_training(self.reward_model)
         self.reward_model.config.pad_token_id = self.tokenizer.pad_token_id
 
         def wrapped_reward(
@@ -207,7 +212,6 @@ class SotopiaGRPOTrainer:
             num_generations=self.args.num_generations,
             log_completions=True,
             wandb_log_unique_prompts=True,
-            beta=1e-4,
         )
 
         self.grpo_trainer = GRPOTrainer(
