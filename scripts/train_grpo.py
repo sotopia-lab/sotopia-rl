@@ -7,7 +7,7 @@ from accelerate import Accelerator
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Train a model with GRPO using a reward model.")
-    
+
     parser.add_argument("--model_name", type=str, default="/data/models/gemma-2-2b-it",
                         help="Path to the model")
 
@@ -31,6 +31,7 @@ if __name__ == '__main__':
                         help="Maximum length of generated responses")
     parser.add_argument("--num_generations", type=int, default=4,
                         help="Number of generations for GRPO")
+    parser.add_argument("--beta", type=float, default=0.04, help="Beta parameter for GRPO")
 
     # Adapter parameters
     parser.add_argument("--policy_adapter_path", type=str, default=None,
@@ -55,7 +56,7 @@ if __name__ == '__main__':
                         help="Wandb run name")
     parser.add_argument("--use_lora_train_grpo", action="store_true",
                         help="Use LoRA for training GRPO")
- 
+
     args = parser.parse_args()
     accelerator = Accelerator()
     trainer = SotopiaGRPOTrainer(args, accelerator)
