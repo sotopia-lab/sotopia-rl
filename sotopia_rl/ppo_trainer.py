@@ -12,6 +12,8 @@ from transformers import (
     GenerationConfig,
 )
 from trl import get_kbit_device_map, PPOConfig, PPOTrainer
+from peft import prepare_model_for_kbit_training
+from trl.trainer.utils import disable_dropout_in_model
 from accelerate import PartialState, Accelerator
 
 import wandb
@@ -31,15 +33,6 @@ class SotopiaPPOTrainer:
 
         self._setup_generation_models()
         self._setup_classification_models()
-
-        self.policy, self.ref_policy, self.reward_model, self.value_model = self.accelerator.prepare(
-            self.policy, self.ref_policy, self.reward_model, self.value_model
-        )
-        self.policy = self.accelerator.unwrap_model(self.policy)
-        self.ref_policy = self.accelerator.unwrap_model(self.ref_policy)
-        self.reward_model = self.accelerator.unwrap_model(self.reward_model)
-        self.value_model = self.accelerator.unwrap_model(self.value_model)
-
         self._setup_ppo_trainer()
 
         def save_model(self, output_dir: str, _internal_call: bool = False):
@@ -56,11 +49,12 @@ class SotopiaPPOTrainer:
         self.ppo_trainer.save_model = save_model.__get__(self.ppo_trainer, type(self.ppo_trainer))
 
     def _init_wandb(self):
-        wandb.init(
-            project=self.args.wandb_project,
-            name=self.args.wandb_run_name,
-            config={k: v for k, v in vars(self.args).items() if isinstance(v, (int, float, str))}
-        )
+        if self.accelerator.is_main_process:
+            wandb.init(
+                project=self.args.wandb_project,
+                name=self.args.wandb_run_name,
+                config={k: v for k, v in vars(self.args).items() if isinstance(v, (int, float, str))}
+            )
 
     def _setup_tokenizer(self):
         self.tokenizer = AutoTokenizer.from_pretrained(self.args.model_name, padding_side="left")
@@ -84,7 +78,7 @@ class SotopiaPPOTrainer:
             
             generator = torch.Generator().manual_seed(42)
             val_ratio = getattr(self.args, 'val_ratio', 0.05)
-            train_size = min(int(len(dataset) * (1 - val_ratio)), len(dataset) - 2)
+            train_size = min(int(len(dataset) * (1 - val_ratio)), len(dataset) - 10)
             val_size = len(dataset) - train_size
             self.train_dataset, self.val_dataset = random_split(dataset, [train_size, val_size], generator=generator)
             print(f"Dataset split: {len(self.train_dataset)} train, {len(self.val_dataset)} validation")
@@ -104,12 +98,14 @@ class SotopiaPPOTrainer:
             quantization_config=self.quant_config,
             device_map=get_kbit_device_map(),
         )
+        base_gen_ref = prepare_model_for_kbit_training(base_gen_ref)
         self.ref_policy = PeftModelForCausalLM.from_pretrained(
             base_gen_ref,
             self.args.ref_adapter_path,
             is_trainable=False,
             adapter_name="ref_adapter"
         )
+        disable_dropout_in_model(self.ref_policy)
 
         if self.args.use_lora_train_ppo:
             base_gen_policy = AutoModelForCausalLM.from_pretrained(
@@ -118,6 +114,7 @@ class SotopiaPPOTrainer:
                 quantization_config=self.quant_config,
                 device_map=get_kbit_device_map(),
             )
+            base_gen_policy = prepare_model_for_kbit_training(base_gen_policy)
             self.policy = PeftModelForCausalLM.from_pretrained(
                 base_gen_policy,
                 self.args.policy_adapter_path,
@@ -129,6 +126,7 @@ class SotopiaPPOTrainer:
                 self.args.model_name,
                 torch_dtype='auto',
             )
+        disable_dropout_in_model(self.policy)
 
         requires_grad_num = 0
         for name, param in self.policy.named_parameters():
@@ -151,12 +149,15 @@ class SotopiaPPOTrainer:
             quantization_config=self.quant_config,
             device_map=get_kbit_device_map(),
         )
+        base_reward_model = prepare_model_for_kbit_training(base_reward_model)
         self.reward_model = PeftModelForSequenceClassification.from_pretrained(
             base_reward_model,
             self.args.reward_adapter_path,
             is_trainable=False,
             adapter_name="reward_adapter"
         )
+        disable_dropout_in_model(self.reward_model)
+
         for name, param in self.reward_model.named_parameters():
             if self.reward_model.active_adapter in name:
                 param.requires_grad = False
@@ -169,6 +170,7 @@ class SotopiaPPOTrainer:
                 quantization_config=self.quant_config,
                 device_map=get_kbit_device_map(),
             )
+            base_value_model = prepare_model_for_kbit_training(base_value_model) # important for qlora
             self.value_model = PeftModelForSequenceClassification.from_pretrained(
                 base_value_model,
                 self.args.value_adapter_path,
@@ -181,6 +183,7 @@ class SotopiaPPOTrainer:
                 torch_dtype='auto',
                 num_labels=1,
             )
+        disable_dropout_in_model(self.value_model)
         
         # VERY VERY IMPORTANT
         # specifically designed for PPO training, 
