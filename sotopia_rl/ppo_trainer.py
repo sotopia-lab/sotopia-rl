@@ -12,6 +12,8 @@ from transformers import (
     GenerationConfig,
 )
 from trl import get_kbit_device_map, PPOConfig, PPOTrainer
+from peft import prepare_model_for_kbit_training
+from trl.trainer.utils import disable_dropout_in_model
 from accelerate import PartialState, Accelerator
 
 import wandb
@@ -20,8 +22,7 @@ os.environ['NCCL_P2P_DISABLE'] = '1'
 os.environ["TORCH_DISTRIBUTED_DEBUG"] = "DETAIL"
 
 class SotopiaPPOTrainer:
-    def __init__(self, args, accelerator: Accelerator):
-        self.accelerator = accelerator
+    def __init__(self, args):
         self.args = args
 
         self._init_wandb()
@@ -31,25 +32,24 @@ class SotopiaPPOTrainer:
 
         self._setup_generation_models()
         self._setup_classification_models()
-
-        self.policy, self.ref_policy, self.reward_model, self.value_model = self.accelerator.prepare(
-            self.policy, self.ref_policy, self.reward_model, self.value_model
-        )
-        self.policy = self.accelerator.unwrap_model(self.policy)
-        self.ref_policy = self.accelerator.unwrap_model(self.ref_policy)
-        self.reward_model = self.accelerator.unwrap_model(self.reward_model)
-        self.value_model = self.accelerator.unwrap_model(self.value_model)
-
         self._setup_ppo_trainer()
+
+        for m in [self.policy, self.ref_policy]:
+            m.config.use_cache = False
+        for m in [self.value_model, self.reward_model]:
+            m.config.use_cache = False
 
         def save_model(self, output_dir: str, _internal_call: bool = False):
             if hasattr(self.model, "policy"):
-                model_to_save = self.model.policy
-            elif hasattr(self.model, "module") and hasattr(self.model.module, "policy"):
-                model_to_save = self.model.module.policy
+                policy_to_save = self.model.policy
+                value_to_save = self.model.value_model
+            elif hasattr(self.model, "module"):
+                policy_to_save = self.model.module.policy
+                value_to_save = self.model.module.value_model
             else:
-                model_to_save = self.model
-            model_to_save.save_pretrained(output_dir)
+                raise ValueError("Model does not have 'policy' or 'module' attribute")
+            policy_to_save.save_pretrained(output_dir)
+            value_to_save.save_pretrained(output_dir)
             self.tokenizer.save_pretrained(output_dir)
             print(f"Model saved to {output_dir}")
 
@@ -75,16 +75,16 @@ class SotopiaPPOTrainer:
 
             # Create and split dataset
             dataset = PPODataset(
-                self.args.ppo_data_path,
-                self.tokenizer,
-                template,
+                data_path=self.args.ppo_data_path,
+                tokenizer=self.tokenizer,
+                template=template,
                 max_length=self.args.max_length
             )
             print(f"dataset: {len(dataset)}")
             
             generator = torch.Generator().manual_seed(42)
             val_ratio = getattr(self.args, 'val_ratio', 0.05)
-            train_size = min(int(len(dataset) * (1 - val_ratio)), len(dataset) - 2)
+            train_size = min(int(len(dataset) * (1 - val_ratio)), len(dataset) - 10)
             val_size = len(dataset) - train_size
             self.train_dataset, self.val_dataset = random_split(dataset, [train_size, val_size], generator=generator)
             print(f"Dataset split: {len(self.train_dataset)} train, {len(self.val_dataset)} validation")
@@ -111,6 +111,7 @@ class SotopiaPPOTrainer:
             adapter_name="ref_adapter"
         )
 
+        
         if self.args.use_lora_train_ppo:
             base_gen_policy = AutoModelForCausalLM.from_pretrained(
                 self.args.model_name,
@@ -129,6 +130,8 @@ class SotopiaPPOTrainer:
                 self.args.model_name,
                 torch_dtype='auto',
             )
+        self.ref_policy.config.pad_token_id = self.tokenizer.pad_token_id
+        self.policy.config.pad_token_id = self.tokenizer.pad_token_id
 
         requires_grad_num = 0
         for name, param in self.policy.named_parameters():
@@ -157,6 +160,7 @@ class SotopiaPPOTrainer:
             is_trainable=False,
             adapter_name="reward_adapter"
         )
+
         for name, param in self.reward_model.named_parameters():
             if self.reward_model.active_adapter in name:
                 param.requires_grad = False
@@ -182,12 +186,9 @@ class SotopiaPPOTrainer:
                 num_labels=1,
             )
         
-        # VERY VERY IMPORTANT
-        # specifically designed for PPO training, 
-        # based on the get_reward function
-        # it fill the input_ids paddings with 0s
-        self.value_model.config.pad_token_id = 0
-        self.reward_model.config.pad_token_id = 0
+        # need to set this with not None results
+        self.value_model.config.pad_token_id = self.tokenizer.pad_token_id
+        self.reward_model.config.pad_token_id = self.tokenizer.pad_token_id
         
         requires_grad_num = 0
         for name, param in self.value_model.named_parameters():
@@ -203,6 +204,7 @@ class SotopiaPPOTrainer:
 
     def _setup_ppo_trainer(self):
         training_args = PPOConfig(
+            vf_coef=0.5,
             per_device_train_batch_size=self.args.per_device_train_batch_size,
             per_device_eval_batch_size=self.args.per_device_eval_batch_size,
             num_mini_batches=self.args.num_mini_batches,
