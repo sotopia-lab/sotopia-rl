@@ -208,6 +208,7 @@ class SotopiaGRPOTrainer:
             num_generations=self.args.num_generations,
             log_completions=True,
             wandb_log_unique_prompts=True,
+            beta=self.args.beta,
         )
 
         self.grpo_trainer = GRPOTrainer(

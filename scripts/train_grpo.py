@@ -31,6 +31,8 @@ if __name__ == '__main__':
                         help="Maximum length of generated responses")
     parser.add_argument("--num_generations", type=int, default=4,
                         help="Number of generations for GRPO")
+    parser.add_argument("--beta", type=float, default=0.04,
+                        help="Beta parameter for GRPO")
 
     # Adapter parameters
     parser.add_argument("--policy_adapter_path", type=str, default=None,
