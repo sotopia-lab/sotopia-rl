@@ -221,7 +221,7 @@ class SotopiaPPOTrainer:
         self.ppo_trainer = PPOTrainer(
             args=training_args,
             model=self.policy,
-            ref_model=self.ref_policy,
+            ref_model=copy.deepcopy(self.policy),
             processing_class=self.tokenizer,
             reward_model=self.reward_model,
             value_model=self.value_model,
