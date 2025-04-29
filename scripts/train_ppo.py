@@ -20,7 +20,7 @@ if __name__ == '__main__':
                         help="Number of PPO epochs per update")
     parser.add_argument("--learning_rate", type=float, default=5e-6,
                         help="Learning rate for optimizer")
-    parser.add_argument("--gamma", type=float, default=0.99,
+    parser.add_argument("--gamma", type=float, default=1.0,
                         help="Discount factor")
     parser.add_argument("--lam", type=float, default=0.95,
                         help="GAE lambda for advantage estimation")
@@ -32,7 +32,7 @@ if __name__ == '__main__':
                         help="Number of steps to accumulate gradients before performing an update")
     parser.add_argument("--val_ratio", type=float, default=0.05,
                         help="Ratio of validation data")
-    parser.add_argument("--response_length", type=int, default=128,
+    parser.add_argument("--response_length", type=int, default=256,
                         help="Maximum length of generated responses")
     parser.add_argument("--local_rollout_forward_batch_size", type=int, default=16,
                         help="Batch size for local rollout forward pass")
@@ -69,6 +69,5 @@ if __name__ == '__main__':
                         help="Use LoRA for training PPO")
  
     args = parser.parse_args()
-    accelerator = Accelerator()
-    trainer = SotopiaPPOTrainer(args, accelerator)
+    trainer = SotopiaPPOTrainer(args)
     trainer.train()
