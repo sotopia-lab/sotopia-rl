@@ -108,7 +108,7 @@ class SotopiaSFTTrainer(Trainer):
             logging_steps=1,
             report_to="wandb",
             bf16=True,
-            optim="adamw_torch",
+            optim="paged_adamw_8bit" if args.use_qlora else "adamw_torch",
             dataloader_num_workers=4,
             ddp_find_unused_parameters=False,
             eval_strategy="steps",
