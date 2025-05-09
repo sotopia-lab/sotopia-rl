@@ -11,7 +11,7 @@ from transformers import (
     GenerationConfig,
 )
 from accelerate import PartialState
-from peft import PeftModelForCausalLM, PeftModelForSequenceClassification
+from peft import PeftModelForCausalLM, PeftModelForSequenceClassification, LoraConfig, get_peft_model
 from jinja2 import Environment, FileSystemLoader
 from trl import get_kbit_device_map, GRPOConfig, GRPOTrainer
 from accelerate import Accelerator
