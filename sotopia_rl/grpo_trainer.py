@@ -104,7 +104,7 @@ class SotopiaGRPOTrainer:
             quantization_config=self.quant_config,
             device_map=get_kbit_device_map(),
         )
-        #base_gen_policy = prepare_model_for_kbit_training(base_gen_policy)
+        base_gen_policy = prepare_model_for_kbit_training(base_gen_policy)
         lora_config = LoraConfig(
             r=8,
             lora_alpha=32,
