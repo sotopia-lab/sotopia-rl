@@ -99,27 +99,22 @@ class SotopiaGRPOTrainer:
         )
 
     def _setup_policy_models(self):
-        if self.args.use_lora_train_grpo:
-            base_gen_policy = AutoModelForCausalLM.from_pretrained(
-                args.model_name,
-                quantization_config=self.quant_config,
-                device_map="auto",
-            )
-            model = prepare_model_for_kbit_training(base_gen_policy)
-            lora_config = LoraConfig(
-                r=8,
-                lora_alpha=32,
-                target_modules=["c_attn", "q_proj", "v_proj"],
-                lora_dropout=0.1,
-                bias="none",
-                task_type="CAUSAL_LM",
-            )
-            self.policy = get_peft_model(model, lora_config)
-        else:
-            self.policy = AutoModelForCausalLM.from_pretrained(
-                self.args.model_name,
-                torch_dtype="auto",
-            )
+        base_gen_policy = AutoModelForCausalLM.from_pretrained(
+            self.args.model_name,
+            quantization_config=self.quant_config,
+            device_map="auto",
+        )
+        model = prepare_model_for_kbit_training(base_gen_policy)
+        lora_config = LoraConfig(
+            r=8,
+            lora_alpha=32,
+            target_modules=["c_attn", "q_proj", "v_proj"],
+            lora_dropout=0.1,
+            bias="none",
+            task_type="CAUSAL_LM",
+        )
+        self.policy = get_peft_model(model, lora_config)
+
         self.policy.config.pad_token_id = self.tokenizer.pad_token_id
 
         requires_grad_num = 0
