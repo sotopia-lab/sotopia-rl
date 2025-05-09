@@ -35,8 +35,6 @@ if __name__ == '__main__':
                         help="Beta parameter for GRPO")
 
     # Adapter parameters
-    parser.add_argument("--policy_adapter_path", type=str, default=None,
-                        help="Path to policy model adapter")
     parser.add_argument("--reward_adapter_path", type=str, default=None,
                         help="Path to reward model adapter")
 

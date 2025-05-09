@@ -94,38 +94,78 @@ export DJANGO_GPU=1
 export VLLM_PORT=8000
 export DJANGO_PORT=8015
 export REJ_SAMPLING_NUM=10
-export SFT_MODEL_FOLDER_NAME="sft_qwen25_7b_sft_round_1_bc_data_top_2"
-export SFT_MODEL_CKPT_STEP=1500
-export RM_FOLDER_NAME="rm_reward_discounting"
-export REPO_FOLDER_NAME="/data/haofeiy2/sotopia-rl"
+export SFT_MODEL_FOLDER_NAME="new_sft_qwen_top_2_0506"
+export SFT_MODEL_CKPT_STEP=1000
+export RM_FOLDER_NAME="rm_reward_direct_default_without_that_n_error_as_the_end"
+export REPO_FOLDER_NAME="/data/disk0/sotopia-rl"
 export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-${SFT_MODEL_CKPT_STEP}"
-export RM_MODEL_PATH="${REPO_FOLDER_NAME}/${RM_FOLDER_NAME}/checkpoint-2250"
+export RM_MODEL_PATH="${REPO_FOLDER_NAME}/${RM_FOLDER_NAME}/checkpoint-4480"
 export ENV_MODEL="gpt-4o"
 
-export TAG="${RM_FOLDER_NAME}_rej_sampling_num${REJ_SAMPLING_NUM}_vs_${SFT_MODEL_FOLDER_NAME}_0328"
-export SFT_MODEL_NAME="sft_qwen25_7b_sft_round_1_bc_data_top_2-gpu${VLLM_GPU}"
+
+export VLLM_GPU=2
+export DJANGO_GPU=3
+export VLLM_PORT=8020
+export DJANGO_PORT=8030
+export REJ_SAMPLING_NUM=10
+export SFT_MODEL_FOLDER_NAME="sft_qwen25_7b_sft_round_1_bc_data_top_2"
+export SFT_MODEL_CKPT_STEP=1500
+export RM_FOLDER_NAME="rm_reward_direct_default_without_that_n_error_as_the_end"
+export REPO_FOLDER_NAME="/data/disk0/sotopia-rl"
+export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-${SFT_MODEL_CKPT_STEP}"
+export RM_MODEL_PATH="${REPO_FOLDER_NAME}/${RM_FOLDER_NAME}/checkpoint-4480"
+export ENV_MODEL="gpt-4o"
+
+export VLLM_GPU=4
+export DJANGO_GPU=5
+export VLLM_PORT=8040
+export DJANGO_PORT=8050
+export REJ_SAMPLING_NUM=10
+export SFT_MODEL_FOLDER_NAME="new_sft_qwen_top_2_0506"
+export SFT_MODEL_CKPT_STEP=1000
+export RM_FOLDER_NAME="rm_goal_direct_0507"
+export REPO_FOLDER_NAME="/data/disk0/sotopia-rl"
+export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-${SFT_MODEL_CKPT_STEP}"
+export RM_MODEL_PATH="${REPO_FOLDER_NAME}/${RM_FOLDER_NAME}/checkpoint-6800"
+export ENV_MODEL="gpt-4o"
+
+export VLLM_GPU=6
+export DJANGO_GPU=7
+export VLLM_PORT=8060
+export DJANGO_PORT=8070
+export REJ_SAMPLING_NUM=10
+export SFT_MODEL_FOLDER_NAME="sft_qwen25_7b_sft_round_1_bc_data_top_2"
+export SFT_MODEL_CKPT_STEP=1500
+export RM_FOLDER_NAME="rm_goal_direct_0507"
+export REPO_FOLDER_NAME="/data/disk0/sotopia-rl"
+export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-${SFT_MODEL_CKPT_STEP}"
+export RM_MODEL_PATH="${REPO_FOLDER_NAME}/${RM_FOLDER_NAME}/checkpoint-6800"
+export ENV_MODEL="gpt-4o"
+
+export TAG="${RM_FOLDER_NAME}_rej_sampling_num${REJ_SAMPLING_NUM}_vs_${SFT_MODEL_FOLDER_NAME}_0507_1"
+export SFT_MODEL_NAME="${SFT_MODEL_FOLDER_NAME}-gpu${VLLM_GPU}"
 export MODEL_A=custom/${RM_FOLDER_NAME}_rejsampling_num${REJ_SAMPLING_NUM}@http://localhost:${DJANGO_PORT}/sotopia
 export MODEL_B=custom/${SFT_MODEL_NAME}@http://localhost:${VLLM_PORT}/v1
-export REDIS_OM_URL="redis://:QzmCUD3C3RdsR@35.232.108.130:6379"
+export REDIS_OM_URL="redis://localhost:6379"
 export SFT_MODEL_VLLM_API_URL="http://localhost:${VLLM_PORT}/v1/completions"
 
 
 # Command 1: Launch the VLLM API server with LoRA enabled.
 CUDA_VISIBLE_DEVICES=$VLLM_GPU python -m vllm.entrypoints.openai.api_server \
-    --model /mnt/data_from_server1/models/Qwen2.5-7B-Instruct \
+    --model /data/disk0/models/Qwen2.5-7B-Instruct \
     --port "$VLLM_PORT" \
-    --chat-template /data/haofeiy2/sotopia-rl/evals/qwen2.5-7b.jinja \
+    --chat-template /data/disk0/sotopia-rl/evals/qwen2.5-7b.jinja \
     --served-model-name qwen25-7b-instruct \
     --enable-lora \
     --lora-modules "$SFT_MODEL_NAME=$SFT_MODEL_PATH"
 
 # Command 2: Start the Django server with the specified configuration.
-CUDA_VISIBLE_DEVICES=$DJANGO_GPU python /data/haofeiy2/sotopia-rl/serves/manage.py start_with_config \
+CUDA_VISIBLE_DEVICES=$DJANGO_GPU python /data/disk0/sotopia-rl/serves/manage.py start_with_config \
     --sft_model_name "$SFT_MODEL_NAME" \
     --sft_model_vllm_api_url "$SFT_MODEL_VLLM_API_URL" \
     --reward_model_path "$RM_MODEL_PATH" \
-    --reward_model_name "/mnt/data_from_server1/models/Qwen2.5-7B-Instruct" \
-    --template_path "/data/haofeiy2/sotopia-rl/evals/qwen2.5-7b.jinja" \
+    --reward_model_name "/data/disk0/models/Qwen2.5-7B-Instruct" \
+    --template_path "/data/disk0/sotopia-rl/evals/qwen2.5-7b.jinja" \
     --max_responses "$REJ_SAMPLING_NUM" \
     --max_length 4096 \
     --port "$DJANGO_PORT" \
