@@ -102,7 +102,7 @@ class SotopiaGRPOTrainer:
         base_gen_policy = AutoModelForCausalLM.from_pretrained(
             self.args.model_name,
             quantization_config=self.quant_config,
-            device_map="auto",
+            device_map=get_kbit_device_map(),
         )
         #base_gen_policy = prepare_model_for_kbit_training(base_gen_policy)
         lora_config = LoraConfig(
