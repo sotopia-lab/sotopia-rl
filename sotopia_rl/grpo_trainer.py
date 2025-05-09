@@ -104,7 +104,7 @@ class SotopiaGRPOTrainer:
             quantization_config=self.quant_config,
             device_map="auto",
         )
-        model = prepare_model_for_kbit_training(base_gen_policy)
+        #base_gen_policy = prepare_model_for_kbit_training(base_gen_policy)
         lora_config = LoraConfig(
             r=8,
             lora_alpha=32,
@@ -113,7 +113,7 @@ class SotopiaGRPOTrainer:
             bias="none",
             task_type="CAUSAL_LM",
         )
-        self.policy = get_peft_model(model, lora_config)
+        self.policy = get_peft_model(base_gen_policy, lora_config)
 
         self.policy.config.pad_token_id = self.tokenizer.pad_token_id
 
