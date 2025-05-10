@@ -1,4 +1,4 @@
-CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 accelerate launch \
+CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6 accelerate launch \
   --config_file /data/disk0/sotopia-rl/scripts/accelerate_config_sft.yaml \
   --main_process_port 29512 \
     /data/disk0/sotopia-rl/scripts/train_sft.py \
