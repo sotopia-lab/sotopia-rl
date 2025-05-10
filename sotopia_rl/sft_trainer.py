@@ -54,18 +54,11 @@ class SotopiaSFTTrainer(Trainer):
         tokenizer = AutoTokenizer.from_pretrained(args.model_name)
         tokenizer.model_max_length = args.max_length
 
-        quantization_config = BitsAndBytesConfig(
-            load_in_4bit=True,
-            bnb_4bit_compute_dtype=torch.bfloat16,
-            bnb_4bit_use_double_quant=True,
-            bnb_4bit_quant_type="nf4",
-        )
         if args.use_qlora:
             print(f"Using QLoRA (4bit) to load model: {args.model_name}")
             base_model = AutoModelForCausalLM.from_pretrained(
                 args.model_name,
                 torch_dtype=torch.float16,
-                quantization_config=quantization_config,
             )
         else:
             base_model = AutoModelForCausalLM.from_pretrained(args.model_name).to(self.device)

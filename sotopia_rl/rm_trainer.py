@@ -68,9 +68,9 @@ class SotopiaRMTrainer(Trainer):
             per_device_eval_batch_size=args.val_batch_size,
             num_train_epochs=args.num_epochs,
             logging_steps=1,
-            save_steps=args.evaluation_steps,
+            save_steps=50,
             save_strategy="steps",
-            eval_steps=args.evaluation_steps,
+            eval_steps=50,
             logging_dir="./logs",
             gradient_accumulation_steps=args.accumulation_steps,
             learning_rate=args.learning_rate,
@@ -80,6 +80,8 @@ class SotopiaRMTrainer(Trainer):
             dataloader_num_workers=4,
             report_to="wandb",
             ddp_find_unused_parameters=False,
+            eval_strategy="steps",
+            label_names=["labels"]
         )
 
 

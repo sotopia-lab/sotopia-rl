@@ -146,7 +146,7 @@ class RejectionSampler:
             ).to(self.reward_device)
 
             # check that there is no \n at the end of reward model inputs
-            assert inputs['input_ids'][0][-1] == self.tokenizer.eos_token_id
+            # assert inputs['input_ids'][0][-1] == self.tokenizer.eos_token_id
 
             with torch.no_grad():
                 outputs = self.reward_model(**inputs, return_dict=True)

@@ -11,7 +11,7 @@ from transformers import (
     GenerationConfig,
 )
 from accelerate import PartialState
-from peft import PeftModelForCausalLM, PeftModelForSequenceClassification
+from peft import PeftModelForCausalLM, PeftModelForSequenceClassification, LoraConfig, get_peft_model
 from jinja2 import Environment, FileSystemLoader
 from trl import get_kbit_device_map, GRPOConfig, GRPOTrainer
 from accelerate import Accelerator
@@ -99,24 +99,23 @@ class SotopiaGRPOTrainer:
         )
 
     def _setup_policy_models(self):
-        if self.args.use_lora_train_grpo:
-            base_gen_policy = AutoModelForCausalLM.from_pretrained(
-                self.args.model_name,
-                torch_dtype="auto",
-                quantization_config=self.quant_config,
-                device_map=get_kbit_device_map(),
-            )
-            self.policy = PeftModelForCausalLM.from_pretrained(
-                base_gen_policy,
-                self.args.policy_adapter_path,
-                is_trainable=True,
-                adapter_name="policy_adapter",
-            )
-        else:
-            self.policy = AutoModelForCausalLM.from_pretrained(
-                self.args.model_name,
-                torch_dtype="auto",
-            )
+        base_gen_policy = AutoModelForCausalLM.from_pretrained(
+            self.args.model_name,
+            quantization_config=self.quant_config,
+            device_map=get_kbit_device_map(),
+            torch_dtype='auto',
+        )
+        #base_gen_policy = prepare_model_for_kbit_training(base_gen_policy)
+        lora_config = LoraConfig(
+            r=8,
+            lora_alpha=32,
+            target_modules=["c_attn", "q_proj", "v_proj"],
+            lora_dropout=0.1,
+            bias="none",
+            task_type="CAUSAL_LM",
+        )
+        self.policy = get_peft_model(base_gen_policy, lora_config)
+
         self.policy.config.pad_token_id = self.tokenizer.pad_token_id
 
         requires_grad_num = 0
