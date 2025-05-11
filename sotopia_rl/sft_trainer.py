@@ -93,7 +93,6 @@ class SotopiaSFTTrainer(Trainer):
             full_ds, [train_size, val_size], generator=torch.Generator().manual_seed(42)
         )
 
-
         # 5️⃣ Build HF TrainingArguments
         hf_args = TrainingArguments(
             output_dir=args.checkpoint_dir,
@@ -116,9 +115,6 @@ class SotopiaSFTTrainer(Trainer):
             label_names=["labels"]
         )
 
-
-        collate_fn = train_ds.dataset.collate_fn if hasattr(train_ds, 'dataset') else None
-        print(collate_fn)
         # 6️⃣ Call the Trainer constructor
         super().__init__(
             model=model,

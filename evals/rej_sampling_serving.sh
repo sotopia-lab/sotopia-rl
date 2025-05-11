@@ -89,20 +89,33 @@ export RM_MODEL_PATH="${REPO_FOLDER_NAME}/${RM_FOLDER_NAME}/checkpoint-4000"
 export ENV_MODEL="gpt-4o"
 
 #0 sotopia-hard-70 discounting rm_reward_discounting_rej_sampling_num10_vs_sft_qwen25_7b_sft_round_1_bc_data_top_2_0328
-export VLLM_GPU=0
-export DJANGO_GPU=1
+export VLLM_GPU=2
+export DJANGO_GPU=3
 export VLLM_PORT=8000
 export DJANGO_PORT=8015
 export REJ_SAMPLING_NUM=10
-export SFT_MODEL_FOLDER_NAME="sft_qwen25_7b_sft_round_1_bc_data_top_2"
-export SFT_MODEL_CKPT_STEP=1500
-export RM_FOLDER_NAME="rm_reward_discounting"
+export SFT_MODEL_FOLDER_NAME="new_sft_default_0506"
+export SFT_MODEL_CKPT_STEP=100
+export RM_FOLDER_NAME="rm_all_the_same_0507"
 export REPO_FOLDER_NAME="/data/haofeiy2/sotopia-rl"
 export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-${SFT_MODEL_CKPT_STEP}"
-export RM_MODEL_PATH="${REPO_FOLDER_NAME}/${RM_FOLDER_NAME}/checkpoint-2250"
+export RM_MODEL_PATH="${REPO_FOLDER_NAME}/${RM_FOLDER_NAME}/checkpoint-7180"
 export ENV_MODEL="gpt-4o"
 
-export TAG="${RM_FOLDER_NAME}_rej_sampling_num${REJ_SAMPLING_NUM}_vs_${SFT_MODEL_FOLDER_NAME}_0328"
+export VLLM_GPU=7
+export DJANGO_GPU=8
+export VLLM_PORT=8035
+export DJANGO_PORT=8045
+export REJ_SAMPLING_NUM=10
+export SFT_MODEL_FOLDER_NAME="sft_round_1_bc_data_top_2_with_aligned_format_instruction_prompt_0509"
+export SFT_MODEL_CKPT_STEP=500
+export RM_FOLDER_NAME="rm_knowledge_0507"
+export REPO_FOLDER_NAME="/data/haofeiy2/sotopia-rl"
+export SFT_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT_MODEL_FOLDER_NAME}/checkpoint-${SFT_MODEL_CKPT_STEP}"
+export RM_MODEL_PATH="${REPO_FOLDER_NAME}/${RM_FOLDER_NAME}/checkpoint-6800"
+export ENV_MODEL="gpt-4o"
+
+export TAG="${RM_FOLDER_NAME}_rej_sampling_num${REJ_SAMPLING_NUM}_vs_${SFT_MODEL_FOLDER_NAME}_0509_v2"
 export SFT_MODEL_NAME="sft_qwen25_7b_sft_round_1_bc_data_top_2-gpu${VLLM_GPU}"
 export MODEL_A=custom/${RM_FOLDER_NAME}_rejsampling_num${REJ_SAMPLING_NUM}@http://localhost:${DJANGO_PORT}/sotopia
 export MODEL_B=custom/${SFT_MODEL_NAME}@http://localhost:${VLLM_PORT}/v1
