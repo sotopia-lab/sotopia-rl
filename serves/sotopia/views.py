@@ -9,8 +9,8 @@ from rest_framework.decorators import api_view
 @api_view(["POST"])
 def chat_completions(request):
     messages = request.data.get("messages")
-    temperature = request.data.get("temperature", 0.7)
-    top_p = request.data.get("top_p", 0.9)
+    temperature = request.data.get("temperature", 1.0)
+    top_p = request.data.get("top_p", 1.0)
     max_new_tokens = request.data.get("max_new_tokens", 500)
     if not messages:
         return JsonResponse({"error": "Messages are required."}, status=400)

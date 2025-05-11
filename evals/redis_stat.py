@@ -21,6 +21,8 @@ def analyze_episodes_with_positions(tag):
         'agent2': defaultdict(float)
     })
 
+    episode_message_length_sum = 0
+
     # Process each episode
     for episode in episodes:
         try:
@@ -31,6 +33,9 @@ def analyze_episodes_with_positions(tag):
                 continue
 
             print(episode.models)
+            print('Episode message length:', len(episode.messages))
+            episode_message_length = len(episode.messages)
+            episode_message_length_sum += episode_message_length
             # Get model names
             model1_name = episode.models[1]  # agent1's model
             model2_name = episode.models[2]  # agent2's model
@@ -51,9 +56,15 @@ def analyze_episodes_with_positions(tag):
                 model_rewards[model1_name][key] += value
                 position_rewards[model1_name]['agent1'][key] += value
 
+                if key == 'goal':
+                    print(f"Model1 Goal: {value}")
+
             for key, value in reward2.items():
                 model_rewards[model2_name][key] += value
                 position_rewards[model2_name]['agent2'][key] += value
+
+                if key == 'goal':
+                    print(f"Model2 Goal: {value}")
 
             # Count model appearances
             model_counts[model1_name] += 1
@@ -68,6 +79,10 @@ def analyze_episodes_with_positions(tag):
 
     # Calculate overall averages
     print("\n===== OVERALL MODEL PERFORMANCE =====")
+
+    print(f"Total episodes: {len(episodes)}")
+    print(f"Mean message length: {episode_message_length_sum / len(episodes):.2f}")
+
     for model, rewards in model_rewards.items():
         print(f"\nModel: {model} (appeared in {model_counts[model]} episodes)")
         print(f"  As agent1: {position_counts[model]['agent1']} times")
@@ -129,4 +144,4 @@ def analyze_episodes_with_positions(tag):
     }
 
 # Run the analysis
-results = analyze_episodes_with_positions("Qwen2.5-7B-Instruct_vs_sft_qwen25_7b_bigtom_step_1500-bigtom_0402")
+results = analyze_episodes_with_positions("rm_goal_direct_0507_rej_sampling_num10_vs_sft_0510_epoch500_0511")

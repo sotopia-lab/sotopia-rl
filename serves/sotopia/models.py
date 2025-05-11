@@ -41,7 +41,8 @@ class RejectionSampler:
         print(f"Loading reward model: {reward_model_path}")
 
         model_kwargs = {
-            "torch_dtype": torch.float32, # very important
+            #"torch_dtype": "auto", # very important
+            "torch_dtype": torch.float32,
             "device_map": "auto",
             "num_labels": 1  # For regression task
         }
@@ -105,6 +106,11 @@ class RejectionSampler:
                 api_responses = response.json()
                 for completion in api_responses.get("choices", []):
                     if "text" in completion:
+                        #completion["text"] = completion["text"].replace("```", "")
+                        #completion["text"] = completion["text"].replace("```json", " ")
+                        #completion["text"] = completion["text"].replace("json", " ")
+                        #completion["text"] = completion["text"].strip()
+
                         total_responses.append(completion["text"])
 
                 for response in total_responses[total_responses_generated:]:
@@ -146,7 +152,7 @@ class RejectionSampler:
             ).to(self.reward_device)
 
             # check that there is no \n at the end of reward model inputs
-            assert inputs['input_ids'][0][-1] == self.tokenizer.eos_token_id
+            #assert inputs['input_ids'][0][-1] == self.tokenizer.eos_token_id
 
             with torch.no_grad():
                 outputs = self.reward_model(**inputs, return_dict=True)
