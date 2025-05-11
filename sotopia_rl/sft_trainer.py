@@ -54,13 +54,13 @@ class SotopiaSFTTrainer(Trainer):
         tokenizer = AutoTokenizer.from_pretrained(args.model_name)
         tokenizer.model_max_length = args.max_length
 
-        quantization_config = BitsAndBytesConfig(
-            load_in_4bit=True,
-            bnb_4bit_compute_dtype=torch.bfloat16,
-            bnb_4bit_use_double_quant=True,
-            bnb_4bit_quant_type="nf4",
-        )
         if args.use_qlora:
+            quantization_config = BitsAndBytesConfig(
+                load_in_4bit=True,
+                bnb_4bit_compute_dtype=torch.bfloat16,
+                bnb_4bit_use_double_quant=True,
+                bnb_4bit_quant_type="nf4",
+            )
             print(f"Using QLoRA (4bit) to load model: {args.model_name}")
             base_model = AutoModelForCausalLM.from_pretrained(
                 args.model_name,
@@ -93,6 +93,7 @@ class SotopiaSFTTrainer(Trainer):
             full_ds, [train_size, val_size], generator=torch.Generator().manual_seed(42)
         )
 
+
         # 5️⃣ Build HF TrainingArguments
         hf_args = TrainingArguments(
             output_dir=args.checkpoint_dir,
@@ -115,6 +116,9 @@ class SotopiaSFTTrainer(Trainer):
             label_names=["labels"]
         )
 
+
+        collate_fn = train_ds.dataset.collate_fn if hasattr(train_ds, 'dataset') else None
+        print(collate_fn)
         # 6️⃣ Call the Trainer constructor
         super().__init__(
             model=model,
