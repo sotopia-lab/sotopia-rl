@@ -72,30 +72,30 @@ BANNED_EPI_IDS = [
     "01JQ91S0W3P9GGAW4MDZ8F31GC",
 ]
 
-# def filter_episodes(episodes):
-#     print(len(episodes))
-#     env_agents_to_ep_dict = defaultdict(list)
-#     for episode in episodes:
-#         env_agents_to_ep_dict[(episode.environment, episode.agents[0], episode.agents[1])].append(episode)
-#         env_agents_to_ep_dict[(episode.environment, episode.agents[1], episode.agents[0])].append(episode)
-    
-#     filtered_episodes = []
-#     # visited_envs = set()
-#     for episode in episodes:
-#         if episode.environment not in SOTOPIA_HARD_ENVS:
-#             continue
-#         # if episode.environment in visited_envs:
-#         #     continue
-#         for banned_epi_id in BANNED_EPI_IDS:
-#             if episode.pk == banned_epi_id:
-#                 continue
-#         if len(env_agents_to_ep_dict[(episode.environment, episode.agents[0], episode.agents[1])]) == 2:
-#             filtered_episodes.extend(env_agents_to_ep_dict[(episode.environment, episode.agents[0], episode.agents[1])])
-#             # visited_envs.add(episode.environment)
-#     return filtered_episodes
-
 def filter_episodes(episodes):
-    return episodes
+    print(len(episodes))
+    env_agents_to_ep_dict = defaultdict(list)
+    for episode in episodes:
+        if episode.agents[0] < episode.agents[1]:
+            env_agents_to_ep_dict[(episode.environment, episode.agents[0], episode.agents[1])].append(episode)
+        else:
+            env_agents_to_ep_dict[(episode.environment, episode.agents[1], episode.agents[0])].append(episode)
+    env_agents_hash_list = list(env_agents_to_ep_dict.keys())
+    env_agents_hash_list.sort(key=lambda x: (x[0], x[1], x[2]))
+    
+    filtered_episodes = []
+    visited_counter = defaultdict(int)
+    max_repetition = 1
+    for env, agent1, agent2 in env_agents_hash_list:
+        if env not in SOTOPIA_HARD_ENVS:
+            continue
+        if visited_counter[env] >= max_repetition:
+            continue
+        if len(env_agents_to_ep_dict[(env, agent1, agent2)]) == 2:
+            filtered_episodes.extend(env_agents_to_ep_dict[(env, agent1, agent2)])
+            visited_counter[env] += 1
+    breakpoint()
+    return filtered_episodes
 
 async def evaluate_episode(
     episode,

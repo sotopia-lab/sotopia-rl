@@ -1,13 +1,17 @@
 import json
 from collections import defaultdict
+from statistics import mean as average
 
-FILE_NAME = "/root/sotopia-rl/Untitled/.cache/rm_reward_direct_default_no_goal_gpt-4o_without_goal_leak_rej_sampling_num10_vs_sft_qwen25_7b_sft_round_1_bc_data_top_2_0326_v0_eval_claude_claude-3-7-sonnet-20250219_results.json"
+TAG = "grpo_rm_goal_0503_w_relationship_knowledge_0507_5_10_step_2200_vs_sft_0510_epoch500_step_200-0512"
+MODEL_NAME = "together_ai/deepseek-ai/DeepSeek-V3"
+FILE_NAME = f".cache/{TAG}_eval_{MODEL_NAME.replace('/', '_')}_results.json"
 
 with open(FILE_NAME, "r") as f:
     results = json.load(f)
     print(len(results))
 
 model_goal_score_dict = defaultdict(list)
+model_overall_score_dict = defaultdict(list)
 judge_model = None
 for result in results.values():
     if result is None:
@@ -30,11 +34,19 @@ for result in results.values():
     print(agent2_dict)
     model_1 = result["models"][1]
     model_2 = result["models"][2]
+    overall_score_1 = average(agent1_dict.values())
+    overall_score_2 = average(agent2_dict.values())
+    
     if agent1_dict and agent2_dict:
         model_goal_score_dict[model_1].append(agent1_dict["goal"])
         model_goal_score_dict[model_2].append(agent2_dict["goal"])
+        model_overall_score_dict[model_1].append(overall_score_1)
+        model_overall_score_dict[model_2].append(overall_score_2)
 
 print(f"Judge Model: {judge_model}")
 for model_name, scores in model_goal_score_dict.items():
     print(f"Model: {model_name}")
-    print(f"Average Score: {sum(scores)/len(scores)}")
+    print(f"Average Goal: {sum(scores)/len(scores)}")
+for model_name, scores in model_overall_score_dict.items():
+    print(f"Model: {model_name}")
+    print(f"Average Overall: {sum(scores)/len(scores)}")
