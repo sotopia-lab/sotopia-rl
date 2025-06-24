@@ -304,19 +304,20 @@ def behavior_cloning_data_filtering_mistral_mistral():
         eps_list += eps_by_env_filtered[env]
 
     print(total_num)
-
+    
 def behavior_cloning_data_filtering_qwen_qwen():
     # get conversation episodes according to social task scenarios
     eps_list = []
     # TODO: Fill in the tag. The tag should be the --TAG you used in `../data_generate/scripts/sotopia_conf/generation_utils_conf/generate_xxx.gin`
     TAGS = [
-        "qwen-sft-qwen-sft-3-26-v2"
+        "selfplay_sft_0510_epoch_500"
     ]
     with open("used_env.json", "r") as f:
         # TODO: Fill in the experiment name. The name should be the key value of social tasks in `../data_generate/env_files/used_env.json`
         SCENARIOS = json.loads(f.read())["selftrain-round-2"]
 
     eps_by_env = get_episodes_by_env_dict(tags=TAGS, scenarios=set(SCENARIOS))
+    print(len(eps_by_env))
 
     eps_by_env_filtered = filter_episodes_on_top_2_selfplay(eps_by_env)
     
@@ -328,7 +329,7 @@ def behavior_cloning_data_filtering_qwen_qwen():
 
     print(total_num)
     breakpoint()
-    episodes_to_jsonl(eps_list, "sotopia_pi_round1_qwen_episodes_filtered.jsonl")
+    episodes_to_jsonl(eps_list, "sotopia_pi_round1_qwen_episodes_filtered_0510.jsonl")
 
 if __name__ == "__main__":
     # behavior_cloning_data_filtering_gpt4_gpt4()

@@ -18,7 +18,7 @@ def main(data_dir: str, utterances_output_subdir: str, episodes_file: str, sft_o
     
     with open(episode_path, 'r') as f:
         data: List[Dict[str, Any]] = [json.loads(d) for d in f.readlines()]
-    # breakpoint()
+    
     cache_dir = os.path.join(data_dir, utterances_output_subdir)
     if not os.path.exists(cache_dir):
         os.makedirs(cache_dir)
