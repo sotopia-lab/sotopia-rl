@@ -1,7 +1,7 @@
 import json
 import re
 from typing import Any, Dict, List, Tuple
-
+import os
 from openai import OpenAI
 
 from sotopia_rl.prompter.generic_templates import (
@@ -9,13 +9,55 @@ from sotopia_rl.prompter.generic_templates import (
 )
 
 def openai_call(prompt: str, model: str = "gpt-3.5-turbo") -> str | None:
-    client = OpenAI()
-    response = client.chat.completions.create(
-        model=model,
-        messages=[{"role": "user", "content": prompt}],
-        response_format={ "type": "json_object" }
-    )
-    return response.choices[0].message.content
+    if model in ["gpt-3.5-turbo", "gpt-4", "gpt-4o", "o4-mini"]:
+        client = OpenAI()
+        response = client.chat.completions.create(
+            model=model,
+            messages=[{"role": "user", "content": prompt}],
+            response_format={ "type": "json_object" }
+        )
+        return response.choices[0].message.content
+    elif model.startswith("together_ai"):
+        client = OpenAI(
+        api_key=os.environ.get("TOGETHER_API_KEY"),
+        base_url="https://api.together.xyz/v1",
+        )
+        together_model = "/".join(model.split("/")[1:])
+        response = client.chat.completions.create(
+            model=together_model,
+            messages=[
+                {"role": "user", "content": prompt},
+            ],
+        )
+        return response.choices[0].message.content
+    elif model.startswith("claude"):
+        client = OpenAI(
+        api_key=os.environ.get("CLAUDE_API_KEY"),
+        base_url="https://api.anthropic.com/v1",
+        )
+        claude_model = "/".join(model.split("/")[1:])
+        response = client.chat.completions.create(
+            model=claude_model,
+            messages=[
+                {"role": "user", "content": prompt},
+            ],
+        )
+        return response.choices[0].message.content
+    elif model.startswith("gemini"):
+        client = OpenAI(
+            api_key=os.environ.get("GEMINI_API_KEY"),
+            base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
+        )
+        claude_model = "/".join(model.split("/")[1:])
+        response = client.chat.completions.create(
+            model=claude_model,
+            messages=[
+                {"role": "user", "content": prompt},
+            ],
+        )
+        return response.choices[0].message.content
+    else:
+        raise ValueError(f"Model {model} not supported.")
 
 def extract_json(text: str) -> str | None:
     # Use regex to find the JSON string within the text
@@ -143,9 +185,15 @@ def get_attribution_single_conv(conversation, agent, goals, episode, rewards, ll
     attribution_scores = assign_attributions_for_conversation(
         prompt, conversation, agent, llm_name=llm_name
     )
-    attribution_rewards = calc_attributed_reward(attribution_scores, scale, rewards[agent][dimension])
+    if dimension == "conversation_behavior":
+        dim_score = 10
+    elif dimension == "goal_barebone":
+        dim_score = rewards[agent]["goal"]
+    else: 
+        dim_score = rewards[agent][dimension]
+    attribution_rewards = calc_attributed_reward(attribution_scores, scale, dim_score)
     for key in attribution_rewards:
         attribution_rewards[key]["dimension"] = dimension
         attribution_rewards[key]["scale"] = scale
-        attribution_rewards[key]["dim_score"] = rewards[agent][dimension]
+        attribution_rewards[key]["dim_score"] = dim_score
     return attribution_rewards

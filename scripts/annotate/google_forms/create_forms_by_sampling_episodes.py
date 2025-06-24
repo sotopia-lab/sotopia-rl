@@ -3,17 +3,17 @@ import sys
 sys.path.append("../../")
 import argparse
 
-from sotopia_rl.annotator.form_response_retrieval import (
-    get_episodes_from_form_ids,
-    retrieve_responses,
-)
-from sotopia_rl.prompting.attribution_prompting import generate_reward_attribution
+from sotopia_rl.annotator.episode_sampling import sample_episodes
+from sotopia_rl.annotator.form_creation import create_forms
+from sotopia_rl.prompter.attribution_prompting import generate_reward_attribution
+from sotopia_rl.utils.preprocess import add_score
 
 
 def main(data_dir: str, llm_name: str, gcp_key: str) -> None:
-    get_episodes_from_form_ids(data_dir, gcp_key)
+    sample_episodes(data_dir)
+    add_score(data_dir)
     generate_reward_attribution(data_dir, llm_name)
-    retrieve_responses(data_dir, gcp_key)
+    create_forms(data_dir, gcp_key)
 
 
 if __name__ == "__main__":

@@ -56,14 +56,37 @@ FINANCIAL_AND_MATERIAL_BENEFITS_DESCRIPTION = """
 Financial and Material Benefits refers to the evaluation of whether the interactions yield financial or material gain or loss. A higher score indicates significant financial or material gain, while a lower score indicates a loss.
 """
 
+GOAL_BAREBONE_DESCRIPTION = """
+Goal refers to the reiteration of the agent's social goals and the analysis of their achievement. A higher score indicates significant progress or achievement of the stated goals, while a lower score indicates minimal or no progress.
+"""
+
 GOAL_DESCRIPTION = """
 Goal refers to the reiteration of the agent's social goals and the analysis of their achievement. A higher score indicates significant progress or achievement of the stated goals, while a lower score indicates minimal or no progress.
+
+DOMAIN SPECIFIC SCORING GUIDELINES:
+! Note: The following scoring guidelines are specific to the domain of goal and should be used in conjunction with the general scoring scale. The domain specific rules ultimately override the general scoring scale. Here are the specific rules:
+   - The highest score should be assigned to the utterance that is most relevant to the goal. In general, avoid assigning the highest score to more than one utterance unless they are equally critical.
+   - A lower score should be assigned to the utterances that are not relevant to the goal or do not contribute to its achievement. The lowest score should be assigned to the utterances that do not make any progress towards the goal juding by the goal description and the conversation history.
+   - A lower score should be assigned to the utterances that are not effective in achieving the goal, juding by the response of the other agent. Effective utterances are those that lead to a positive response from the other agent, while ineffective utterances are those that lead to a negative or neutral response.
+   - Note that you should only consider the contribution to the goal achievement. For each utterance, assess whether the goal is achieved. If a goal is already achieved, the utterance should not be assigned a score higher than 1.
+"""
+
+CONVERSATION_BEHAVIOR_DESCRIPTION = """   
+Conversation Behavior refers to the evaluation of the agent's conversation behavior, including the avoidance of repetitive utterances, proper ending of the conversation, and overall performance as a social agent. A higher score indicates effective conversation behavior, while a lower score indicates poor performance in these areas.
+
+DOMAIN SPECIFIC SCORING GUIDELINES:
+! Note: The following scoring guidelines are specific to the domain of conversation behavior and should be used in conjunction with the general scoring scale. The domain specific rules ultimately override the general scoring scale. Here are the specific rules:
+   - If an utterance is repetitive of the previous utterance, assign it an importance of 0. Note that repetitive utterances are not necessarily identical, but they should be similar in meaning or content.
+   - If an utterance is the last utterance in the conversation and it is a proper ending of the conversation, assign it an importance of the highest score. If not a proper ending, assign it an importance of 0.
+   - If an utterance is a proper ending of the conversation but not the last utterance, assign it an importance of 0.
+   - Otherwise, assign an importance of 1.
+   - Do not assign a score higher than 1 for any utterance in this domain except for the last utterance in the conversation.
 """
 
 SCALE_GUIDELINE_DICT = {
       "default": THREE_SCALE_SCORING_GUIDELINES,
-      "5-scale": FIVE_SCALE_SCORING_GUIDELINES,
-      "10-scale": TEN_SCALE_SCORING_GUIDELINES,
+      "5_scale": FIVE_SCALE_SCORING_GUIDELINES,
+      "10_scale": TEN_SCALE_SCORING_GUIDELINES,
    }
 
 DIMENSION_DESCRIPTION_DICT = {
@@ -74,12 +97,14 @@ DIMENSION_DESCRIPTION_DICT = {
     "social_rules": SOCIAL_RULES_DESCRIPTION,
     "financial_and_material_benefits": FINANCIAL_AND_MATERIAL_BENEFITS_DESCRIPTION,
     "goal": GOAL_DESCRIPTION,
+    "conversation_behavior": CONVERSATION_BEHAVIOR_DESCRIPTION,
+    "goal_barebone": GOAL_BAREBONE_DESCRIPTION,
 }
 
 DIRECT_ATTRIBUTION_TEMPLATE = """
 Reward Attribution Instructions for LLMs
 
-Your task is to evaluate the importance of each utterance in a conversation between two agents to certain social values. You will be provided with the dialogue history, the social goal of one of the agents, and the certain dimension to be evaluated. For example, the social values are common social values such as goal achieving, believability of the agents as a human, adherence to social rules, financial and material gains, relationship maintainance and improvement, secret keeping, or discovery of new knowledge. However, you will be only provided with one dimension to be evaluated and you should only focus on that dimension.
+Your task is to evaluate the importance of each utterance in a conversation between two agents on a certain dimension of evaluation. You will be provided with the dialogue history, the social goal of one of the agents, and the certain dimension to be evaluated. For example, the dimension can be common social values such as adherence to social rules, relationship maintainance or improvement, or secret keeping. The dimension can also be objectives such as goal achieving, financial and material gains, or discovery of new knowledge. Moreover, the dimension can also be about performance of a language model as an social agent, such as the agent's believability as a human, avoidance of repetitions, and properly ending the conversation. However, you will be only provided with one dimension to be evaluated and you should only focus on that dimension.
 
 1. Input Context:
    - You will receive the dialogue history between two conversational agents each with their own social goal.
@@ -90,7 +115,7 @@ Your task is to evaluate the importance of each utterance in a conversation betw
    - Assign am importance value to each utterance (identified by the agent's name and utterance number) based on its contribution to the achievement on the provided dimension. Note, you should only consider how critical an utterance is to the achievment of the dimension, not the quality of the utterance itself.
    - Consider both the individual utterance and the responses from the other agent, as both affect the final outcome.
 
-3. Specific Scoring Guidelines:
+3. General Scoring Scale:
 {scoring_guidelines}
 
 4. Chosen Agent for Evaluation:

@@ -25,7 +25,6 @@ POSSIBLE_MODELS = [
     "together_ai/mistralai/Mixtral-8x22B-Instruct-v0.1",
     "together_ai/deepseek-ai/DeepSeek-R1",
     "mistralai/Mistral-7B-Instruct-v0.2",
-    "claude/claude-3-7-sonnet-20250219"
     ]
 
 SOTOPIA_HARD_ENVS = ["01H7VFHNV13MHN97GAH73E3KM8", "01H7VFHN5WVC5HKKVBHZBA553R", "01H7VFHN9W0WAFZCBT09PKJJNK", "01H7VFHPDZVVCDZR3AARA547CY", "01H7VFHPQQQY6H4DNC6NBQ8XTG", "01H7VFHN7WJK7VWVRZZTQ6DX9T", "01H7VFHPS5WJW2694R1MNC8JFY", "01H7VFHNN7XTR99319DS8KZCQM", "01H7VFHQ11NAMZS4A2RDGDB01V", "01H7VFHPSWGDGEYRP63H2DJKV0", "01H7VFHNF4G18PC9JHGRC8A1R6", "01H7VFHNNYH3W0VRWVY178K2TK", "01H7VFHP8AN5643B0NR0NP00VE", "01H7VFHN7A1ZX5KSMT2YN9RXC4"]
@@ -73,34 +72,36 @@ BANNED_EPI_IDS = [
     "01JQ91S0W3P9GGAW4MDZ8F31GC",
 ]
 
-def filter_episodes(episodes):
-    env_agents_to_ep_dict = defaultdict(list)
-    for episode in episodes:
-        env_agents_to_ep_dict[(episode.environment, episode.agents[0], episode.agents[1])].append(episode)
-        env_agents_to_ep_dict[(episode.environment, episode.agents[1], episode.agents[0])].append(episode)
+# def filter_episodes(episodes):
+#     print(len(episodes))
+#     env_agents_to_ep_dict = defaultdict(list)
+#     for episode in episodes:
+#         env_agents_to_ep_dict[(episode.environment, episode.agents[0], episode.agents[1])].append(episode)
+#         env_agents_to_ep_dict[(episode.environment, episode.agents[1], episode.agents[0])].append(episode)
     
-    filtered_episodes = []
-    visited_envs = set()
-    for episode in episodes:
-        if episode.environment not in SOTOPIA_HARD_ENVS:
-            continue
-        if episode.environment in visited_envs:
-            continue
-        for banned_epi_id in BANNED_EPI_IDS:
-            if episode.pk == banned_epi_id:
-                continue
-        if len(env_agents_to_ep_dict[(episode.environment, episode.agents[0], episode.agents[1])]) == 2:
-            filtered_episodes.extend(env_agents_to_ep_dict[(episode.environment, episode.agents[0], episode.agents[1])])
-            visited_envs.add(episode.environment)
-    return filtered_episodes
+#     filtered_episodes = []
+#     # visited_envs = set()
+#     for episode in episodes:
+#         if episode.environment not in SOTOPIA_HARD_ENVS:
+#             continue
+#         # if episode.environment in visited_envs:
+#         #     continue
+#         for banned_epi_id in BANNED_EPI_IDS:
+#             if episode.pk == banned_epi_id:
+#                 continue
+#         if len(env_agents_to_ep_dict[(episode.environment, episode.agents[0], episode.agents[1])]) == 2:
+#             filtered_episodes.extend(env_agents_to_ep_dict[(episode.environment, episode.agents[0], episode.agents[1])])
+#             # visited_envs.add(episode.environment)
+#     return filtered_episodes
 
-def run_eval(tag, model_index):
+def filter_episodes(episodes):
+    return episodes[0:2]
+
+def run_eval(tag, model_name):
     all_episodes = EpisodeLog.find(EpisodeLog.tag == tag).all()
     print(f"Total episodes found: {len(all_episodes)}")
     filtered_episodes = filter_episodes(all_episodes)
     print(f"Filtered episodes: {len(filtered_episodes)}")
-    
-    model_name = POSSIBLE_MODELS[model_index]
 
     evaluator = ReachGoalLLMEvaluator(model_name, EvaluationForTwoAgents[SotopiaDimensions])
     results = {episode.pk: None for episode in filtered_episodes}
@@ -141,15 +142,16 @@ def run_eval(tag, model_index):
     with open(f".cache/{tag}_eval_{model_name.replace('/', '_')}_results.json", "w") as f:
         json.dump(results, f, indent=4)
 
-TAG = "rm_reward_direct_default_no_goal_gpt-4o_without_goal_leak_rej_sampling_num10_vs_sft_qwen25_7b_sft_round_1_bc_data_top_2_0326_v0"
+TAG = "grpo_rm_goal_0511_step_2200_vs_sft_0510_epoch_500_step_200-0512"
 
-def main(tag, model_index):
-    run_eval(tag, model_index)
+def main(tag, model_name):
+    run_eval(tag, model_name)
 
 import argparse
 if __name__ == "__main__":
     args = argparse.ArgumentParser(description="Re-evaluate episodes with a specific model.")
-    args.add_argument("--model_index", type=int, default=0, help="Index of the model to use for re-evaluation.")
+    args.add_argument("--model_name", type=str, default="", help="Index of the model to use for re-evaluation.")
     args.add_argument("--tag", type=str, default=TAG, help="Tag of the episodes to re-evaluate.")
     args = args.parse_args()
-    main(args.tag, args.model_index)
+    assert args.model_name in POSSIBLE_MODELS, f"Model name {args.model_name} is not in the list of possible models: {POSSIBLE_MODELS}"
+    main(args.tag, args.model_name)
