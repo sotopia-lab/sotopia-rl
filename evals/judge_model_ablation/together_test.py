@@ -1,4 +1,3 @@
-from together import Together
 from sotopia.envs.evaluators import EvaluationForTwoAgents, SotopiaDimensions
 import os
 import openai
@@ -9,7 +8,6 @@ client = openai.OpenAI(
   api_key=os.environ.get("TOGETHER_API_KEY"),
   base_url="https://api.together.xyz/v1",
 )
-
 # response = client.chat.completions.create(
 #   model="meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
 #   messages=[
@@ -116,8 +114,8 @@ Here is the output schema:
 import rich
 import json
 
-model = "mistralai/Mixtral-8x22B-Instruct-v0.1" # "meta-llama/Meta-Llama-3.1-405B-Instruct-Turbo" # "Qwen/Qwen2.5-72B-Instruct-Turbo" # deepseek-ai/DeepSeek-V3 # 
-
+model = "deepseek-ai/DeepSeek-V3" # "meta-llama/Meta-Llama-3.1-405B-Instruct-Turbo" # "Qwen/Qwen2.5-72B-Instruct-Turbo" # deepseek-ai/DeepSeek-V3 # 
+breakpoint()
 response = client.chat.completions.create(
     model=model, #  # deepseek-ai/DeepSeek-V3 # Qwen/Qwen2.5-72B-Instruct-Turbo #
     messages=[
@@ -130,7 +128,7 @@ response = client.chat.completions.create(
 )
 result = response.choices[0].message.content
 casted_result = cast(EvaluationForTwoAgents[SotopiaDimensions], result)
-if model == "mistralai/Mistral-7B-Instruct-v0.2":
+if model == "deepseek-ai/DeepSeek-V3":
     # strip ```json in front and ``` at the end
     result = result[7:-3]
 # elif model == 
