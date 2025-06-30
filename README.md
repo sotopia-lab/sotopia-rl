@@ -1,3 +1,5 @@
+![sotopia-rl](assets/sotopia-rl-title.png)
+
 # sotopia-rl
 
 ## Install
