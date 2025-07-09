@@ -1,30 +1,34 @@
-export SFT_SELFPLAY_TAG="selfplay_new_sft_sotopia_rl_gpt-4o_0507_v7"
-export SFT1_GPU=6
-export SFT2_GPU=7
+export REPO_FOLDER_NAME="$(cd "$(dirname "$0")/.." && pwd)"
+export MODEL_PATH="Qwen/Qwen2.5-7B-Instruct"
+export SFT_SELFPLAY_TAG="selfpaly_tag"
+export SFT1_GPU=0
+export SFT2_GPU=1
+export SFT1_PORT=7010
+export SFT2_PORT=7020
+export SFT1_MODEL_NAME="sft_checkpoints_qwen2.5-7b"
+export SFT2_MODEL_NAME="sft_checkpoints_qwen2.5-7b"
+export SFT1_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT1_MODEL_NAME}/best-checkpoint"
+export SFT2_MODEL_PATH="${REPO_FOLDER_NAME}/${SFT2_MODEL_NAME}/best-checkpoint"
 export ENV_MODEL="gpt-4o"
-export SFT1_PORT=7040
-export SFT1_MODEL_NAME="new_sft_default_0506"
-export SFT2_PORT=7050
-export SFT2_MODEL_NAME="new_sft_default_0506"
+export CHAT_TEMPLATE="${REPO_FOLDER_NAME}/evals/qwen2.5-7b.jinja"
+
 export MODEL_A=custom/${SFT1_MODEL_NAME}@http://localhost:${SFT1_PORT}/v1
 export MODEL_B=custom/${SFT2_MODEL_NAME}@http://localhost:${SFT2_PORT}/v1
-export SFT1_MODEL_PATH="/data/haofeiy2/sotopia-rl/${SFT1_MODEL_NAME}/checkpoint-1000"
-export SFT2_MODEL_PATH="/data/haofeiy2/sotopia-rl/${SFT2_MODEL_NAME}/checkpoint-1000"
-export REDIS_OM_URL="redis://:QzmCUD3C3RdsR@35.232.108.130:6379"
-
+export MODEL_PATH="Qwen/Qwen2.5-7B-Instruct"
+export CHAT_TEMPLATE="${REPO_FOLDER_NAME}/evals/qwen2.5-7b.jinja"
 
 CUDA_VISIBLE_DEVICES=$SFT1_GPU python -m vllm.entrypoints.openai.api_server \
-    --model /mnt/data_from_server1/models/Qwen2.5-7B-Instruct \
+    --model $MODEL_PATH \
     --port "$SFT1_PORT" \
-    --chat-template /data/haofeiy2/sotopia-rl/evals/qwen2.5-7b.jinja \
+    --chat-template $CHAT_TEMPLATE \
     --served-model-name qwen25-7b-instruct \
     --enable-lora \
     --lora-modules "$SFT1_MODEL_NAME=$SFT1_MODEL_PATH"
 
 CUDA_VISIBLE_DEVICES=$SFT2_GPU python -m vllm.entrypoints.openai.api_server \
-    --model /mnt/data_from_server1/models/Qwen2.5-7B-Instruct \
+    --model $MODEL_PATH \
     --port "$SFT2_PORT" \
-    --chat-template /data/haofeiy2/sotopia-rl/evals/qwen2.5-7b.jinja \
+    --chat-template $CHAT_TEMPLATE \
     --served-model-name qwen25-7b-instruct \
     --enable-lora \
     --lora-modules "$SFT2_MODEL_NAME=$SFT2_MODEL_PATH"

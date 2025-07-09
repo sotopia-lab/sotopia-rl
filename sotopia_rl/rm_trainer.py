@@ -40,7 +40,9 @@ class SotopiaRMTrainer(Trainer):
                 project=args.wandb_project,
                 name=args.wandb_run_name,
                 config={
-                    k: v for k, v in vars(args).items() if isinstance(v, (int, float, str))
+                    k: v
+                    for k, v in vars(args).items()
+                    if isinstance(v, (int, float, str))
                 },
             )
 
@@ -70,7 +72,6 @@ class SotopiaRMTrainer(Trainer):
             logging_steps=1,
             save_steps=args.evaluation_steps,
             save_strategy="steps",
-            eval_steps=args.evaluation_steps,
             logging_dir="./logs",
             gradient_accumulation_steps=args.accumulation_steps,
             learning_rate=args.learning_rate,
@@ -80,8 +81,9 @@ class SotopiaRMTrainer(Trainer):
             dataloader_num_workers=4,
             report_to="wandb",
             ddp_find_unused_parameters=False,
+            eval_strategy="steps",
+            label_names=["labels"],
         )
-
 
         collate_fn = (
             train_dataset.dataset.collate_fn
