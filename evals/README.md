@@ -122,4 +122,4 @@ python examples/experiment_eval.py \
   "--gin.TAG='${TAG}'"
 ```
 
-For ENV_IDS in ` sotopia-hard`  and ` sotopia-all` , please see [this file](#https://github.com/sotopia-lab/sotopia-rl/tree/main/data/env_ids.txt).
+For ENV_IDS in ` sotopia-hard`  and ` sotopia-all` , please see [this file](https://github.com/sotopia-lab/sotopia-rl/tree/main/data/env_ids.txt).
