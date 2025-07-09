@@ -204,4 +204,4 @@ CUDA_VISIBLE_DEVICES=0,1,2,3,4,5 accelerate launch \
 
 We first deploy SFT and GRPO model using vllm and, deploy reward model using danjgo, then we evaluate our model based on SOTOPIA-EVAL framework.
 
-For details please see [this section](#https://github.com/sotopia-lab/sotopia-rl/tree/main/evals/README.md).
+For details please see [this section](https://github.com/sotopia-lab/sotopia-rl/tree/main/evals/README.md).
