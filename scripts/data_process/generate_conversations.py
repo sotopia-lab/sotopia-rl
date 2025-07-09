@@ -1,7 +1,6 @@
 import argparse
 import json
 import re
-import subprocess
 
 
 def overwrite_eval_bash(

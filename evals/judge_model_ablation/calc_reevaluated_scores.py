@@ -36,7 +36,7 @@ for result in results.values():
     model_2 = result["models"][2]
     overall_score_1 = average(agent1_dict.values())
     overall_score_2 = average(agent2_dict.values())
-    
+
     if agent1_dict and agent2_dict:
         model_goal_score_dict[model_1].append(agent1_dict["goal"])
         model_goal_score_dict[model_2].append(agent2_dict["goal"])

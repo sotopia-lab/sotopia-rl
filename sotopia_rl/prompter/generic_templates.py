@@ -71,7 +71,7 @@ DOMAIN SPECIFIC SCORING GUIDELINES:
    - Note that you should only consider the contribution to the goal achievement. For each utterance, assess whether the goal is achieved. If a goal is already achieved, the utterance should not be assigned a score higher than 1.
 """
 
-CONVERSATION_BEHAVIOR_DESCRIPTION = """   
+CONVERSATION_BEHAVIOR_DESCRIPTION = """
 Conversation Behavior refers to the evaluation of the agent's conversation behavior, including the avoidance of repetitive utterances, proper ending of the conversation, and overall performance as a social agent. A higher score indicates effective conversation behavior, while a lower score indicates poor performance in these areas.
 
 DOMAIN SPECIFIC SCORING GUIDELINES:

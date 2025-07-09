@@ -1,13 +1,14 @@
 import argparse
 import os
+
 os.environ["TRANSFORMERS_NO_COMPILE"] = "1"
-import argparse
-from sotopia_rl import SotopiaGRPOTrainer
 from accelerate import Accelerator
+
+from sotopia_rl import SotopiaGRPOTrainer
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Train a model with GRPO using a reward model.")
-    
+
     parser.add_argument("--model_name", type=str, default="/data/models/gemma-2-2b-it",
                         help="Path to the model")
 
@@ -57,7 +58,7 @@ if __name__ == '__main__':
                         help="Wandb run name")
     parser.add_argument("--use_lora_train_grpo", action="store_true",
                         help="Use LoRA for training GRPO")
- 
+
     args = parser.parse_args()
     accelerator = Accelerator()
     trainer = SotopiaGRPOTrainer(args, accelerator)

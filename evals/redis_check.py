@@ -1,7 +1,7 @@
-from sotopia.database.logs import EpisodeLog
-from sotopia.database.persistent_profile import EnvironmentProfile
-import rich
 from collections import Counter
+
+import rich
+from sotopia.database.logs import EpisodeLog
 
 # tag = "grpo_rm_reward_goal_w_conversation_behavior_4_23_step_1400_vs_sft_qwen25_7b_sft_round_1_bc_data_top_2_step_1500-0422"
 tag = "sft_round_1_bc_data_top_2_with_aligned_format_instruction_prompt_weight_decay_0_0509_step_700_vs_sft_round_1_bc_data_top_2_with_aligned_format_instruction_prompt_weight_decay_0_0509_step_700-0510_v1"

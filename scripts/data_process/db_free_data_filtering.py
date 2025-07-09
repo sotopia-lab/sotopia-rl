@@ -1,11 +1,9 @@
-import os
 
 # TODO: Fill in REDIS OM URL in the form of `redis://:password@host:port`
 # os.environ["REDIS_OM_URL"] = "redis://:password@server_name:port_num"
 
 import json
 import random
-from collections import Counter
 
 import matplotlib.pyplot as plt
 import numpy as np

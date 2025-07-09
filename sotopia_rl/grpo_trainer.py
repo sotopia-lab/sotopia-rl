@@ -1,24 +1,20 @@
 import os
+
 import torch
 import wandb
-from datasets import load_dataset
+from accelerate import Accelerator
+from jinja2 import Environment, FileSystemLoader
+from peft import PeftModelForCausalLM, PeftModelForSequenceClassification
 from torch.utils.data import random_split
 from transformers import (
     AutoModelForCausalLM,
     AutoModelForSequenceClassification,
     AutoTokenizer,
     BitsAndBytesConfig,
-    GenerationConfig,
 )
-from accelerate import PartialState
-from peft import PeftModelForCausalLM, PeftModelForSequenceClassification
-from jinja2 import Environment, FileSystemLoader
-from trl import get_kbit_device_map, GRPOConfig, GRPOTrainer
-from accelerate import Accelerator
+from trl import GRPOConfig, GRPOTrainer, get_kbit_device_map
+
 from sotopia_rl.data import GRPODataset
-from functools import partial
-from typing import List
-from peft import prepare_model_for_kbit_training
 
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 os.environ["NCCL_P2P_DISABLE"] = "1"

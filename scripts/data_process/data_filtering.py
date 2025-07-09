@@ -5,12 +5,11 @@ os.environ["REDIS_OM_URL"] = "redis://:QzmCUD3C3RdsR@35.232.108.130:6379"
 
 import json
 import random
-from collections import Counter
-from sotopia.database import episodes_to_jsonl
 
 import matplotlib.pyplot as plt
 import numpy as np
 from prompt_reverse_engineering import reverse_episode_log
+from sotopia.database import episodes_to_jsonl
 from sotopia.database.logs import EpisodeLog
 
 
@@ -304,7 +303,7 @@ def behavior_cloning_data_filtering_mistral_mistral():
         eps_list += eps_by_env_filtered[env]
 
     print(total_num)
-    
+
 def behavior_cloning_data_filtering_qwen_qwen():
     # get conversation episodes according to social task scenarios
     eps_list = []
@@ -320,7 +319,7 @@ def behavior_cloning_data_filtering_qwen_qwen():
     print(len(eps_by_env))
 
     eps_by_env_filtered = filter_episodes_on_top_2_selfplay(eps_by_env)
-    
+
     total_num = 0
     for env in eps_by_env_filtered:
         total_num += len(eps_by_env_filtered[env])

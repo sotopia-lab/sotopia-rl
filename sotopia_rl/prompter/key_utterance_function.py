@@ -1,12 +1,9 @@
-import json
 import re
 from typing import Any, Dict, List, Tuple
 
 from openai import OpenAI
 
-from sotopia_rl.prompter.one_pass_instructions import (
-    ATTRIBUTION_INSTRUCTIONS_DICT,
-)
+from sotopia_rl.prompter.one_pass_instructions import ATTRIBUTION_INSTRUCTIONS_DICT
 
 REGEX = "^Utterance (?:[0-9]|[1-9][0-9]) by {agent}$"
 
@@ -62,7 +59,7 @@ def assign_attributions_for_conversation(
                 uttr_count += 1
             uttr_attr_dict[f"Utterance {j//2} by {speaker}"] = 0
         response = openai_call(prompt, llm_name).strip()
-        
+
         if response is None:
             print("Failed to get response from OpenAI; returning empty dictionary")
             return {}

@@ -1,14 +1,23 @@
-from sotopia.envs.evaluators import ReachGoalLLMEvaluator, EvaluationForTwoAgents, SotopiaDimensions
-from sotopia.database.logs import EpisodeLog
-from sotopia.messages.message_classes import ScriptBackground
-from sotopia.database.persistent_profile import AgentProfile, RelationshipType, EnvironmentProfile
-from sotopia.envs.parallel import get_bio
+import argparse
 import asyncio
-from tqdm import tqdm
 import json
 from copy import deepcopy
-import click
-import rich
+
+from sotopia.database.logs import EpisodeLog
+from sotopia.database.persistent_profile import (
+    AgentProfile,
+    EnvironmentProfile,
+    RelationshipType,
+)
+from sotopia.envs.evaluators import (
+    EvaluationForTwoAgents,
+    ReachGoalLLMEvaluator,
+    SotopiaDimensions,
+)
+from sotopia.envs.parallel import get_bio
+from sotopia.messages.message_classes import ScriptBackground
+from tqdm import tqdm
+from tqdm.asyncio import tqdm_asyncio
 
 POSSIBLE_MODELS = [
     "o3-mini",
@@ -18,7 +27,7 @@ POSSIBLE_MODELS = [
     "claude/claude-3-7-sonnet-20250219",
     "together_ai/meta-llama/Llama-3.3-70B-Instruct-Turbo",
     "together_ai/meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
-    "together_ai/Qwen/Qwen2.5-72B-Instruct-Turbo", 
+    "together_ai/Qwen/Qwen2.5-72B-Instruct-Turbo",
     "together_ai/deepseek-ai/DeepSeek-V3",
     "gpt-4o-mini",
     "gpt-4",
@@ -62,12 +71,6 @@ def get_history(episode: EpisodeLog, script_background: ScriptBackground) -> str
         history += f"\nTurn #{i}\n" + message
     return history
 
-import asyncio
-from copy import deepcopy
-from tqdm import tqdm
-from tqdm.asyncio import tqdm_asyncio
-from collections import defaultdict
-
 BANNED_EPI_IDS = [
     "01JQ91S0W3P9GGAW4MDZ8F31GC",
 ]
@@ -78,7 +81,7 @@ BANNED_EPI_IDS = [
 #     for episode in episodes:
 #         env_agents_to_ep_dict[(episode.environment, episode.agents[0], episode.agents[1])].append(episode)
 #         env_agents_to_ep_dict[(episode.environment, episode.agents[1], episode.agents[0])].append(episode)
-    
+
 #     filtered_episodes = []
 #     # visited_envs = set()
 #     for episode in episodes:
@@ -176,7 +179,6 @@ TAG = "grpo_rm_goal_0511_step_2200_vs_sft_0510_epoch_500_step_200-0512"
 def main(tag, model_name):
     run_eval(tag, model_name, 50)
 
-import argparse
 if __name__ == "__main__":
     args = argparse.ArgumentParser(description="Re-evaluate episodes with a specific model.")
     args.add_argument("--model_name", type=str, default="", help="Index of the model to use for re-evaluation.")
