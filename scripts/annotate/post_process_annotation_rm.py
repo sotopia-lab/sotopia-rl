@@ -50,14 +50,14 @@ def get_attributed_data(data: List[Dict[str, Any]], utterance_pattern: str, do_n
             new_utterance['goal_score'] = d['goal_score']
             total_attributed_reward += new_utterance['attributed_reward']
             all_utterances.append(new_utterance)
-            
+
         if do_normalize:
             for utterance in all_utterances:
                 utterance['attributed_reward'] = utterance['attributed_reward'] / total_attributed_reward * d['goal_score']
-                
+
         for utterance in all_utterances:
             attributed_data.append(utterance)
-            
+
     print(f"Error Count: {error_count}")
     return attributed_data
 
@@ -80,7 +80,7 @@ def main(data_dir: str, input_file: str, reward_output_file: str, do_normalize: 
 
     utterance_pattern = r'Utterance (\d+) by ([A-Za-z ]+)'
     print("turning into attributed utterances")
-    
+
     attributed_data = get_attributed_data(data, utterance_pattern, do_normalize=do_normalize)
     sotopia_pi_utterance_reward = []
     # breakpoint()

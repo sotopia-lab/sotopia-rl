@@ -26,7 +26,7 @@ T = TypeVar("T", bound=BaseModel)
 ONLY_RESPONSE_DIRECT_INSTRUCTIONS = """
 ## Reward Attribution Instructions for LLMs
 
-Two agents are in a conversation. For now, you are the judge of the utterance of one of the agents. 
+Two agents are in a conversation. For now, you are the judge of the utterance of one of the agents.
 
 1. Input Context:
    - You will receive the utterance or action of an agent in one turn of the conversation.
@@ -69,7 +69,7 @@ Two agents are in a conversation. For now, you are the judge of the utterance of
 DEFAULT_PROMPT = """
 ## Reward Attribution Instructions for LLMs
 
-Two agents are in a conversation. For now, you are the judge of the utterance of one of the agents. 
+Two agents are in a conversation. For now, you are the judge of the utterance of one of the agents.
 
 1. Input Context:
    - You will receive the utterance or action of an agent in one turn of the conversation and the conversation before it.

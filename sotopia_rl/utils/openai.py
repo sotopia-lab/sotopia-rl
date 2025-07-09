@@ -1,5 +1,7 @@
-from openai import OpenAI
 import os
+
+from openai import OpenAI
+
 
 def openai_call(prompt: str, model: str = "gpt-3.5-turbo") -> str | None:
     if model in ["gpt-3.5-turbo", "gpt-4", "gpt-4o", "o4-mini"]:

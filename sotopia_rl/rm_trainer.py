@@ -1,9 +1,10 @@
 import os
 
 import torch
-import torch.distributed as dist
+import torch._dynamo
+import wandb
 from jinja2 import Environment, FileSystemLoader
-from peft import LoraConfig, get_peft_model, PeftModelForSequenceClassification
+from peft import LoraConfig, PeftModelForSequenceClassification
 from torch.nn import MSELoss
 from torch.utils.data import random_split
 from transformers import (
@@ -12,12 +13,8 @@ from transformers import (
     Trainer,
     TrainingArguments,
 )
-from accelerate import Accelerator
-from typing import Optional
 
-import wandb
 from sotopia_rl.data import RMDataset
-import torch._dynamo
 
 torch._dynamo.config.suppress_errors = True
 

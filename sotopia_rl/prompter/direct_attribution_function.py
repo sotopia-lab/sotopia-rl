@@ -4,9 +4,7 @@ from typing import Any, Dict, List, Tuple
 
 from openai import OpenAI
 
-from sotopia_rl.prompter.one_pass_instructions import (
-    ATTRIBUTION_INSTRUCTIONS_DICT,
-)
+from sotopia_rl.prompter.one_pass_instructions import ATTRIBUTION_INSTRUCTIONS_DICT
 
 
 def openai_call(prompt: str, model: str = "gpt-3.5-turbo") -> str | None:
@@ -85,7 +83,7 @@ def assign_attributions_for_conversation(
             except ValueError:
                 print("Failed to convert all values to integers; retrying")
                 continue
-        
+
         if uttr_count != len(result) and i < 4:
             print("Response length does not match the number of agent utterances; retrying")
         elif uttr_count == len(result):

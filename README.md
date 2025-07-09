@@ -17,7 +17,7 @@
 
 ## Introduction
 
-**Sotopia-RL** is an utterance-level, attribution-based, and multi-dimensional social reward design method, trained using single-turn online RL It achieves state-of-the-art performance on social goal completion tasks in the SOTOPIA benchmark. 
+**Sotopia-RL** is an utterance-level, attribution-based, and multi-dimensional social reward design method, trained using single-turn online RL It achieves state-of-the-art performance on social goal completion tasks in the SOTOPIA benchmark.
 
 We first attribute episode-level rewards for multi-turn social interactions to in- dividual utterances with LLMs. Then, we construct a combined reward that includes multiple dimensions of rewards besides goal completion, allowing us to regularize the optimization pro- cess for goal completion. These rewards are used to guide the RL training of social agents.
 
@@ -52,7 +52,7 @@ A Redis database needs to be set up to connect to a Redis DB for loading and sav
 conda env config vars set REDIS_OM_URL="redis://:PASSWORD@server_name:port_num"
 ```
 
-**Set OpenAI API Key** 
+**Set OpenAI API Key**
 
 ```bash
 conda env config vars set OPENAI_API_KEY="<your_openai_api_key>"

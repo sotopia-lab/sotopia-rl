@@ -33,7 +33,7 @@ CUDA_VISIBLE_DEVICES=$ORI_GPU python -m vllm.entrypoints.openai.api_server \
     --model $MODEL_PATH \
     --port "$ORI_PORT" \
     --chat-template $CHAT_TEMPLATE \
-    --served-model-name $ORI_MODEL_NAME  
+    --served-model-name $ORI_MODEL_NAME
 
 # Command 3: Run experiment evaluations.
 python examples/experiment_eval.py \

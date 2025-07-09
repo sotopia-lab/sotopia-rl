@@ -1,8 +1,7 @@
-from sotopia.envs.evaluators import EvaluationForTwoAgents, SotopiaDimensions
 import os
-import openai
-from typing import TypeVar, Any, cast
-from pydantic import BaseModel
+
+from google import genai
+from sotopia.envs.evaluators import EvaluationForTwoAgents, SotopiaDimensions
 
 PROMPT = """
 Here is the context of this interaction:
@@ -56,7 +55,7 @@ Turn #20
 
 Turn #21
 The reasoning is:
-Environment comments: terminated: The conversation is too long; 
+Environment comments: terminated: The conversation is too long;
 Agent 1 comments:
 believability: <naturalness> Rafael Cortez interacts in a natural and realistic manner, maintaining a professional tone throughout the conversation. <consistency> His actions align with his character traits of being outgoing and competitive, as he tries to find a solution to the issue with Dr. Walter while maintaining a professional demeanor.
 relationship: Rafael Cortez and Mia Sanders share a common dislike for Dr. Walter, which initially brings them together. Throughout the interaction, they maintain a professional relationship, discussing their shared values and goals. The interaction does not significantly change their relationship, but it reinforces their mutual respect and understanding.
@@ -126,16 +125,15 @@ Here is the output schema:
 
 # print(response.choices[0].message.parsed)
 
-from google import genai
-from pydantic import BaseModel
-
 client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 response = client.models.generate_content(
-    model='gemini-2.0-flash',
-    contents='List a few popular cookie recipes. Be sure to include the amounts of ingredients.',
+    model="gemini-2.0-flash",
+    contents="List a few popular cookie recipes. Be sure to include the amounts of ingredients.",
     config={
-        'response_mime_type': 'application/json',
-        'response_schema': EvaluationForTwoAgents[SotopiaDimensions].model_json_schema(),
+        "response_mime_type": "application/json",
+        "response_schema": EvaluationForTwoAgents[
+            SotopiaDimensions
+        ].model_json_schema(),
     },
 )
 breakpoint()

@@ -1,6 +1,8 @@
 import os
 
 import torch
+import wandb
+from accelerate import Accelerator, PartialState
 from jinja2 import Environment, FileSystemLoader
 from peft import PeftModelForCausalLM, PeftModelForSequenceClassification
 from torch.utils.data import random_split
@@ -9,14 +11,12 @@ from transformers import (
     AutoModelForSequenceClassification,
     AutoTokenizer,
     BitsAndBytesConfig,
-    GenerationConfig,
 )
-from trl import get_kbit_device_map, PPOConfig, PPOTrainer
-from accelerate import PartialState, Accelerator
+from trl import PPOConfig, PPOTrainer, get_kbit_device_map
 
-import wandb
 from sotopia_rl.data import PPODataset
-os.environ['NCCL_P2P_DISABLE'] = '1' 
+
+os.environ['NCCL_P2P_DISABLE'] = '1'
 os.environ["TORCH_DISTRIBUTED_DEBUG"] = "DETAIL"
 
 class SotopiaPPOTrainer:
@@ -81,7 +81,7 @@ class SotopiaPPOTrainer:
                 max_length=self.args.max_length
             )
             print(f"dataset: {len(dataset)}")
-            
+
             generator = torch.Generator().manual_seed(42)
             val_ratio = getattr(self.args, 'val_ratio', 0.05)
             train_size = min(int(len(dataset) * (1 - val_ratio)), len(dataset) - 2)
@@ -96,7 +96,7 @@ class SotopiaPPOTrainer:
             bnb_4bit_use_double_quant=True,
             bnb_4bit_quant_type="nf4"
         )
-    
+
     def _setup_generation_models(self):
         base_gen_ref = AutoModelForCausalLM.from_pretrained(
             self.args.model_name,
@@ -181,14 +181,14 @@ class SotopiaPPOTrainer:
                 torch_dtype='auto',
                 num_labels=1,
             )
-        
+
         # VERY VERY IMPORTANT
-        # specifically designed for PPO training, 
+        # specifically designed for PPO training,
         # based on the get_reward function
         # it fill the input_ids paddings with 0s
         self.value_model.config.pad_token_id = 0
         self.reward_model.config.pad_token_id = 0
-        
+
         requires_grad_num = 0
         for name, param in self.value_model.named_parameters():
             if param.requires_grad:

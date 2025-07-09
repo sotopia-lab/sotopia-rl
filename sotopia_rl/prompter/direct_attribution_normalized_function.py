@@ -4,9 +4,7 @@ from typing import Any, Dict, List, Tuple
 
 from openai import OpenAI
 
-from sotopia_rl.prompter.one_pass_instructions import (
-    ATTRIBUTION_INSTRUCTIONS_DICT,
-)
+from sotopia_rl.prompter.one_pass_instructions import ATTRIBUTION_INSTRUCTIONS_DICT
 
 
 def openai_call(prompt: str, model: str = "gpt-3.5-turbo") -> str | None:
@@ -79,7 +77,7 @@ def assign_attributions_for_conversation(
                     print(response)
                     return {}
                 result = json.loads(formatted_response)
-        
+
         if uttr_count != len(result) and i < 4:
             print("Response length does not match the number of agent utterances; retrying")
         elif uttr_count == len(result):
@@ -100,7 +98,7 @@ def calc_attributed_reward(attributed_data: List[Dict[str, float | int]], attrib
     for k, v in attributed_data.items():
         total_attributions += v
     for k, v in attributed_data.items():
-        utterance_reward_map[k] = {"reward": calc_reward(v, attribution_instruction_name, goal_score, total_attributions), 
+        utterance_reward_map[k] = {"reward": calc_reward(v, attribution_instruction_name, goal_score, total_attributions),
                                     "attribution": v}
     return utterance_reward_map
 

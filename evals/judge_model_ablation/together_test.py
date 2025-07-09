@@ -1,8 +1,10 @@
-from sotopia.envs.evaluators import EvaluationForTwoAgents, SotopiaDimensions
+import json
 import os
+from typing import cast
+
 import openai
-from typing import TypeVar, Any, cast
 import rich
+from sotopia.envs.evaluators import EvaluationForTwoAgents, SotopiaDimensions
 
 client = openai.OpenAI(
   api_key=os.environ.get("TOGETHER_API_KEY"),
@@ -68,7 +70,7 @@ Turn #20
 
 Turn #21
 The reasoning is:
-Environment comments: terminated: The conversation is too long; 
+Environment comments: terminated: The conversation is too long;
 Agent 1 comments:
 believability: <naturalness> Rafael Cortez interacts in a natural and realistic manner, maintaining a professional tone throughout the conversation. <consistency> His actions align with his character traits of being outgoing and competitive, as he tries to find a solution to the issue with Dr. Walter while maintaining a professional demeanor.
 relationship: Rafael Cortez and Mia Sanders share a common dislike for Dr. Walter, which initially brings them together. Throughout the interaction, they maintain a professional relationship, discussing their shared values and goals. The interaction does not significantly change their relationship, but it reinforces their mutual respect and understanding.
@@ -111,10 +113,8 @@ Here is the output schema:
 # result = completion.choices[0].message.parsed
 # casted_result = cast(EvaluationForTwoAgents[SotopiaDimensions], result)
 
-import rich
-import json
 
-model = "deepseek-ai/DeepSeek-V3" # "meta-llama/Meta-Llama-3.1-405B-Instruct-Turbo" # "Qwen/Qwen2.5-72B-Instruct-Turbo" # deepseek-ai/DeepSeek-V3 # 
+model = "deepseek-ai/DeepSeek-V3" # "meta-llama/Meta-Llama-3.1-405B-Instruct-Turbo" # "Qwen/Qwen2.5-72B-Instruct-Turbo" # deepseek-ai/DeepSeek-V3 #
 breakpoint()
 response = client.chat.completions.create(
     model=model, #  # deepseek-ai/DeepSeek-V3 # Qwen/Qwen2.5-72B-Instruct-Turbo #
@@ -131,7 +131,7 @@ casted_result = cast(EvaluationForTwoAgents[SotopiaDimensions], result)
 if model == "deepseek-ai/DeepSeek-V3":
     # strip ```json in front and ``` at the end
     result = result[7:-3]
-# elif model == 
+# elif model ==
 breakpoint()
 result_dict = json.loads(result)
 rich.print(result_dict)

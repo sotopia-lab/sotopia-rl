@@ -1,12 +1,16 @@
 import json
+import os
 import re
 from typing import Any, Dict, List, Tuple
-import os
+
 from openai import OpenAI
 
 from sotopia_rl.prompter.generic_templates import (
-    SCALE_GUIDELINE_DICT, DIMENSION_DESCRIPTION_DICT, DIRECT_ATTRIBUTION_TEMPLATE, 
+    DIMENSION_DESCRIPTION_DICT,
+    DIRECT_ATTRIBUTION_TEMPLATE,
+    SCALE_GUIDELINE_DICT,
 )
+
 
 def openai_call(prompt: str, model: str = "gpt-3.5-turbo") -> str | None:
     if model in ["gpt-3.5-turbo", "gpt-4", "gpt-4o", "o4-mini"]:
@@ -135,7 +139,7 @@ def assign_attributions_for_conversation(
             except ValueError:
                 print("Failed to convert all values to integers; retrying")
                 continue
-        
+
         if uttr_count != len(result) and i < 4:
             print("Response length does not match the number of agent utterances; retrying")
         elif uttr_count == len(result):
@@ -189,7 +193,7 @@ def get_attribution_single_conv(conversation, agent, goals, episode, rewards, ll
         dim_score = 10
     elif dimension == "goal_barebone":
         dim_score = rewards[agent]["goal"]
-    else: 
+    else:
         dim_score = rewards[agent][dimension]
     attribution_rewards = calc_attributed_reward(attribution_scores, scale, dim_score)
     for key in attribution_rewards:

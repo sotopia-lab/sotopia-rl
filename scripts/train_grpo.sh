@@ -15,4 +15,4 @@ CUDA_VISIBLE_DEVICES=0,1,2,3,4,5 accelerate launch \
   --num_grpo_epochs 2 \
   --use_lora_train_grpo \
   --num_generations 16 \
-  --output_dir ../grpo_checkpoints_qwen2.5-7b 
+  --output_dir ../grpo_checkpoints_qwen2.5-7b

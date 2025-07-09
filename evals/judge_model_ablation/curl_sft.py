@@ -1,5 +1,7 @@
-import requests
 import json
+
+import requests
+import rich
 
 # Define the request details
 url = "http://localhost:8006/v1/completions"
@@ -64,7 +66,7 @@ data = {
 
 # Send the POST request
 response = requests.post(url, headers=headers, data=json.dumps(data))
-import rich
+
 # Print the response
 print("Status Code:", response.status_code)
 json_data = response.json()
