@@ -2,27 +2,7 @@
 
 <h1 align="center"> Sotopia-RL: Reward Design for Social Intelligence</h1>
 
-<p align="center">
-  <a href="https://rl.sotopia.world/">
-    <img src="https://img.shields.io/badge/Project-Page-green.svg" alt="Project Page">
-  </a>
-  <a href="https://arxiv.org/abs/your-paper-link">
-    <img src="https://img.shields.io/badge/Paper-PDF-red.svg" alt="Paper PDF">
-  </a>
-  <a href="https://huggingface.co/ulab-ai/sotopia-rl-qwen-2.5-7B-grpo">
-    <img src="https://img.shields.io/badge/%F0%9F%A4%97-Model-orange" alt="HuggingFace Model">
-  </a>
-  <a href="https://www.python.org/downloads/release/python-3109/">
-    <img src="https://img.shields.io/badge/python-%E2%89%A53.10-blue" alt="Python 3.10+">
-  </a>
-  <a href="https://pre-commit.com/">
-    <img src="https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white" alt="Pre-commit enabled">
-  </a>
-  <a href="https://github.com/psf/black">
-    <img src="https://img.shields.io/badge/code%20style-black-000000.svg" alt="Code style: black">
-  </a>
-  <img src="https://img.shields.io/badge/Code%20License-Apache_2.0-blue.svg" alt="Code License">
-</p>
+[![Project Page](https://img.shields.io/badge/Project-Page-green.svg)](https://rl.sotopia.world/) ![Paper PDF](https://img.shields.io/badge/Paper-PDF-red.svg) [![huggingface](https://img.shields.io/badge/%F0%9F%A4%97-Model-orange)](https://huggingface.co/ulab-ai/sotopia-rl-qwen-2.5-7B-grpo) [![Python 3.10](https://img.shields.io/badge/python-%E2%89%A53.10-blue)](https://www.python.org/downloads/release/python-3109/) [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://pre-commit.com/) <a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a> ![Code License](https://img.shields.io/badge/Code%20License-Apache_2.0-blue.svg)
 
 
 ## 📚 Table of Contents
@@ -224,4 +204,4 @@ CUDA_VISIBLE_DEVICES=0,1,2,3,4,5 accelerate launch \
 
 We first deploy SFT and GRPO model using vllm and, deploy reward model using danjgo, then we evaluate our model based on SOTOPIA-EVAL framework.
 
-For details please see this section.
+For details please see [this section](#https://github.com/sotopia-lab/sotopia-rl/tree/main/evals/README.md).
