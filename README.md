@@ -2,7 +2,7 @@
 
 <h1 align="center"> Sotopia-RL: Reward Design for Social Intelligence</h1>
 
-[![Project Page](https://img.shields.io/badge/Project-Page-green.svg)](https://rl.sotopia.world/) ![Paper PDF](https://img.shields.io/badge/Paper-PDF-red.svg) [![huggingface](https://img.shields.io/badge/%F0%9F%A4%97-Model-orange)](https://huggingface.co/ulab-ai/sotopia-rl-qwen-2.5-7B-grpo) [![Python 3.10](https://img.shields.io/badge/python-%E2%89%A53.10-blue)](https://www.python.org/downloads/release/python-3109/) [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://pre-commit.com/) <a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a> ![Code License](https://img.shields.io/badge/Code%20License-Apache_2.0-blue.svg)
+[![Project Page](https://img.shields.io/badge/Project-Page-green.svg)](https://rl.sotopia.world/) [![Paper PDF](https://img.shields.io/badge/Paper-PDF-red.svg)](https://arxiv.org/abs/2508.03905) [![huggingface](https://img.shields.io/badge/%F0%9F%A4%97-Model-orange)](https://huggingface.co/ulab-ai/sotopia-rl-qwen-2.5-7B-grpo) [![Python 3.10](https://img.shields.io/badge/python-%E2%89%A53.10-blue)](https://www.python.org/downloads/release/python-3109/) [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://pre-commit.com/) <a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a> ![Code License](https://img.shields.io/badge/Code%20License-Apache_2.0-blue.svg)
 
 
 ## 📚 Table of Contents
@@ -21,7 +21,17 @@
 
 We first attribute episode-level rewards for multi-turn social interactions to in- dividual utterances with LLMs. Then, we construct a combined reward that includes multiple dimensions of rewards besides goal completion, allowing us to regularize the optimization pro- cess for goal completion. These rewards are used to guide the RL training of social agents.
 
-
+```
+@misc{yu2025sotopiarlrewarddesignsocial,
+  title={Sotopia-RL: Reward Design for Social Intelligence},
+  author={Haofei Yu and Zhengyang Qi and Yining Zhao and Kolby Nottingham and Keyang Xuan and Bodhisattwa Prasad Majumder and Hao Zhu and Paul Pu Liang and Jiaxuan You},
+  year={2025},
+  eprint={2508.03905},
+  archivePrefix={arXiv},
+  primaryClass={cs.CL},
+  url={https://arxiv.org/abs/2508.03905}
+}
+```
 
 ![sotopia-rl](assets/sotopia_method.jpg)
 
