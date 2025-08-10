@@ -2,7 +2,7 @@
 
 <h1 align="center"> Sotopia-RL: Reward Design for Social Intelligence</h1>
 
-[![Project Page](https://img.shields.io/badge/Project-Page-green.svg)](https://rl.sotopia.world/) ![Paper PDF](https://img.shields.io/badge/Paper-PDF-red.svg) [![huggingface](https://img.shields.io/badge/%F0%9F%A4%97-Model-orange)](https://huggingface.co/ulab-ai/sotopia-rl-qwen-2.5-7B-grpo) [![Python 3.10](https://img.shields.io/badge/python-%E2%89%A53.10-blue)](https://www.python.org/downloads/release/python-3109/) [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://pre-commit.com/) <a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a> ![Code License](https://img.shields.io/badge/Code%20License-Apache_2.0-blue.svg)
+[![Project Page](https://img.shields.io/badge/Project-Page-green.svg)](https://rl.sotopia.world/) [![Paper PDF](https://img.shields.io/badge/Paper-PDF-red.svg)](https://arxiv.org/abs/2508.03905) [![huggingface](https://img.shields.io/badge/%F0%9F%A4%97-Model-orange)](https://huggingface.co/ulab-ai/sotopia-rl-qwen-2.5-7B-grpo) [![Python 3.10](https://img.shields.io/badge/python-%E2%89%A53.10-blue)](https://www.python.org/downloads/release/python-3109/) [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://pre-commit.com/) <a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a> ![Code License](https://img.shields.io/badge/Code%20License-Apache_2.0-blue.svg)
 
 
 ## 📚 Table of Contents
