@@ -21,7 +21,17 @@
 
 We first attribute episode-level rewards for multi-turn social interactions to in- dividual utterances with LLMs. Then, we construct a combined reward that includes multiple dimensions of rewards besides goal completion, allowing us to regularize the optimization pro- cess for goal completion. These rewards are used to guide the RL training of social agents.
 
-
+```
+@misc{yu2025sotopiarlrewarddesignsocial,
+  title={Sotopia-RL: Reward Design for Social Intelligence},
+  author={Haofei Yu and Zhengyang Qi and Yining Zhao and Kolby Nottingham and Keyang Xuan and Bodhisattwa Prasad Majumder and Hao Zhu and Paul Pu Liang and Jiaxuan You},
+  year={2025},
+  eprint={2508.03905},
+  archivePrefix={arXiv},
+  primaryClass={cs.CL},
+  url={https://arxiv.org/abs/2508.03905}
+}
+```
 
 ![sotopia-rl](assets/sotopia_method.jpg)
 
