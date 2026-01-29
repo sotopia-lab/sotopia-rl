@@ -1,0 +1,14 @@
+python /root/sotopia-rl/evals/redis_stat.py dpo_ckpt_1000_vs_sft_baseline_dpo_agent1
+python /root/sotopia-rl/evals/redis_stat.py dpo_ckpt_1000_vs_sft_baseline_dpo_agent2
+python /root/sotopia-rl/evals/redis_stat.py dpo_ckpt_2000_vs_sft_baseline_dpo_agent1
+python /root/sotopia-rl/evals/redis_stat.py dpo_ckpt_2000_vs_sft_baseline_dpo_agent2
+python /root/sotopia-rl/evals/redis_stat.py dpo_ckpt_3000_vs_sft_baseline_dpo_agent1
+python /root/sotopia-rl/evals/redis_stat.py dpo_ckpt_3000_vs_sft_baseline_dpo_agent2
+python /root/sotopia-rl/evals/redis_stat.py dpo_ckpt_4000_vs_sft_baseline_dpo_agent1
+python /root/sotopia-rl/evals/redis_stat.py dpo_ckpt_4000_vs_sft_baseline_dpo_agent2
+python /root/sotopia-rl/evals/redis_stat.py dpo_ckpt_5000_vs_sft_baseline_dpo_agent1
+python /root/sotopia-rl/evals/redis_stat.py dpo_ckpt_5000_vs_sft_baseline_dpo_agent2
+python /root/sotopia-rl/evals/redis_stat.py dpo_ckpt_6000_vs_sft_baseline_dpo_agent1
+python /root/sotopia-rl/evals/redis_stat.py dpo_ckpt_6000_vs_sft_baseline_dpo_agent2
+python /root/sotopia-rl/evals/redis_stat.py dpo_ckpt_7000_vs_sft_baseline_dpo_agent1
+python /root/sotopia-rl/evals/redis_stat.py dpo_ckpt_7000_vs_sft_baseline_dpo_agent2
