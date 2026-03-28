@@ -1,0 +1,18 @@
+{
+  "episode_id": "01JTYE0E5PGKE232AZ2VBQH7GA",
+  "split": "split_1",
+  "annotator": "jason",
+  "agent_1_name": "Mia Davis",
+  "agent_2_name": "Benjamin Jackson",
+  "goal_scores": {
+    "Mia Davis": 9,
+    "Benjamin Jackson": 5
+  },
+  "reward_attribution": {
+    "agent_1_turn_0": 2,
+    "agent_1_turn_1": 2,
+    "agent_1_turn_2": 1,
+    "agent_2_turn_0": 1,
+    "agent_2_turn_1": 1
+  }
+}

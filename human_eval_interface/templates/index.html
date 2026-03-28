@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sotopia Annotation Interface</title>
+<style>
+  :root {
+    --bg: #f5f5f5; --surface: #fff; --border: #ddd;
+    --primary: #2563eb; --primary-light: #dbeafe;
+    --text: #1e293b; --text-muted: #64748b;
+    --success: #16a34a; --success-light: #dcfce7;
+    --warning: #d97706; --warning-light: #fef3c7;
+    --danger: #dc2626;
+    --agent1: #7c3aed; --agent1-bg: #f5f3ff;
+    --agent2: #0891b2; --agent2-bg: #ecfeff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; }
+
+  .app { display: flex; height: 100vh; }
+
+  /* Sidebar */
+  .sidebar { width: 300px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
+  .sidebar-header { padding: 16px; border-bottom: 1px solid var(--border); }
+  .sidebar-header h1 { font-size: 16px; margin-bottom: 12px; }
+  .sidebar-header label { display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 4px; }
+  .sidebar-header input, .sidebar-header select { width: 100%; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; }
+  .sidebar-header .row { display: flex; gap: 8px; margin-bottom: 8px; }
+  .sidebar-header .row > div { flex: 1; }
+  .progress-bar { height: 6px; background: #e2e8f0; border-radius: 3px; margin-top: 8px; overflow: hidden; }
+  .progress-bar .fill { height: 100%; background: var(--success); transition: width .3s; }
+  .progress-text { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+  .episode-list { flex: 1; overflow-y: auto; padding: 8px; }
+  .episode-item { padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; font-family: monospace; display: flex; align-items: center; gap: 8px; margin-bottom: 2px; }
+  .episode-item:hover { background: var(--primary-light); }
+  .episode-item.active { background: var(--primary); color: #fff; }
+  .episode-item .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .episode-item .dot.done { background: var(--success); }
+  .episode-item .dot.pending { background: #cbd5e1; }
+  .episode-item .id-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* Main content */
+  .main { flex: 1; overflow-y: auto; padding: 24px 32px; }
+  .empty-state { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); font-size: 18px; }
+
+  .episode-header { margin-bottom: 20px; }
+  .episode-header h2 { font-size: 20px; margin-bottom: 4px; }
+  .episode-header .meta { font-size: 13px; color: var(--text-muted); }
+  .codename-badge { display: inline-block; background: #e2e8f0; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; margin-left: 8px; }
+
+  .section { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 20px; }
+  .section h3 { font-size: 15px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+
+  .agent-card { background: var(--agent1-bg); border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; font-size: 13px; }
+  .agent-card:nth-child(2) { background: var(--agent2-bg); }
+  .agent-card .agent-name { font-weight: 700; margin-bottom: 4px; }
+  .agent-card .agent-goal { margin-top: 6px; padding: 6px 10px; background: rgba(0,0,0,.04); border-radius: 6px; font-style: italic; }
+
+  /* Conversation */
+  .conversation { display: flex; flex-direction: column; gap: 10px; }
+  .turn { display: flex; gap: 12px; align-items: flex-start; }
+  .turn-number { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; color: #fff; margin-top: 2px; }
+  .turn.agent-0 .turn-number { background: var(--agent1); }
+  .turn.agent-1 .turn-number { background: var(--agent2); }
+  .turn-content { flex: 1; }
+  .turn-speaker { font-size: 12px; font-weight: 600; margin-bottom: 2px; }
+  .turn.agent-0 .turn-speaker { color: var(--agent1); }
+  .turn.agent-1 .turn-speaker { color: var(--agent2); }
+  .turn-text { font-size: 14px; padding: 8px 12px; border-radius: 8px; background: #f8fafc; border: 1px solid var(--border); }
+  .turn.action .turn-text { font-style: italic; background: var(--warning-light); border-color: #fde68a; }
+
+  /* Annotation panels */
+  .annotation-section { background: var(--surface); border: 2px solid var(--primary); border-radius: 10px; padding: 20px; margin-bottom: 20px; }
+  .annotation-section h3 { font-size: 15px; color: var(--primary); margin-bottom: 4px; }
+  .annotation-section .description { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; }
+
+  /* Goal score */
+  .goal-score-block { margin-bottom: 16px; padding: 12px; border-radius: 8px; border: 1px solid var(--border); }
+  .goal-score-block .agent-label { font-weight: 600; font-size: 14px; margin-bottom: 8px; }
+  .score-slider { display: flex; align-items: center; gap: 12px; }
+  .score-slider input[type=range] { flex: 1; accent-color: var(--primary); }
+  .score-value { width: 40px; text-align: center; font-size: 20px; font-weight: 700; color: var(--primary); }
+  .score-guide { font-size: 11px; color: var(--text-muted); margin-top: 6px; line-height: 1.4; }
+  .score-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+
+  /* Attribution */
+  .attribution-block { margin-bottom: 16px; }
+  .attribution-block .agent-label { font-weight: 600; font-size: 14px; margin-bottom: 10px; padding: 6px 12px; border-radius: 6px; }
+  .attribution-block:nth-child(1) .agent-label { background: var(--agent1-bg); color: var(--agent1); }
+  .attribution-block:nth-child(2) .agent-label { background: var(--agent2-bg); color: var(--agent2); }
+  .attr-turn { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 6px; margin-bottom: 4px; background: #f8fafc; border: 1px solid var(--border); }
+  .attr-turn .turn-label { font-size: 12px; font-weight: 600; min-width: 80px; }
+  .attr-turn .turn-preview { font-size: 12px; color: var(--text-muted); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 400px; }
+  .attr-turn input[type=range] { width: 120px; accent-color: var(--primary); }
+  .attr-turn .attr-value { width: 28px; text-align: center; font-weight: 700; font-size: 14px; color: var(--primary); }
+
+  /* Buttons */
+  .btn { padding: 10px 24px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all .15s; }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: #1d4ed8; }
+  .btn-primary:disabled { background: #93c5fd; cursor: not-allowed; }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  .btn-outline:hover { background: #f1f5f9; }
+  .btn-success { background: var(--success); color: #fff; }
+  .btn-success:hover { background: #15803d; }
+
+  .action-bar { display: flex; gap: 12px; align-items: center; padding: 16px 0; position: sticky; bottom: 0; background: var(--bg); border-top: 1px solid var(--border); margin-top: 20px; }
+  .action-bar .spacer { flex: 1; }
+  .save-status { font-size: 13px; color: var(--success); font-weight: 600; }
+
+  .tooltip-container { position: relative; display: inline-block; }
+  .tooltip-trigger { cursor: help; color: var(--primary); font-size: 12px; font-weight: 600; border: 1px solid var(--primary); border-radius: 50%; width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; margin-left: 6px; }
+  .tooltip-content { display: none; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: var(--text); color: #fff; padding: 10px 14px; border-radius: 8px; font-size: 12px; width: 320px; z-index: 10; line-height: 1.5; margin-bottom: 6px; }
+  .tooltip-container:hover .tooltip-content { display: block; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <h1>Sotopia Annotation</h1>
+      <div class="row">
+        <div>
+          <label>Annotator</label>
+          <input type="text" id="annotator-input" placeholder="Your name" value="">
+        </div>
+        <div>
+          <label>Split</label>
+          <select id="split-select"></select>
+        </div>
+      </div>
+      <div class="progress-bar"><div class="fill" id="progress-fill"></div></div>
+      <div class="progress-text" id="progress-text">0 / 0 annotated</div>
+    </div>
+    <div class="episode-list" id="episode-list"></div>
+  </div>
+
+  <div class="main" id="main-content">
+    <div class="empty-state">Select an episode from the sidebar to begin annotating.</div>
+  </div>
+</div>
+
+<script>
+const API = '';
+let state = {
+  annotator: localStorage.getItem('annotator') || '',
+  split: localStorage.getItem('split') || '',
+  episodes: [],
+  currentEpisode: null,
+  currentData: null,
+  annotation: null,
+};
+
+const $ = (sel) => document.querySelector(sel);
+const $$ = (sel) => document.querySelectorAll(sel);
+
+document.getElementById('annotator-input').value = state.annotator;
+
+async function init() {
+  const splits = await fetch(`${API}/api/splits`).then(r => r.json());
+  const sel = $('#split-select');
+  splits.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s; opt.textContent = s.replace('_', ' ');
+    sel.appendChild(opt);
+  });
+  if (state.split && splits.includes(state.split)) sel.value = state.split;
+  else if (splits.length) { state.split = splits[0]; sel.value = splits[0]; }
+  await loadEpisodes();
+}
+
+$('#annotator-input').addEventListener('change', (e) => {
+  state.annotator = e.target.value.trim();
+  localStorage.setItem('annotator', state.annotator);
+  loadEpisodes();
+});
+
+$('#split-select').addEventListener('change', (e) => {
+  state.split = e.target.value;
+  localStorage.setItem('split', state.split);
+  state.currentEpisode = null;
+  loadEpisodes();
+});
+
+async function loadEpisodes() {
+  if (!state.split) return;
+  const params = state.annotator ? `?annotator=${encodeURIComponent(state.annotator)}` : '';
+  state.episodes = await fetch(`${API}/api/episodes/${state.split}${params}`).then(r => r.json());
+  renderEpisodeList();
+  updateProgress();
+}
+
+async function updateProgress() {
+  if (!state.split || !state.annotator) {
+    $('#progress-fill').style.width = '0%';
+    $('#progress-text').textContent = 'Enter annotator name to track progress';
+    return;
+  }
+  const p = await fetch(`${API}/api/progress/${state.split}?annotator=${encodeURIComponent(state.annotator)}`).then(r => r.json());
+  const pct = p.total ? (p.annotated / p.total * 100) : 0;
+  $('#progress-fill').style.width = pct + '%';
+  $('#progress-text').textContent = `${p.annotated} / ${p.total} annotated`;
+}
+
+function renderEpisodeList() {
+  const list = $('#episode-list');
+  list.innerHTML = '';
+  state.episodes.forEach(ep => {
+    const div = document.createElement('div');
+    div.className = 'episode-item' + (state.currentEpisode === ep.id ? ' active' : '');
+    div.innerHTML = `<span class="dot ${ep.annotated ? 'done' : 'pending'}"></span><span class="id-text">${ep.id}</span>`;
+    div.onclick = () => selectEpisode(ep.id);
+    list.appendChild(div);
+  });
+}
+
+async function selectEpisode(id) {
+  state.currentEpisode = id;
+  renderEpisodeList();
+  const data = await fetch(`${API}/api/episode/${state.split}/${id}`).then(r => r.json());
+  state.currentData = data;
+
+  let ann = null;
+  if (state.annotator) {
+    ann = await fetch(`${API}/api/annotation/${state.split}/${id}?annotator=${encodeURIComponent(state.annotator)}`).then(r => r.json());
+  }
+  state.annotation = ann;
+  renderEpisode(data, ann);
+}
+
+function renderEpisode(data, ann) {
+  const main = $('#main-content');
+  const allAgentNames = data.agents.map(a => a.name);
+
+  // agent_1 = first speaker, agent_2 = second speaker
+  const speakOrder = [];
+  for (const t of data.turns) {
+    if (!speakOrder.includes(t.speaker)) speakOrder.push(t.speaker);
+    if (speakOrder.length === 2) break;
+  }
+  const agents = speakOrder.length === 2 ? speakOrder : allAgentNames;
+
+  const agentIndex = {};
+  agents.forEach((a, i) => agentIndex[a] = i);
+
+  const agentTurns = {};
+  allAgentNames.forEach(a => { agentTurns[a] = []; });
+  let turnCounters = {};
+  allAgentNames.forEach(a => { turnCounters[a] = 0; });
+
+  data.turns.forEach((t, i) => {
+    if (agentTurns[t.speaker] !== undefined) {
+      agentTurns[t.speaker].push({ globalIdx: i, localIdx: turnCounters[t.speaker], ...t });
+      turnCounters[t.speaker]++;
+    }
+  });
+
+  const goalScores = ann?.goal_scores || {};
+  const attrScores = ann?.reward_attribution || {};
+
+  main.innerHTML = `
+    <div class="episode-header">
+      <h2>${data.scenario}<span class="codename-badge">${data.codename}</span></h2>
+      <div class="meta">Episode: ${data.id} &middot; Split: ${data.split}</div>
+    </div>
+
+    <div class="section">
+      <h3>Agents &amp; Goals</h3>
+      ${data.agents.map((a, i) => `
+        <div class="agent-card">
+          <div class="agent-name" style="color: var(--agent${i+1})">${a.name}</div>
+          <div>${a.background}</div>
+          <div class="agent-goal">${data.goals[a.name] || 'No goal specified'}</div>
+        </div>
+      `).join('')}
+    </div>
+
+    <div class="section">
+      <h3>Conversation</h3>
+      <div class="conversation">
+        ${data.turns.map((t, i) => {
+          const ai = agentIndex[t.speaker] ?? 0;
+          return `
+            <div class="turn agent-${ai} ${t.is_action ? 'action' : ''}">
+              <div class="turn-number">${i}</div>
+              <div class="turn-content">
+                <div class="turn-speaker">${t.speaker}</div>
+                <div class="turn-text">${t.utterance}</div>
+              </div>
+            </div>`;
+        }).join('')}
+      </div>
+    </div>
+
+    <div class="annotation-section">
+      <h3>1. Goal Achieving Score
+        <span class="tooltip-container">
+          <span class="tooltip-trigger">?</span>
+          <span class="tooltip-content">
+            <b>0:</b> Absolutely nothing achieved<br>
+            <b>1-3:</b> Main goal not achieved, some partial goals achieved but most failed<br>
+            <b>4-7:</b> Main goal not achieved, but partial goals achieved with progress (e.g. suboptimal negotiation)<br>
+            <b>8-9:</b> Main goal achieved in equivalent/circumvented way, or achieved but minor goals not fully met<br>
+            <b>10:</b> All goals fully achieved
+          </span>
+        </span>
+      </h3>
+      <p class="description">Rate how well each agent achieved their stated social goal (0-10).</p>
+      ${agents.map((a, i) => `
+        <div class="goal-score-block">
+          <div class="agent-label" style="color: var(--agent${i+1})">${a}</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;font-style:italic">${data.goals[a] || ''}</div>
+          <div class="score-slider">
+            <input type="range" min="0" max="10" value="${goalScores[a] ?? 5}" data-agent="${a}" class="goal-slider">
+            <span class="score-value goal-val" data-agent="${a}">${goalScores[a] ?? 5}</span>
+          </div>
+          <div class="score-labels"><span>0 - Nothing</span><span>4-7 - Partial</span><span>10 - Full</span></div>
+        </div>
+      `).join('')}
+    </div>
+
+    <div class="annotation-section">
+      <h3>2. Reward Attribution
+        <span class="tooltip-container">
+          <span class="tooltip-trigger">?</span>
+          <span class="tooltip-content">
+            Rate each utterance's contribution to goal achievement (0-3).<br><br>
+            <b>0:</b> No impact on goal<br>
+            <b>1:</b> Minor/moderate impact<br>
+            <b>2:</b> Significant impact<br>
+            <b>3:</b> Critical / most important utterance<br><br>
+            Assign the highest score to the most critical utterance. Avoid giving 3 to more than one utterance unless equally critical.
+          </span>
+        </span>
+      </h3>
+      <p class="description">For each agent, score how much each of their utterances contributed to achieving <em>that agent's</em> goal (0-3). The output will be in the form: {"agent_1_turn_0": score, "agent_2_turn_0": score, ...}</p>
+      ${agents.map((a, i) => `
+        <div class="attribution-block">
+          <div class="agent-label">${a}</div>
+          ${agentTurns[a].map(t => {
+            const key = `agent_${i+1}_turn_${t.localIdx}`;
+            const val = attrScores[key] ?? 0;
+            return `
+              <div class="attr-turn">
+                <span class="turn-label">Turn ${t.globalIdx}</span>
+                <span class="turn-preview" title="${t.utterance.replace(/"/g, '&quot;')}">${t.utterance}</span>
+                <input type="range" min="0" max="3" value="${val}" data-key="${key}" class="attr-slider">
+                <span class="attr-value" data-key="${key}">${val}</span>
+              </div>`;
+          }).join('')}
+        </div>
+      `).join('')}
+    </div>
+
+    <div class="action-bar">
+      <button class="btn btn-outline" id="btn-prev">Previous</button>
+      <button class="btn btn-outline" id="btn-next">Next</button>
+      <span class="spacer"></span>
+      <span class="save-status" id="save-status"></span>
+      <button class="btn btn-primary" id="btn-save">Save Annotation</button>
+    </div>
+  `;
+
+  main.querySelectorAll('.goal-slider').forEach(sl => {
+    sl.addEventListener('input', () => {
+      main.querySelector(`.goal-val[data-agent="${sl.dataset.agent}"]`).textContent = sl.value;
+    });
+  });
+
+  main.querySelectorAll('.attr-slider').forEach(sl => {
+    sl.addEventListener('input', () => {
+      main.querySelector(`.attr-value[data-key="${sl.dataset.key}"]`).textContent = sl.value;
+    });
+  });
+
+  document.getElementById('btn-save').addEventListener('click', saveCurrentAnnotation);
+  document.getElementById('btn-prev').addEventListener('click', () => navigateEpisode(-1));
+  document.getElementById('btn-next').addEventListener('click', () => navigateEpisode(1));
+}
+
+async function saveCurrentAnnotation() {
+  if (!state.annotator) {
+    alert('Please enter your annotator name first.');
+    return;
+  }
+  if (!state.currentEpisode) return;
+
+  const goalScores = {};
+  document.querySelectorAll('.goal-slider').forEach(sl => {
+    goalScores[sl.dataset.agent] = parseInt(sl.value);
+  });
+
+  const rewardAttribution = {};
+  document.querySelectorAll('.attr-slider').forEach(sl => {
+    rewardAttribution[sl.dataset.key] = parseInt(sl.value);
+  });
+
+  const body = {
+    annotator: state.annotator,
+    goal_scores: goalScores,
+    reward_attribution: rewardAttribution,
+  };
+
+  const res = await fetch(`${API}/api/annotation/${state.split}/${state.currentEpisode}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+
+  if (res.ok) {
+    const statusEl = document.getElementById('save-status');
+    statusEl.textContent = 'Saved!';
+    setTimeout(() => { statusEl.textContent = ''; }, 2000);
+    await loadEpisodes();
+    renderEpisodeList();
+  }
+}
+
+function navigateEpisode(direction) {
+  const idx = state.episodes.findIndex(e => e.id === state.currentEpisode);
+  const next = idx + direction;
+  if (next >= 0 && next < state.episodes.length) {
+    selectEpisode(state.episodes[next].id);
+  }
+}
+
+init();
+</script>
+</body>
+</html>
