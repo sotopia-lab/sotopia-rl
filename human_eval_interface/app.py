@@ -160,8 +160,8 @@ def api_save_annotation(split: str, episode_id: str):
         "annotator": annotator,
         "agent_1_name": agent_1_name,
         "agent_2_name": agent_2_name,
-        "goal_scores": request.json.get("goal_scores", {}),
-        "reward_attribution": request.json.get("reward_attribution", {}),
+        "dimension_scores": request.json.get("dimension_scores", {}),
+        "dimension_attributions": request.json.get("dimension_attributions", {}),
     }
     save_annotation(split, episode_id, annotator, data)
     return jsonify({"status": "ok"})

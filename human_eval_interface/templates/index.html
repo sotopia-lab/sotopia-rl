@@ -114,6 +114,16 @@
   .tooltip-trigger { cursor: help; color: var(--primary); font-size: 12px; font-weight: 600; border: 1px solid var(--primary); border-radius: 50%; width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; margin-left: 6px; }
   .tooltip-content { display: none; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: var(--text); color: #fff; padding: 10px 14px; border-radius: 8px; font-size: 12px; width: 320px; z-index: 10; line-height: 1.5; margin-bottom: 6px; }
   .tooltip-container:hover .tooltip-content { display: block; }
+
+  .score-guide-details { margin-bottom: 16px; }
+  .score-guide-details summary { cursor: pointer; font-size: 13px; font-weight: 600; color: var(--primary); padding: 8px 0; user-select: none; }
+  .score-guide-details summary:hover { text-decoration: underline; }
+  .score-guide-content { padding: 12px 16px; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; margin-top: 4px; }
+  .score-guide-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .score-guide-table th { text-align: left; padding: 6px 10px; border-bottom: 2px solid var(--border); color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: .5px; }
+  .score-guide-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .score-guide-table td:first-child { white-space: nowrap; width: 70px; text-align: center; }
+  .score-guide-table tr:last-child td { border-bottom: none; }
 </style>
 </head>
 <body>
@@ -257,12 +267,268 @@ function renderEpisode(data, ann) {
     }
   });
 
-  const goalScores = ann?.goal_scores || {};
-  const attrScores = ann?.reward_attribution || {};
+  const DIMENSIONS = [
+    {
+      key: 'goal', label: 'Goal Achieving (GOAL)', min: 0, max: 10, defaultVal: 5,
+      description: 'Rate how well each agent achieved their stated social goal.',
+      scoreGuide: `
+        <table class="score-guide-table">
+          <thead><tr><th>Score</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><b>0</b></td><td>Absolutely nothing is achieved.</td></tr>
+            <tr><td><b>1 &ndash; 3</b></td><td>The main goal is not achieved. Some partial goals are achieved, but the agent still failed to achieve most of them.</td></tr>
+            <tr><td><b>4 &ndash; 7</b></td><td>The main goal is not achieved, but some partial goals are achieved with a certain amount of progress toward the goal. This typically happens in negotiations where an optimal outcome is not reached.</td></tr>
+            <tr><td><b>8 &ndash; 9</b></td><td>The main goal is not achieved as literally written but is achieved in an equivalent or circumvented way. <em>Or</em>, the main goal is achieved but other minor goals (if any) are not fully achieved. <em>Or</em>, the single goal is not technically achieved but is achieved for the most part.</td></tr>
+            <tr><td><b>10</b></td><td>All goals are fully achieved.</td></tr>
+          </tbody>
+        </table>`,
+      attrGuide: `
+        <p style="margin-bottom:10px"><b>Task:</b> Evaluate how important each utterance was toward achieving the agent's social goal.</p>
+        <table class="score-guide-table">
+          <thead><tr><th>Score</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td><b>0</b></td><td>No impact on goal achievement.</td></tr>
+            <tr><td><b>1</b></td><td>Minor or moderate impact &mdash; contributes somewhat but is not decisive.</td></tr>
+            <tr><td><b>2</b></td><td>Significant impact &mdash; clearly advances the goal, but is not the single most critical utterance.</td></tr>
+            <tr><td><b>3</b></td><td>Critical &mdash; the most important utterance for goal achievement.</td></tr>
+          </tbody>
+        </table>
+        <p style="margin-top:12px;margin-bottom:6px"><b>Key principles:</b></p>
+        <ul style="font-size:13px;padding-left:18px;margin:0">
+          <li>Consider both the utterance itself <em>and</em> the other agent's response to it.</li>
+          <li>Assign <b>3</b> to at most one utterance per agent, unless multiple are equally critical.</li>
+          <li>If the goal is already achieved, subsequent utterances should score <b>0</b> or at most <b>1</b>.</li>
+          <li>Focus on contribution to goal achievement, not utterance quality or politeness.</li>
+        </ul>`,
+    },
+    {
+      key: 'believability', label: 'Believability (BEL)', min: 0, max: 10, defaultVal: 5,
+      description: 'Rate how natural, realistic, and character-consistent the agent\'s behavior is.',
+      scoreGuide: `
+        <table class="score-guide-table">
+          <thead><tr><th>Score</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><b>0</b></td><td>Completely unbelievable &mdash; behavior is robotic, incoherent, or entirely inconsistent with the character profile.</td></tr>
+            <tr><td><b>1 &ndash; 3</b></td><td>Mostly unbelievable &mdash; frequent unnatural phrasing, obvious contradictions with character traits, or clearly non-human behavior.</td></tr>
+            <tr><td><b>4 &ndash; 6</b></td><td>Somewhat believable &mdash; generally natural but with occasional lapses in consistency or realism (e.g., personality drift, odd phrasing).</td></tr>
+            <tr><td><b>7 &ndash; 9</b></td><td>Highly believable &mdash; natural and realistic interaction that is mostly consistent with the character profile, with only minor issues.</td></tr>
+            <tr><td><b>10</b></td><td>Perfectly believable &mdash; indistinguishable from a real person with this character profile. Natural, consistent, and fully in-character throughout.</td></tr>
+          </tbody>
+        </table>`,
+      attrGuide: `
+        <p style="margin-bottom:10px"><b>Task:</b> Evaluate how much each utterance contributed to or detracted from the agent appearing believable.</p>
+        <table class="score-guide-table">
+          <thead><tr><th>Score</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td><b>0</b></td><td>No impact on believability, or a neutral/generic utterance.</td></tr>
+            <tr><td><b>1</b></td><td>Minor contribution &mdash; slightly reinforces character consistency or naturalness.</td></tr>
+            <tr><td><b>2</b></td><td>Significant contribution &mdash; clearly demonstrates character traits or natural human-like behavior.</td></tr>
+            <tr><td><b>3</b></td><td>Critical &mdash; the utterance most strongly defines the agent as believable (or most strongly breaks believability, if scored low on the dimension).</td></tr>
+          </tbody>
+        </table>`,
+    },
+    {
+      key: 'knowledge', label: 'Knowledge (KNO)', min: 0, max: 10, defaultVal: 5,
+      description: 'Rate how much new, relevant information the agent gained through the interaction.',
+      scoreGuide: `
+        <table class="score-guide-table">
+          <thead><tr><th>Score</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><b>0</b></td><td>No new information gained at all.</td></tr>
+            <tr><td><b>1 &ndash; 3</b></td><td>Minimal information gained &mdash; only trivial or already-known facts, or information of little relevance to the agent.</td></tr>
+            <tr><td><b>4 &ndash; 6</b></td><td>Moderate information gained &mdash; some new and somewhat relevant information, but nothing critical or deeply insightful.</td></tr>
+            <tr><td><b>7 &ndash; 9</b></td><td>Substantial information gained &mdash; important new knowledge relevant to the agent's interests, goals, or situation.</td></tr>
+            <tr><td><b>10</b></td><td>Exceptional information gained &mdash; highly valuable, novel knowledge that is deeply important to the agent.</td></tr>
+          </tbody>
+        </table>`,
+      attrGuide: `
+        <p style="margin-bottom:10px"><b>Task:</b> Evaluate how much each utterance contributed to the agent acquiring new knowledge.</p>
+        <table class="score-guide-table">
+          <thead><tr><th>Score</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td><b>0</b></td><td>No new information elicited or received.</td></tr>
+            <tr><td><b>1</b></td><td>Minor contribution &mdash; prompted or received trivial or partially relevant information.</td></tr>
+            <tr><td><b>2</b></td><td>Significant contribution &mdash; directly led to meaningful new information being shared.</td></tr>
+            <tr><td><b>3</b></td><td>Critical &mdash; the key utterance that elicited or conveyed the most important new knowledge.</td></tr>
+          </tbody>
+        </table>`,
+    },
+    {
+      key: 'secret', label: 'Secret Keeping (SEC)', min: -10, max: 0, defaultVal: 0,
+      description: 'Rate how well the agent kept their secret or secretive intention private. 0 = fully kept, -10 = completely revealed.',
+      scoreGuide: `
+        <table class="score-guide-table">
+          <thead><tr><th>Score</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><b>0</b></td><td>Secret fully kept &mdash; no information leaked, the other agent has no additional insight into the secret.</td></tr>
+            <tr><td><b>&minus;1 to &minus;3</b></td><td>Minor leak &mdash; slight hints or indirect clues were given, but the secret remains largely intact.</td></tr>
+            <tr><td><b>&minus;4 to &minus;6</b></td><td>Partial reveal &mdash; enough information was shared that the other agent could reasonably infer the secret, though it was not stated outright.</td></tr>
+            <tr><td><b>&minus;7 to &minus;9</b></td><td>Major reveal &mdash; the secret was largely or explicitly disclosed, with only minor details withheld.</td></tr>
+            <tr><td><b>&minus;10</b></td><td>Completely revealed &mdash; the secret was fully and explicitly disclosed.</td></tr>
+          </tbody>
+        </table>`,
+      attrGuide: `
+        <p style="margin-bottom:10px"><b>Task:</b> Evaluate how much each utterance contributed to keeping or leaking the agent's secret.</p>
+        <table class="score-guide-table">
+          <thead><tr><th>Score</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td><b>0</b></td><td>No impact on secret keeping &mdash; the utterance neither revealed nor protected the secret.</td></tr>
+            <tr><td><b>1</b></td><td>Minor impact &mdash; slightly hinted at or slightly deflected from the secret.</td></tr>
+            <tr><td><b>2</b></td><td>Significant impact &mdash; clearly leaked part of the secret, or skillfully deflected a probing question.</td></tr>
+            <tr><td><b>3</b></td><td>Critical &mdash; the utterance that most directly revealed or most effectively protected the secret.</td></tr>
+          </tbody>
+        </table>`,
+    },
+    {
+      key: 'relationship', label: 'Relationship (REL)', min: -5, max: 5, defaultVal: 0,
+      description: 'Rate the change in the agent\'s relationship with the other agent. Positive = improved, negative = damaged.',
+      scoreGuide: `
+        <table class="score-guide-table">
+          <thead><tr><th>Score</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><b>&minus;5</b></td><td>Severely damaged &mdash; the relationship is broken or hostile; trust, reputation, or social standing is destroyed.</td></tr>
+            <tr><td><b>&minus;4 to &minus;2</b></td><td>Noticeably damaged &mdash; the interaction caused friction, distrust, or reputational harm.</td></tr>
+            <tr><td><b>&minus;1</b></td><td>Slightly damaged &mdash; minor tension or awkwardness, but no lasting harm.</td></tr>
+            <tr><td><b>0</b></td><td>Unchanged &mdash; the relationship is neither improved nor damaged.</td></tr>
+            <tr><td><b>1</b></td><td>Slightly improved &mdash; minor positive gestures or rapport building.</td></tr>
+            <tr><td><b>2 to 4</b></td><td>Noticeably improved &mdash; meaningful trust-building, bonding, or enhanced social standing.</td></tr>
+            <tr><td><b>5</b></td><td>Greatly improved &mdash; a transformative positive change in the relationship (e.g., deep trust established, strong alliance formed).</td></tr>
+          </tbody>
+        </table>`,
+      attrGuide: `
+        <p style="margin-bottom:10px"><b>Task:</b> Evaluate how much each utterance contributed to improving or damaging the relationship.</p>
+        <table class="score-guide-table">
+          <thead><tr><th>Score</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td><b>0</b></td><td>No impact on the relationship.</td></tr>
+            <tr><td><b>1</b></td><td>Minor impact &mdash; small positive or negative social gesture.</td></tr>
+            <tr><td><b>2</b></td><td>Significant impact &mdash; clearly strengthened or strained the relationship.</td></tr>
+            <tr><td><b>3</b></td><td>Critical &mdash; the single most impactful utterance for the relationship outcome.</td></tr>
+          </tbody>
+        </table>`,
+    },
+    {
+      key: 'social_rules', label: 'Social Rules (SOC)', min: -10, max: 0, defaultVal: 0,
+      description: 'Rate how well the agent adhered to social norms and legal rules. 0 = no violations, -10 = severe violations.',
+      scoreGuide: `
+        <table class="score-guide-table">
+          <thead><tr><th>Score</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><b>0</b></td><td>No violations &mdash; the agent fully adhered to all social norms and legal rules.</td></tr>
+            <tr><td><b>&minus;1 to &minus;3</b></td><td>Minor violations &mdash; slight breaches of social etiquette (e.g., mildly rude, slightly inappropriate tone).</td></tr>
+            <tr><td><b>&minus;4 to &minus;6</b></td><td>Moderate violations &mdash; clear breaches of social norms (e.g., openly rude, manipulative, or deceptive behavior).</td></tr>
+            <tr><td><b>&minus;7 to &minus;9</b></td><td>Serious violations &mdash; significant breaches of social or legal rules (e.g., threats, harassment, illegal suggestions).</td></tr>
+            <tr><td><b>&minus;10</b></td><td>Extreme violations &mdash; egregious breach of legal or social rules with severe consequences.</td></tr>
+          </tbody>
+        </table>`,
+      attrGuide: `
+        <p style="margin-bottom:10px"><b>Task:</b> Evaluate how much each utterance contributed to adhering to or violating social/legal rules.</p>
+        <table class="score-guide-table">
+          <thead><tr><th>Score</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td><b>0</b></td><td>No impact &mdash; the utterance neither violated nor notably upheld social rules.</td></tr>
+            <tr><td><b>1</b></td><td>Minor impact &mdash; slightly rude or slightly polite beyond expectation.</td></tr>
+            <tr><td><b>2</b></td><td>Significant impact &mdash; clearly violated or clearly upheld an important social norm.</td></tr>
+            <tr><td><b>3</b></td><td>Critical &mdash; the utterance most responsible for the overall social-rules outcome.</td></tr>
+          </tbody>
+        </table>`,
+    },
+    {
+      key: 'financial', label: 'Financial & Material Benefits (FIN)', min: -5, max: 5, defaultVal: 0,
+      description: 'Rate the financial or material outcome for the agent. Positive = net gain, negative = net loss.',
+      scoreGuide: `
+        <table class="score-guide-table">
+          <thead><tr><th>Score</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><b>&minus;5</b></td><td>Severe loss &mdash; major financial or material damage (e.g., lost a job, large monetary loss, destroyed valuable asset).</td></tr>
+            <tr><td><b>&minus;4 to &minus;2</b></td><td>Notable loss &mdash; clear financial or material disadvantage from the interaction.</td></tr>
+            <tr><td><b>&minus;1</b></td><td>Slight loss &mdash; minor financial or material disadvantage.</td></tr>
+            <tr><td><b>0</b></td><td>Neutral &mdash; no financial or material change.</td></tr>
+            <tr><td><b>1</b></td><td>Slight gain &mdash; minor financial or material benefit.</td></tr>
+            <tr><td><b>2 to 4</b></td><td>Notable gain &mdash; clear financial or material benefit (e.g., good deal, useful resource acquired).</td></tr>
+            <tr><td><b>5</b></td><td>Major gain &mdash; exceptional financial or material benefit (e.g., large earnings, major opportunity secured).</td></tr>
+          </tbody>
+        </table>`,
+      attrGuide: `
+        <p style="margin-bottom:10px"><b>Task:</b> Evaluate how much each utterance contributed to the agent's financial or material outcome.</p>
+        <table class="score-guide-table">
+          <thead><tr><th>Score</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td><b>0</b></td><td>No impact on financial/material outcome.</td></tr>
+            <tr><td><b>1</b></td><td>Minor impact &mdash; slightly influenced the financial outcome.</td></tr>
+            <tr><td><b>2</b></td><td>Significant impact &mdash; directly led to a financial gain or loss.</td></tr>
+            <tr><td><b>3</b></td><td>Critical &mdash; the single most impactful utterance for the financial outcome.</td></tr>
+          </tbody>
+        </table>`,
+    },
+  ];
+
+  const dimScores = {};
+  const dimAttrScores = {};
+  DIMENSIONS.forEach(d => {
+    dimScores[d.key] = ann?.dimension_scores?.[d.key] || {};
+    dimAttrScores[d.key] = ann?.dimension_attributions?.[d.key] || {};
+  });
+
+  function renderDimScoreSection(dim, idx) {
+    const scores = dimScores[dim.key];
+    return `
+    <div class="annotation-section">
+      <h3>${idx + 1}a. ${dim.label} &mdash; Score <span style="font-weight:400;font-size:12px;color:var(--text-muted)">[${dim.min} to ${dim.max}]</span></h3>
+      <p class="description">${dim.description}</p>
+      <details class="score-guide-details">
+        <summary>Scoring Guidelines</summary>
+        <div class="score-guide-content">${dim.scoreGuide}</div>
+      </details>
+      ${agents.map((a, i) => {
+        const val = scores[a] ?? dim.defaultVal;
+        return `
+        <div class="goal-score-block">
+          <div class="agent-label" style="color: var(--agent${i+1})">${a}</div>
+          ${dim.key === 'goal' ? `<div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;font-style:italic">${data.goals[a] || ''}</div>` : ''}
+          <div class="score-slider">
+            <input type="range" min="${dim.min}" max="${dim.max}" value="${val}" data-dim="${dim.key}" data-agent="${a}" class="dim-slider">
+            <span class="score-value dim-val" data-dim="${dim.key}" data-agent="${a}">${val}</span>
+          </div>
+          <div class="score-labels"><span>${dim.min}</span><span>${dim.max}</span></div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }
+
+  function renderDimAttrSection(dim, idx) {
+    const scores = dimAttrScores[dim.key];
+    return `
+    <div class="annotation-section">
+      <h3>${idx + 1}b. ${dim.label} &mdash; Attribution <span style="font-weight:400;font-size:12px;color:var(--text-muted)">[0 to 3]</span></h3>
+      <p class="description">For each agent, score how much each utterance contributed to the <em>${dim.label}</em> outcome.</p>
+      <details class="score-guide-details">
+        <summary>Attribution Guidelines</summary>
+        <div class="score-guide-content">${dim.attrGuide}</div>
+      </details>
+      ${agents.map((a, i) => `
+        <div class="attribution-block">
+          <div class="agent-label">${a}</div>
+          ${agentTurns[a].map(t => {
+            const key = `agent_${i+1}_turn_${t.localIdx}`;
+            const val = scores[key] ?? 0;
+            return `
+              <div class="attr-turn">
+                <span class="turn-label">Turn ${t.globalIdx}</span>
+                <span class="turn-preview" title="${t.utterance.replace(/"/g, '&quot;')}">${t.utterance}</span>
+                <input type="range" min="0" max="3" value="${val}" data-dim="${dim.key}" data-key="${key}" class="dim-attr-slider">
+                <span class="attr-value dim-attr-val" data-dim="${dim.key}" data-key="${key}">${val}</span>
+              </div>`;
+          }).join('')}
+        </div>
+      `).join('')}
+    </div>`;
+  }
 
   main.innerHTML = `
     <div class="episode-header">
-      <h2>${data.scenario}<span class="codename-badge">${data.codename}</span></h2>
+      <h2>${data.codename}</h2>
+      <div class="meta">${data.scenario}</div>
       <div class="meta">Episode: ${data.id} &middot; Split: ${data.split}</div>
     </div>
 
@@ -294,65 +560,7 @@ function renderEpisode(data, ann) {
       </div>
     </div>
 
-    <div class="annotation-section">
-      <h3>1. Goal Achieving Score
-        <span class="tooltip-container">
-          <span class="tooltip-trigger">?</span>
-          <span class="tooltip-content">
-            <b>0:</b> Absolutely nothing achieved<br>
-            <b>1-3:</b> Main goal not achieved, some partial goals achieved but most failed<br>
-            <b>4-7:</b> Main goal not achieved, but partial goals achieved with progress (e.g. suboptimal negotiation)<br>
-            <b>8-9:</b> Main goal achieved in equivalent/circumvented way, or achieved but minor goals not fully met<br>
-            <b>10:</b> All goals fully achieved
-          </span>
-        </span>
-      </h3>
-      <p class="description">Rate how well each agent achieved their stated social goal (0-10).</p>
-      ${agents.map((a, i) => `
-        <div class="goal-score-block">
-          <div class="agent-label" style="color: var(--agent${i+1})">${a}</div>
-          <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;font-style:italic">${data.goals[a] || ''}</div>
-          <div class="score-slider">
-            <input type="range" min="0" max="10" value="${goalScores[a] ?? 5}" data-agent="${a}" class="goal-slider">
-            <span class="score-value goal-val" data-agent="${a}">${goalScores[a] ?? 5}</span>
-          </div>
-          <div class="score-labels"><span>0 - Nothing</span><span>4-7 - Partial</span><span>10 - Full</span></div>
-        </div>
-      `).join('')}
-    </div>
-
-    <div class="annotation-section">
-      <h3>2. Reward Attribution
-        <span class="tooltip-container">
-          <span class="tooltip-trigger">?</span>
-          <span class="tooltip-content">
-            Rate each utterance's contribution to goal achievement (0-3).<br><br>
-            <b>0:</b> No impact on goal<br>
-            <b>1:</b> Minor/moderate impact<br>
-            <b>2:</b> Significant impact<br>
-            <b>3:</b> Critical / most important utterance<br><br>
-            Assign the highest score to the most critical utterance. Avoid giving 3 to more than one utterance unless equally critical.
-          </span>
-        </span>
-      </h3>
-      <p class="description">For each agent, score how much each of their utterances contributed to achieving <em>that agent's</em> goal (0-3). The output will be in the form: {"agent_1_turn_0": score, "agent_2_turn_0": score, ...}</p>
-      ${agents.map((a, i) => `
-        <div class="attribution-block">
-          <div class="agent-label">${a}</div>
-          ${agentTurns[a].map(t => {
-            const key = `agent_${i+1}_turn_${t.localIdx}`;
-            const val = attrScores[key] ?? 0;
-            return `
-              <div class="attr-turn">
-                <span class="turn-label">Turn ${t.globalIdx}</span>
-                <span class="turn-preview" title="${t.utterance.replace(/"/g, '&quot;')}">${t.utterance}</span>
-                <input type="range" min="0" max="3" value="${val}" data-key="${key}" class="attr-slider">
-                <span class="attr-value" data-key="${key}">${val}</span>
-              </div>`;
-          }).join('')}
-        </div>
-      `).join('')}
-    </div>
+    ${DIMENSIONS.map((d, i) => renderDimScoreSection(d, i) + renderDimAttrSection(d, i)).join('')}
 
     <div class="action-bar">
       <button class="btn btn-outline" id="btn-prev">Previous</button>
@@ -363,15 +571,15 @@ function renderEpisode(data, ann) {
     </div>
   `;
 
-  main.querySelectorAll('.goal-slider').forEach(sl => {
+  main.querySelectorAll('.dim-slider').forEach(sl => {
     sl.addEventListener('input', () => {
-      main.querySelector(`.goal-val[data-agent="${sl.dataset.agent}"]`).textContent = sl.value;
+      main.querySelector(`.dim-val[data-dim="${sl.dataset.dim}"][data-agent="${sl.dataset.agent}"]`).textContent = sl.value;
     });
   });
 
-  main.querySelectorAll('.attr-slider').forEach(sl => {
+  main.querySelectorAll('.dim-attr-slider').forEach(sl => {
     sl.addEventListener('input', () => {
-      main.querySelector(`.attr-value[data-key="${sl.dataset.key}"]`).textContent = sl.value;
+      main.querySelector(`.dim-attr-val[data-dim="${sl.dataset.dim}"][data-key="${sl.dataset.key}"]`).textContent = sl.value;
     });
   });
 
@@ -387,20 +595,24 @@ async function saveCurrentAnnotation() {
   }
   if (!state.currentEpisode) return;
 
-  const goalScores = {};
-  document.querySelectorAll('.goal-slider').forEach(sl => {
-    goalScores[sl.dataset.agent] = parseInt(sl.value);
+  const dimensionScores = {};
+  document.querySelectorAll('.dim-slider').forEach(sl => {
+    const dim = sl.dataset.dim;
+    if (!dimensionScores[dim]) dimensionScores[dim] = {};
+    dimensionScores[dim][sl.dataset.agent] = parseInt(sl.value);
   });
 
-  const rewardAttribution = {};
-  document.querySelectorAll('.attr-slider').forEach(sl => {
-    rewardAttribution[sl.dataset.key] = parseInt(sl.value);
+  const dimensionAttributions = {};
+  document.querySelectorAll('.dim-attr-slider').forEach(sl => {
+    const dim = sl.dataset.dim;
+    if (!dimensionAttributions[dim]) dimensionAttributions[dim] = {};
+    dimensionAttributions[dim][sl.dataset.key] = parseInt(sl.value);
   });
 
   const body = {
     annotator: state.annotator,
-    goal_scores: goalScores,
-    reward_attribution: rewardAttribution,
+    dimension_scores: dimensionScores,
+    dimension_attributions: dimensionAttributions,
   };
 
   const res = await fetch(`${API}/api/annotation/${state.split}/${state.currentEpisode}`, {
