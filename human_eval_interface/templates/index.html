@@ -124,6 +124,24 @@
   .score-guide-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
   .score-guide-table td:first-child { white-space: nowrap; width: 70px; text-align: center; }
   .score-guide-table tr:last-child td { border-bottom: none; }
+
+  /* AI suggestion styles */
+  .ai-toggle { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 13px; }
+  .ai-toggle input[type=checkbox] { accent-color: var(--primary); }
+  .ai-badge { display: inline-flex; align-items: center; gap: 4px; background: #fef3c7; color: #92400e; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 10px; border: 1px solid #fde68a; }
+  .ai-hint { font-size: 13px; color: #78350f; background: #fef9c3; border: 1px solid #facc15; border-radius: 8px; padding: 10px 14px; margin-top: 8px; margin-bottom: 4px; line-height: 1.5; }
+  .ai-hint .ai-score { font-weight: 700; font-size: 16px; }
+  .ai-hint .ai-reasoning-label { font-weight: 600; display: block; margin-top: 4px; }
+  .ai-hint .ai-reasoning { display: block; margin-top: 2px; }
+  .btn-ai { background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; border: none; padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .btn-ai:hover { background: linear-gradient(135deg, #d97706, #b45309); }
+  .btn-ai:disabled { opacity: .5; cursor: not-allowed; }
+  .btn-ai.loading { animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .6; } }
+  .ai-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; padding: 12px 16px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; }
+  .ai-bar .ai-status { font-size: 13px; color: #92400e; flex: 1; }
+  .ai-apply-btn { background: none; border: 1px solid #d97706; color: #d97706; padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
+  .ai-apply-btn:hover { background: #fef3c7; }
 </style>
 </head>
 <body>
@@ -143,6 +161,9 @@
       </div>
       <div class="progress-bar"><div class="fill" id="progress-fill"></div></div>
       <div class="progress-text" id="progress-text">0 / 0 annotated</div>
+      <div class="ai-toggle" id="ai-toggle-container" style="display:none">
+        <input type="checkbox" id="ai-toggle"> <label for="ai-toggle">Enable AI suggestions</label>
+      </div>
     </div>
     <div class="episode-list" id="episode-list"></div>
   </div>
@@ -161,6 +182,9 @@ let state = {
   currentEpisode: null,
   currentData: null,
   annotation: null,
+  aiEnabled: false,
+  aiOn: localStorage.getItem('aiOn') === 'true',
+  aiSuggestion: null,
 };
 
 const $ = (sel) => document.querySelector(sel);
@@ -169,6 +193,17 @@ const $$ = (sel) => document.querySelectorAll(sel);
 document.getElementById('annotator-input').value = state.annotator;
 
 async function init() {
+  const aiStatus = await fetch(`${API}/api/ai-enabled`).then(r => r.json());
+  state.aiEnabled = aiStatus.enabled;
+  if (state.aiEnabled) {
+    $('#ai-toggle-container').style.display = '';
+    $('#ai-toggle').checked = state.aiOn;
+    $('#ai-toggle').addEventListener('change', (e) => {
+      state.aiOn = e.target.checked;
+      localStorage.setItem('aiOn', state.aiOn);
+    });
+  }
+
   const splits = await fetch(`${API}/api/splits`).then(r => r.json());
   const sel = $('#split-select');
   splits.forEach(s => {
@@ -228,6 +263,7 @@ function renderEpisodeList() {
 
 async function selectEpisode(id) {
   state.currentEpisode = id;
+  state.aiSuggestion = null;
   renderEpisodeList();
   const data = await fetch(`${API}/api/episode/${state.split}/${id}`).then(r => r.json());
   state.currentData = data;
@@ -470,6 +506,30 @@ function renderEpisode(data, ann) {
     dimAttrScores[d.key] = ann?.dimension_attributions?.[d.key] || {};
   });
 
+  const aiSug = state.aiSuggestion;
+
+  function aiScoreHint(dimKey, agentName) {
+    if (!aiSug) return '';
+    const d = aiSug.dimension_scores?.[dimKey]?.[agentName];
+    if (!d) return '';
+    return `<div class="ai-hint">
+      <span class="ai-badge">AI Suggestion</span> Score: <span class="ai-score">${d.score}</span>
+      <span class="ai-reasoning-label">Reasoning:</span>
+      <span class="ai-reasoning">${d.reasoning || 'No reasoning provided.'}</span>
+    </div>`;
+  }
+
+  function aiAttrHint(dimKey, turnKey) {
+    if (!aiSug) return '';
+    const d = aiSug.dimension_attributions?.[dimKey]?.[turnKey];
+    if (!d) return '';
+    return `<div class="ai-hint">
+      <span class="ai-badge">AI</span> Score: <span class="ai-score">${d.score}</span>
+      <span class="ai-reasoning-label">Reasoning:</span>
+      <span class="ai-reasoning">${d.reasoning || 'No reasoning provided.'}</span>
+    </div>`;
+  }
+
   function renderDimScoreSection(dim, idx) {
     const scores = dimScores[dim.key];
     return `
@@ -491,6 +551,7 @@ function renderEpisode(data, ann) {
             <span class="score-value dim-val" data-dim="${dim.key}" data-agent="${a}">${val}</span>
           </div>
           <div class="score-labels"><span>${dim.min}</span><span>${dim.max}</span></div>
+          ${aiScoreHint(dim.key, a)}
         </div>`;
       }).join('')}
     </div>`;
@@ -518,7 +579,8 @@ function renderEpisode(data, ann) {
                 <span class="turn-preview" title="${t.utterance.replace(/"/g, '&quot;')}">${t.utterance}</span>
                 <input type="range" min="0" max="3" value="${val}" data-dim="${dim.key}" data-key="${key}" class="dim-attr-slider">
                 <span class="attr-value dim-attr-val" data-dim="${dim.key}" data-key="${key}">${val}</span>
-              </div>`;
+              </div>
+              ${aiAttrHint(dim.key, key)}`;
           }).join('')}
         </div>
       `).join('')}
@@ -560,6 +622,13 @@ function renderEpisode(data, ann) {
       </div>
     </div>
 
+    ${state.aiEnabled && state.aiOn ? `
+    <div class="ai-bar" id="ai-bar">
+      <span class="ai-status" id="ai-status">${aiSug ? 'AI suggestions loaded. Review the hints below each slider.' : 'Click "Ask AI" to get suggested scores and reasoning.'}</span>
+      ${!aiSug ? `<button class="btn-ai" id="btn-ai-ask">Ask AI</button>` : ''}
+      ${aiSug ? `<button class="ai-apply-btn" id="btn-ai-apply">Apply AI Scores</button>` : ''}
+    </div>` : ''}
+
     ${DIMENSIONS.map((d, i) => renderDimScoreSection(d, i) + renderDimAttrSection(d, i)).join('')}
 
     <div class="action-bar">
@@ -586,6 +655,60 @@ function renderEpisode(data, ann) {
   document.getElementById('btn-save').addEventListener('click', saveCurrentAnnotation);
   document.getElementById('btn-prev').addEventListener('click', () => navigateEpisode(-1));
   document.getElementById('btn-next').addEventListener('click', () => navigateEpisode(1));
+
+  const btnAiAsk = document.getElementById('btn-ai-ask');
+  if (btnAiAsk) {
+    btnAiAsk.addEventListener('click', async () => {
+      btnAiAsk.disabled = true;
+      btnAiAsk.classList.add('loading');
+      btnAiAsk.textContent = 'Asking AI...';
+      const statusEl = document.getElementById('ai-status');
+      statusEl.textContent = 'Waiting for AI response (this may take 15-30s)...';
+      try {
+        const res = await fetch(`${API}/api/ai-suggest/${state.split}/${state.currentEpisode}`, { method: 'POST' });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || 'AI request failed');
+        }
+        state.aiSuggestion = await res.json();
+        renderEpisode(state.currentData, state.annotation);
+      } catch (e) {
+        statusEl.textContent = 'AI error: ' + e.message;
+        btnAiAsk.disabled = false;
+        btnAiAsk.classList.remove('loading');
+        btnAiAsk.textContent = 'Retry';
+      }
+    });
+  }
+
+  const btnAiApply = document.getElementById('btn-ai-apply');
+  if (btnAiApply) {
+    btnAiApply.addEventListener('click', () => {
+      if (!aiSug) return;
+      for (const [dimKey, agentScores] of Object.entries(aiSug.dimension_scores || {})) {
+        for (const [agentName, info] of Object.entries(agentScores)) {
+          const sl = main.querySelector(`.dim-slider[data-dim="${dimKey}"][data-agent="${agentName}"]`);
+          const valEl = main.querySelector(`.dim-val[data-dim="${dimKey}"][data-agent="${agentName}"]`);
+          if (sl && valEl && info.score !== undefined) {
+            sl.value = info.score;
+            valEl.textContent = info.score;
+          }
+        }
+      }
+      for (const [dimKey, turnScores] of Object.entries(aiSug.dimension_attributions || {})) {
+        for (const [turnKey, info] of Object.entries(turnScores)) {
+          const sl = main.querySelector(`.dim-attr-slider[data-dim="${dimKey}"][data-key="${turnKey}"]`);
+          const valEl = main.querySelector(`.dim-attr-val[data-dim="${dimKey}"][data-key="${turnKey}"]`);
+          if (sl && valEl && info.score !== undefined) {
+            sl.value = info.score;
+            valEl.textContent = info.score;
+          }
+        }
+      }
+      btnAiApply.textContent = 'Applied!';
+      setTimeout(() => { btnAiApply.textContent = 'Apply AI Scores'; }, 1500);
+    });
+  }
 }
 
 async function saveCurrentAnnotation() {
