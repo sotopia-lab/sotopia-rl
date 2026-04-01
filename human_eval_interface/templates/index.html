@@ -90,11 +90,14 @@
   .attribution-block .agent-label { font-weight: 600; font-size: 14px; margin-bottom: 10px; padding: 6px 12px; border-radius: 6px; }
   .attribution-block:nth-child(1) .agent-label { background: var(--agent1-bg); color: var(--agent1); }
   .attribution-block:nth-child(2) .agent-label { background: var(--agent2-bg); color: var(--agent2); }
-  .attr-turn { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 6px; margin-bottom: 4px; background: #f8fafc; border: 1px solid var(--border); }
+  .attr-turn { display: flex; align-items: flex-start; gap: 10px; padding: 8px 12px; border-radius: 6px; margin-bottom: 4px; background: #f8fafc; border: 1px solid var(--border); }
   .attr-turn .turn-label { font-size: 12px; font-weight: 600; min-width: 80px; }
-  .attr-turn .turn-preview { font-size: 12px; color: var(--text-muted); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 400px; }
+  .attr-turn .turn-preview { font-size: 12px; color: var(--text-muted); flex: 1; }
   .attr-turn input[type=range] { width: 120px; accent-color: var(--primary); }
   .attr-turn .attr-value { width: 28px; text-align: center; font-weight: 700; font-size: 14px; color: var(--primary); }
+  .attr-turn.context-only { opacity: .5; background: transparent; border-style: dashed; }
+  .attr-turn.context-only .turn-preview { font-style: italic; }
+  .attr-turn .attr-placeholder { width: 148px; flex-shrink: 0; }
 
   /* Buttons */
   .btn { padding: 10px 24px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all .15s; }
@@ -559,10 +562,45 @@ function renderEpisode(data, ann) {
 
   function renderDimAttrSection(dim, idx) {
     const scores = dimAttrScores[dim.key];
+
+    const localCounters = {};
+    agents.forEach(a => { localCounters[a] = 0; });
+
+    function renderFullConversationForAgent(agentName, agentIdx) {
+      const counters = {};
+      agents.forEach(a => { counters[a] = 0; });
+
+      return data.turns.map((t, globalIdx) => {
+        const localIdx = counters[t.speaker] ?? 0;
+        counters[t.speaker] = localIdx + 1;
+        const ai = agentIndex[t.speaker] ?? 0;
+
+        if (t.speaker === agentName) {
+          const key = `agent_${agentIdx+1}_turn_${localIdx}`;
+          const val = scores[key] ?? 0;
+          return `
+            <div class="attr-turn">
+              <span class="turn-label" style="color:var(--agent${ai+1})">Turn ${globalIdx}</span>
+              <span class="turn-preview" title="${t.utterance.replace(/"/g, '&quot;')}">${t.utterance}</span>
+              <input type="range" min="0" max="3" value="${val}" data-dim="${dim.key}" data-key="${key}" class="dim-attr-slider">
+              <span class="attr-value dim-attr-val" data-dim="${dim.key}" data-key="${key}">${val}</span>
+            </div>
+            ${aiAttrHint(dim.key, key)}`;
+        } else {
+          return `
+            <div class="attr-turn context-only">
+              <span class="turn-label" style="color:var(--agent${ai+1})">Turn ${globalIdx}</span>
+              <span class="turn-preview" title="${t.utterance.replace(/"/g, '&quot;')}">${t.speaker}: ${t.utterance}</span>
+              <span class="attr-placeholder"></span>
+            </div>`;
+        }
+      }).join('');
+    }
+
     return `
     <div class="annotation-section">
       <h3>${idx + 1}b. ${dim.label} &mdash; Attribution <span style="font-weight:400;font-size:12px;color:var(--text-muted)">[0 to 3]</span></h3>
-      <p class="description">For each agent, score how much each utterance contributed to the <em>${dim.label}</em> outcome.</p>
+      <p class="description">For each agent, score how much each utterance contributed to the <em>${dim.label}</em> outcome. The other agent's turns are shown for context (dashed border, no slider).</p>
       <details class="score-guide-details">
         <summary>Attribution Guidelines</summary>
         <div class="score-guide-content">${dim.attrGuide}</div>
@@ -570,18 +608,7 @@ function renderEpisode(data, ann) {
       ${agents.map((a, i) => `
         <div class="attribution-block">
           <div class="agent-label">${a}</div>
-          ${agentTurns[a].map(t => {
-            const key = `agent_${i+1}_turn_${t.localIdx}`;
-            const val = scores[key] ?? 0;
-            return `
-              <div class="attr-turn">
-                <span class="turn-label">Turn ${t.globalIdx}</span>
-                <span class="turn-preview" title="${t.utterance.replace(/"/g, '&quot;')}">${t.utterance}</span>
-                <input type="range" min="0" max="3" value="${val}" data-dim="${dim.key}" data-key="${key}" class="dim-attr-slider">
-                <span class="attr-value dim-attr-val" data-dim="${dim.key}" data-key="${key}">${val}</span>
-              </div>
-              ${aiAttrHint(dim.key, key)}`;
-          }).join('')}
+          ${renderFullConversationForAgent(a, i)}
         </div>
       `).join('')}
     </div>`;
