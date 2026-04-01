@@ -15,11 +15,15 @@ from sotopia_rl.prompter.generic_templates import (
 def openai_call(prompt: str, model: str = "gpt-3.5-turbo") -> str | None:
     if model in ["gpt-3.5-turbo", "gpt-4", "gpt-4o", "o4-mini"]:
         client = OpenAI()
-        response = client.chat.completions.create(
-            model=model,
-            messages=[{"role": "user", "content": prompt}],
-            response_format={ "type": "json_object" }
-        )
+        try:
+            response = client.chat.completions.create(
+                model=model,
+                messages=[{"role": "user", "content": prompt}],
+                response_format={ "type": "json_object" }
+            )
+        except Exception as e:
+            print(f"OpenAI API error: {e}")
+            return None
         return response.choices[0].message.content
     elif model.startswith("together_ai"):
         client = OpenAI(

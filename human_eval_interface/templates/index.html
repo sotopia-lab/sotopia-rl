@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sotopia Annotation Interface</title>
+<style>
+  :root {
+    --bg: #f5f5f5; --surface: #fff; --border: #ddd;
+    --primary: #2563eb; --primary-light: #dbeafe;
+    --text: #1e293b; --text-muted: #64748b;
+    --success: #16a34a; --success-light: #dcfce7;
+    --warning: #d97706; --warning-light: #fef3c7;
+    --danger: #dc2626;
+    --agent1: #7c3aed; --agent1-bg: #f5f3ff;
+    --agent2: #0891b2; --agent2-bg: #ecfeff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; }
+
+  .app { display: flex; height: 100vh; }
+
+  /* Sidebar */
+  .sidebar { width: 300px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
+  .sidebar-header { padding: 16px; border-bottom: 1px solid var(--border); }
+  .sidebar-header h1 { font-size: 16px; margin-bottom: 12px; }
+  .sidebar-header label { display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 4px; }
+  .sidebar-header input, .sidebar-header select { width: 100%; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; }
+  .sidebar-header .row { display: flex; gap: 8px; margin-bottom: 8px; }
+  .sidebar-header .row > div { flex: 1; }
+  .progress-bar { height: 6px; background: #e2e8f0; border-radius: 3px; margin-top: 8px; overflow: hidden; }
+  .progress-bar .fill { height: 100%; background: var(--success); transition: width .3s; }
+  .progress-text { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+  .episode-list { flex: 1; overflow-y: auto; padding: 8px; }
+  .episode-item { padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; font-family: monospace; display: flex; align-items: center; gap: 8px; margin-bottom: 2px; }
+  .episode-item:hover { background: var(--primary-light); }
+  .episode-item.active { background: var(--primary); color: #fff; }
+  .episode-item .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .episode-item .dot.done { background: var(--success); }
+  .episode-item .dot.pending { background: #cbd5e1; }
+  .episode-item .id-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* Main content */
+  .main { flex: 1; overflow-y: auto; padding: 24px 32px; }
+  .empty-state { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); font-size: 18px; }
+
+  .episode-header { margin-bottom: 20px; }
+  .episode-header h2 { font-size: 20px; margin-bottom: 4px; }
+  .episode-header .meta { font-size: 13px; color: var(--text-muted); }
+  .codename-badge { display: inline-block; background: #e2e8f0; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; margin-left: 8px; }
+
+  .section { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 20px; }
+  .section h3 { font-size: 15px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+
+  .agent-card { background: var(--agent1-bg); border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; font-size: 13px; }
+  .agent-card:nth-child(2) { background: var(--agent2-bg); }
+  .agent-card .agent-name { font-weight: 700; margin-bottom: 4px; }
+  .agent-card .agent-goal { margin-top: 6px; padding: 6px 10px; background: rgba(0,0,0,.04); border-radius: 6px; font-style: italic; }
+
+  /* Conversation */
+  .conversation { display: flex; flex-direction: column; gap: 10px; }
+  .turn { display: flex; gap: 12px; align-items: flex-start; }
+  .turn-number { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; color: #fff; margin-top: 2px; }
+  .turn.agent-0 .turn-number { background: var(--agent1); }
+  .turn.agent-1 .turn-number { background: var(--agent2); }
+  .turn-content { flex: 1; }
+  .turn-speaker { font-size: 12px; font-weight: 600; margin-bottom: 2px; }
+  .turn.agent-0 .turn-speaker { color: var(--agent1); }
+  .turn.agent-1 .turn-speaker { color: var(--agent2); }
+  .turn-text { font-size: 14px; padding: 8px 12px; border-radius: 8px; background: #f8fafc; border: 1px solid var(--border); }
+  .turn.action .turn-text { font-style: italic; background: var(--warning-light); border-color: #fde68a; }
+
+  /* Annotation panels */
+  .annotation-section { background: var(--surface); border: 2px solid var(--primary); border-radius: 10px; padding: 20px; margin-bottom: 20px; }
+  .annotation-section h3 { font-size: 15px; color: var(--primary); margin-bottom: 4px; }
+  .annotation-section .description { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; }
+
+  /* Goal score */
+  .goal-score-block { margin-bottom: 16px; padding: 12px; border-radius: 8px; border: 1px solid var(--border); }
+  .goal-score-block .agent-label { font-weight: 600; font-size: 14px; margin-bottom: 8px; }
+  .score-slider { display: flex; align-items: center; gap: 12px; }
+  .score-slider input[type=range] { flex: 1; accent-color: var(--primary); }
+  .score-value { width: 40px; text-align: center; font-size: 20px; font-weight: 700; color: var(--primary); }
+  .score-guide { font-size: 11px; color: var(--text-muted); margin-top: 6px; line-height: 1.4; }
+  .score-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+
+  /* Attribution */
+  .attribution-block { margin-bottom: 16px; }
+  .attribution-block .agent-label { font-weight: 600; font-size: 14px; margin-bottom: 10px; padding: 6px 12px; border-radius: 6px; }
+  .attribution-block:nth-child(1) .agent-label { background: var(--agent1-bg); color: var(--agent1); }
+  .attribution-block:nth-child(2) .agent-label { background: var(--agent2-bg); color: var(--agent2); }
+  .attr-turn { display: flex; align-items: flex-start; gap: 10px; padding: 8px 12px; border-radius: 6px; margin-bottom: 4px; background: #f8fafc; border: 1px solid var(--border); }
+  .attr-turn .turn-label { font-size: 12px; font-weight: 600; min-width: 80px; }
+  .attr-turn .turn-preview { font-size: 12px; color: var(--text-muted); flex: 1; }
+  .attr-turn input[type=range] { width: 120px; accent-color: var(--primary); }
+  .attr-turn .attr-value { width: 28px; text-align: center; font-weight: 700; font-size: 14px; color: var(--primary); }
+  .attr-turn.context-only { opacity: .5; background: transparent; border-style: dashed; }
+  .attr-turn.context-only .turn-preview { font-style: italic; }
+  .attr-turn .attr-placeholder { width: 148px; flex-shrink: 0; }
+
+  /* Buttons */
+  .btn { padding: 10px 24px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all .15s; }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: #1d4ed8; }
+  .btn-primary:disabled { background: #93c5fd; cursor: not-allowed; }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  .btn-outline:hover { background: #f1f5f9; }
+  .btn-success { background: var(--success); color: #fff; }
+  .btn-success:hover { background: #15803d; }
+
+  .action-bar { display: flex; gap: 12px; align-items: center; padding: 16px 0; position: sticky; bottom: 0; background: var(--bg); border-top: 1px solid var(--border); margin-top: 20px; }
+  .action-bar .spacer { flex: 1; }
+  .save-status { font-size: 13px; color: var(--success); font-weight: 600; }
+
+  .tooltip-container { position: relative; display: inline-block; }
+  .tooltip-trigger { cursor: help; color: var(--primary); font-size: 12px; font-weight: 600; border: 1px solid var(--primary); border-radius: 50%; width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; margin-left: 6px; }
+  .tooltip-content { display: none; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: var(--text); color: #fff; padding: 10px 14px; border-radius: 8px; font-size: 12px; width: 320px; z-index: 10; line-height: 1.5; margin-bottom: 6px; }
+  .tooltip-container:hover .tooltip-content { display: block; }
+
+  .score-guide-details { margin-bottom: 16px; }
+  .score-guide-details summary { cursor: pointer; font-size: 13px; font-weight: 600; color: var(--primary); padding: 8px 0; user-select: none; }
+  .score-guide-details summary:hover { text-decoration: underline; }
+  .score-guide-content { padding: 12px 16px; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; margin-top: 4px; }
+  .score-guide-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .score-guide-table th { text-align: left; padding: 6px 10px; border-bottom: 2px solid var(--border); color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: .5px; }
+  .score-guide-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .score-guide-table td:first-child { white-space: nowrap; width: 70px; text-align: center; }
+  .score-guide-table tr:last-child td { border-bottom: none; }
+
+  /* AI suggestion styles */
+  .ai-toggle { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 13px; }
+  .ai-toggle input[type=checkbox] { accent-color: var(--primary); }
+  .ai-badge { display: inline-flex; align-items: center; gap: 4px; background: #fef3c7; color: #92400e; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 10px; border: 1px solid #fde68a; }
+  .ai-hint { font-size: 13px; color: #78350f; background: #fef9c3; border: 1px solid #facc15; border-radius: 8px; padding: 10px 14px; margin-top: 8px; margin-bottom: 4px; line-height: 1.5; }
+  .ai-hint .ai-score { font-weight: 700; font-size: 16px; }
+  .ai-hint .ai-reasoning-label { font-weight: 600; display: block; margin-top: 4px; }
+  .ai-hint .ai-reasoning { display: block; margin-top: 2px; }
+  .btn-ai { background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; border: none; padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .btn-ai:hover { background: linear-gradient(135deg, #d97706, #b45309); }
+  .btn-ai:disabled { opacity: .5; cursor: not-allowed; }
+  .btn-ai.loading { animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .6; } }
+  .ai-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; padding: 12px 16px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; }
+  .ai-bar .ai-status { font-size: 13px; color: #92400e; flex: 1; }
+  .ai-apply-btn { background: none; border: 1px solid #d97706; color: #d97706; padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
+  .ai-apply-btn:hover { background: #fef3c7; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <h1>Sotopia Annotation</h1>
+      <div class="row">
+        <div>
+          <label>Annotator</label>
+          <input type="text" id="annotator-input" placeholder="Your name" value="">
+        </div>
+        <div>
+          <label>Split</label>
+          <select id="split-select"></select>
+        </div>
+      </div>
+      <div class="progress-bar"><div class="fill" id="progress-fill"></div></div>
+      <div class="progress-text" id="progress-text">0 / 0 annotated</div>
+      <div class="ai-toggle" id="ai-toggle-container" style="display:none">
+        <input type="checkbox" id="ai-toggle"> <label for="ai-toggle">Enable AI suggestions</label>
+      </div>
+    </div>
+    <div class="episode-list" id="episode-list"></div>
+  </div>
+
+  <div class="main" id="main-content">
+    <div class="empty-state">Select an episode from the sidebar to begin annotating.</div>
+  </div>
+</div>
+
+<script>
+const API = '';
+let state = {
+  annotator: localStorage.getItem('annotator') || '',
+  split: localStorage.getItem('split') || '',
+  episodes: [],
+  currentEpisode: null,
+  currentData: null,
+  annotation: null,
+  aiEnabled: false,
+  aiOn: localStorage.getItem('aiOn') === 'true',
+  aiSuggestion: null,
+};
+
+const $ = (sel) => document.querySelector(sel);
+const $$ = (sel) => document.querySelectorAll(sel);
+
+document.getElementById('annotator-input').value = state.annotator;
+
+async function init() {
+  const aiStatus = await fetch(`${API}/api/ai-enabled`).then(r => r.json());
+  state.aiEnabled = aiStatus.enabled;
+  if (state.aiEnabled) {
+    $('#ai-toggle-container').style.display = '';
+    $('#ai-toggle').checked = state.aiOn;
+    $('#ai-toggle').addEventListener('change', (e) => {
+      state.aiOn = e.target.checked;
+      localStorage.setItem('aiOn', state.aiOn);
+    });
+  }
+
+  const splits = await fetch(`${API}/api/splits`).then(r => r.json());
+  const sel = $('#split-select');
+  splits.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s; opt.textContent = s.replace('_', ' ');
+    sel.appendChild(opt);
+  });
+  if (state.split && splits.includes(state.split)) sel.value = state.split;
+  else if (splits.length) { state.split = splits[0]; sel.value = splits[0]; }
+  await loadEpisodes();
+}
+
+$('#annotator-input').addEventListener('change', (e) => {
+  state.annotator = e.target.value.trim();
+  localStorage.setItem('annotator', state.annotator);
+  loadEpisodes();
+});
+
+$('#split-select').addEventListener('change', (e) => {
+  state.split = e.target.value;
+  localStorage.setItem('split', state.split);
+  state.currentEpisode = null;
+  loadEpisodes();
+});
+
+async function loadEpisodes() {
+  if (!state.split) return;
+  const params = state.annotator ? `?annotator=${encodeURIComponent(state.annotator)}` : '';
+  state.episodes = await fetch(`${API}/api/episodes/${state.split}${params}`).then(r => r.json());
+  renderEpisodeList();
+  updateProgress();
+}
+
+async function updateProgress() {
+  if (!state.split || !state.annotator) {
+    $('#progress-fill').style.width = '0%';
+    $('#progress-text').textContent = 'Enter annotator name to track progress';
+    return;
+  }
+  const p = await fetch(`${API}/api/progress/${state.split}?annotator=${encodeURIComponent(state.annotator)}`).then(r => r.json());
+  const pct = p.total ? (p.annotated / p.total * 100) : 0;
+  $('#progress-fill').style.width = pct + '%';
+  $('#progress-text').textContent = `${p.annotated} / ${p.total} annotated`;
+}
+
+function renderEpisodeList() {
+  const list = $('#episode-list');
+  list.innerHTML = '';
+  state.episodes.forEach(ep => {
+    const div = document.createElement('div');
+    div.className = 'episode-item' + (state.currentEpisode === ep.id ? ' active' : '');
+    div.innerHTML = `<span class="dot ${ep.annotated ? 'done' : 'pending'}"></span><span class="id-text">${ep.id}</span>`;
+    div.onclick = () => selectEpisode(ep.id);
+    list.appendChild(div);
+  });
+}
+
+async function selectEpisode(id) {
+  state.currentEpisode = id;
+  state.aiSuggestion = null;
+  renderEpisodeList();
+  const data = await fetch(`${API}/api/episode/${state.split}/${id}`).then(r => r.json());
+  state.currentData = data;
+
+  let ann = null;
+  if (state.annotator) {
+    ann = await fetch(`${API}/api/annotation/${state.split}/${id}?annotator=${encodeURIComponent(state.annotator)}`).then(r => r.json());
+  }
+  state.annotation = ann;
+  renderEpisode(data, ann);
+}
+
+function renderEpisode(data, ann) {
+  const main = $('#main-content');
+  const allAgentNames = data.agents.map(a => a.name);
+
+  // agent_1 = first speaker, agent_2 = second speaker
+  const speakOrder = [];
+  for (const t of data.turns) {
+    if (!speakOrder.includes(t.speaker)) speakOrder.push(t.speaker);
+    if (speakOrder.length === 2) break;
+  }
+  const agents = speakOrder.length === 2 ? speakOrder : allAgentNames;
+
+  const agentIndex = {};
+  agents.forEach((a, i) => agentIndex[a] = i);
+
+  const agentTurns = {};
+  allAgentNames.forEach(a => { agentTurns[a] = []; });
+  let turnCounters = {};
+  allAgentNames.forEach(a => { turnCounters[a] = 0; });
+
+  data.turns.forEach((t, i) => {
+    if (agentTurns[t.speaker] !== undefined) {
+      agentTurns[t.speaker].push({ globalIdx: i, localIdx: turnCounters[t.speaker], ...t });
+      turnCounters[t.speaker]++;
+    }
+  });
+
+  const DIMENSIONS = [
+    {
+      key: 'goal', label: 'Goal Achieving (GOAL)', min: 0, max: 10, defaultVal: 5,
+      description: 'Rate how well each agent achieved their stated social goal.',
+      scoreGuide: `
+        <table class="score-guide-table">
+          <thead><tr><th>Score</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><b>0</b></td><td>Absolutely nothing is achieved.</td></tr>
+            <tr><td><b>1 &ndash; 3</b></td><td>The main goal is not achieved. Some partial goals are achieved, but the agent still failed to achieve most of them.</td></tr>
+            <tr><td><b>4 &ndash; 7</b></td><td>The main goal is not achieved, but some partial goals are achieved with a certain amount of progress toward the goal. This typically happens in negotiations where an optimal outcome is not reached.</td></tr>
+            <tr><td><b>8 &ndash; 9</b></td><td>The main goal is not achieved as literally written but is achieved in an equivalent or circumvented way. <em>Or</em>, the main goal is achieved but other minor goals (if any) are not fully achieved. <em>Or</em>, the single goal is not technically achieved but is achieved for the most part.</td></tr>
+            <tr><td><b>10</b></td><td>All goals are fully achieved.</td></tr>
+          </tbody>
+        </table>`,
+      attrGuide: `
+        <p style="margin-bottom:10px"><b>Task:</b> Evaluate how important each utterance was toward achieving the agent's social goal.</p>
+        <table class="score-guide-table">
+          <thead><tr><th>Score</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td><b>0</b></td><td>No impact on goal achievement.</td></tr>
+            <tr><td><b>1</b></td><td>Minor or moderate impact &mdash; contributes somewhat but is not decisive.</td></tr>
+            <tr><td><b>2</b></td><td>Significant impact &mdash; clearly advances the goal, but is not the single most critical utterance.</td></tr>
+            <tr><td><b>3</b></td><td>Critical &mdash; the most important utterance for goal achievement.</td></tr>
+          </tbody>
+        </table>
+        <p style="margin-top:12px;margin-bottom:6px"><b>Key principles:</b></p>
+        <ul style="font-size:13px;padding-left:18px;margin:0">
+          <li>Consider both the utterance itself <em>and</em> the other agent's response to it.</li>
+          <li>Assign <b>3</b> to at most one utterance per agent, unless multiple are equally critical.</li>
+          <li>If the goal is already achieved, subsequent utterances should score <b>0</b> or at most <b>1</b>.</li>
+          <li>Focus on contribution to goal achievement, not utterance quality or politeness.</li>
+        </ul>`,
+    },
+    {
+      key: 'believability', label: 'Believability (BEL)', min: 0, max: 10, defaultVal: 5,
+      description: 'Rate how natural, realistic, and character-consistent the agent\'s behavior is.',
+      scoreGuide: `
+        <table class="score-guide-table">
+          <thead><tr><th>Score</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><b>0</b></td><td>Completely unbelievable &mdash; behavior is robotic, incoherent, or entirely inconsistent with the character profile.</td></tr>
+            <tr><td><b>1 &ndash; 3</b></td><td>Mostly unbelievable &mdash; frequent unnatural phrasing, obvious contradictions with character traits, or clearly non-human behavior.</td></tr>
+            <tr><td><b>4 &ndash; 6</b></td><td>Somewhat believable &mdash; generally natural but with occasional lapses in consistency or realism (e.g., personality drift, odd phrasing).</td></tr>
+            <tr><td><b>7 &ndash; 9</b></td><td>Highly believable &mdash; natural and realistic interaction that is mostly consistent with the character profile, with only minor issues.</td></tr>
+            <tr><td><b>10</b></td><td>Perfectly believable &mdash; indistinguishable from a real person with this character profile. Natural, consistent, and fully in-character throughout.</td></tr>
+          </tbody>
+        </table>`,
+      attrGuide: `
+        <p style="margin-bottom:10px"><b>Task:</b> Evaluate how much each utterance contributed to or detracted from the agent appearing believable.</p>
+        <table class="score-guide-table">
+          <thead><tr><th>Score</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td><b>0</b></td><td>No impact on believability, or a neutral/generic utterance.</td></tr>
+            <tr><td><b>1</b></td><td>Minor contribution &mdash; slightly reinforces character consistency or naturalness.</td></tr>
+            <tr><td><b>2</b></td><td>Significant contribution &mdash; clearly demonstrates character traits or natural human-like behavior.</td></tr>
+            <tr><td><b>3</b></td><td>Critical &mdash; the utterance most strongly defines the agent as believable (or most strongly breaks believability, if scored low on the dimension).</td></tr>
+          </tbody>
+        </table>`,
+    },
+    {
+      key: 'knowledge', label: 'Knowledge (KNO)', min: 0, max: 10, defaultVal: 5,
+      description: 'Rate how much new, relevant information the agent gained through the interaction.',
+      scoreGuide: `
+        <table class="score-guide-table">
+          <thead><tr><th>Score</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><b>0</b></td><td>No new information gained at all.</td></tr>
+            <tr><td><b>1 &ndash; 3</b></td><td>Minimal information gained &mdash; only trivial or already-known facts, or information of little relevance to the agent.</td></tr>
+            <tr><td><b>4 &ndash; 6</b></td><td>Moderate information gained &mdash; some new and somewhat relevant information, but nothing critical or deeply insightful.</td></tr>
+            <tr><td><b>7 &ndash; 9</b></td><td>Substantial information gained &mdash; important new knowledge relevant to the agent's interests, goals, or situation.</td></tr>
+            <tr><td><b>10</b></td><td>Exceptional information gained &mdash; highly valuable, novel knowledge that is deeply important to the agent.</td></tr>
+          </tbody>
+        </table>`,
+      attrGuide: `
+        <p style="margin-bottom:10px"><b>Task:</b> Evaluate how much each utterance contributed to the agent acquiring new knowledge.</p>
+        <table class="score-guide-table">
+          <thead><tr><th>Score</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td><b>0</b></td><td>No new information elicited or received.</td></tr>
+            <tr><td><b>1</b></td><td>Minor contribution &mdash; prompted or received trivial or partially relevant information.</td></tr>
+            <tr><td><b>2</b></td><td>Significant contribution &mdash; directly led to meaningful new information being shared.</td></tr>
+            <tr><td><b>3</b></td><td>Critical &mdash; the key utterance that elicited or conveyed the most important new knowledge.</td></tr>
+          </tbody>
+        </table>`,
+    },
+    {
+      key: 'secret', label: 'Secret Keeping (SEC)', min: -10, max: 0, defaultVal: 0,
+      description: 'Rate how well the agent kept their secret or secretive intention private. 0 = fully kept, -10 = completely revealed.',
+      scoreGuide: `
+        <table class="score-guide-table">
+          <thead><tr><th>Score</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><b>0</b></td><td>Secret fully kept &mdash; no information leaked, the other agent has no additional insight into the secret.</td></tr>
+            <tr><td><b>&minus;1 to &minus;3</b></td><td>Minor leak &mdash; slight hints or indirect clues were given, but the secret remains largely intact.</td></tr>
+            <tr><td><b>&minus;4 to &minus;6</b></td><td>Partial reveal &mdash; enough information was shared that the other agent could reasonably infer the secret, though it was not stated outright.</td></tr>
+            <tr><td><b>&minus;7 to &minus;9</b></td><td>Major reveal &mdash; the secret was largely or explicitly disclosed, with only minor details withheld.</td></tr>
+            <tr><td><b>&minus;10</b></td><td>Completely revealed &mdash; the secret was fully and explicitly disclosed.</td></tr>
+          </tbody>
+        </table>`,
+      attrGuide: `
+        <p style="margin-bottom:10px"><b>Task:</b> Evaluate how much each utterance contributed to keeping or leaking the agent's secret.</p>
+        <table class="score-guide-table">
+          <thead><tr><th>Score</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td><b>0</b></td><td>No impact on secret keeping &mdash; the utterance neither revealed nor protected the secret.</td></tr>
+            <tr><td><b>1</b></td><td>Minor impact &mdash; slightly hinted at or slightly deflected from the secret.</td></tr>
+            <tr><td><b>2</b></td><td>Significant impact &mdash; clearly leaked part of the secret, or skillfully deflected a probing question.</td></tr>
+            <tr><td><b>3</b></td><td>Critical &mdash; the utterance that most directly revealed or most effectively protected the secret.</td></tr>
+          </tbody>
+        </table>`,
+    },
+    {
+      key: 'relationship', label: 'Relationship (REL)', min: -5, max: 5, defaultVal: 0,
+      description: 'Rate the change in the agent\'s relationship with the other agent. Positive = improved, negative = damaged.',
+      scoreGuide: `
+        <table class="score-guide-table">
+          <thead><tr><th>Score</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><b>&minus;5</b></td><td>Severely damaged &mdash; the relationship is broken or hostile; trust, reputation, or social standing is destroyed.</td></tr>
+            <tr><td><b>&minus;4 to &minus;2</b></td><td>Noticeably damaged &mdash; the interaction caused friction, distrust, or reputational harm.</td></tr>
+            <tr><td><b>&minus;1</b></td><td>Slightly damaged &mdash; minor tension or awkwardness, but no lasting harm.</td></tr>
+            <tr><td><b>0</b></td><td>Unchanged &mdash; the relationship is neither improved nor damaged.</td></tr>
+            <tr><td><b>1</b></td><td>Slightly improved &mdash; minor positive gestures or rapport building.</td></tr>
+            <tr><td><b>2 to 4</b></td><td>Noticeably improved &mdash; meaningful trust-building, bonding, or enhanced social standing.</td></tr>
+            <tr><td><b>5</b></td><td>Greatly improved &mdash; a transformative positive change in the relationship (e.g., deep trust established, strong alliance formed).</td></tr>
+          </tbody>
+        </table>`,
+      attrGuide: `
+        <p style="margin-bottom:10px"><b>Task:</b> Evaluate how much each utterance contributed to improving or damaging the relationship.</p>
+        <table class="score-guide-table">
+          <thead><tr><th>Score</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td><b>0</b></td><td>No impact on the relationship.</td></tr>
+            <tr><td><b>1</b></td><td>Minor impact &mdash; small positive or negative social gesture.</td></tr>
+            <tr><td><b>2</b></td><td>Significant impact &mdash; clearly strengthened or strained the relationship.</td></tr>
+            <tr><td><b>3</b></td><td>Critical &mdash; the single most impactful utterance for the relationship outcome.</td></tr>
+          </tbody>
+        </table>`,
+    },
+    {
+      key: 'social_rules', label: 'Social Rules (SOC)', min: -10, max: 0, defaultVal: 0,
+      description: 'Rate how well the agent adhered to social norms and legal rules. 0 = no violations, -10 = severe violations.',
+      scoreGuide: `
+        <table class="score-guide-table">
+          <thead><tr><th>Score</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><b>0</b></td><td>No violations &mdash; the agent fully adhered to all social norms and legal rules.</td></tr>
+            <tr><td><b>&minus;1 to &minus;3</b></td><td>Minor violations &mdash; slight breaches of social etiquette (e.g., mildly rude, slightly inappropriate tone).</td></tr>
+            <tr><td><b>&minus;4 to &minus;6</b></td><td>Moderate violations &mdash; clear breaches of social norms (e.g., openly rude, manipulative, or deceptive behavior).</td></tr>
+            <tr><td><b>&minus;7 to &minus;9</b></td><td>Serious violations &mdash; significant breaches of social or legal rules (e.g., threats, harassment, illegal suggestions).</td></tr>
+            <tr><td><b>&minus;10</b></td><td>Extreme violations &mdash; egregious breach of legal or social rules with severe consequences.</td></tr>
+          </tbody>
+        </table>`,
+      attrGuide: `
+        <p style="margin-bottom:10px"><b>Task:</b> Evaluate how much each utterance contributed to adhering to or violating social/legal rules.</p>
+        <table class="score-guide-table">
+          <thead><tr><th>Score</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td><b>0</b></td><td>No impact &mdash; the utterance neither violated nor notably upheld social rules.</td></tr>
+            <tr><td><b>1</b></td><td>Minor impact &mdash; slightly rude or slightly polite beyond expectation.</td></tr>
+            <tr><td><b>2</b></td><td>Significant impact &mdash; clearly violated or clearly upheld an important social norm.</td></tr>
+            <tr><td><b>3</b></td><td>Critical &mdash; the utterance most responsible for the overall social-rules outcome.</td></tr>
+          </tbody>
+        </table>`,
+    },
+    {
+      key: 'financial', label: 'Financial & Material Benefits (FIN)', min: -5, max: 5, defaultVal: 0,
+      description: 'Rate the financial or material outcome for the agent. Positive = net gain, negative = net loss.',
+      scoreGuide: `
+        <table class="score-guide-table">
+          <thead><tr><th>Score</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><b>&minus;5</b></td><td>Severe loss &mdash; major financial or material damage (e.g., lost a job, large monetary loss, destroyed valuable asset).</td></tr>
+            <tr><td><b>&minus;4 to &minus;2</b></td><td>Notable loss &mdash; clear financial or material disadvantage from the interaction.</td></tr>
+            <tr><td><b>&minus;1</b></td><td>Slight loss &mdash; minor financial or material disadvantage.</td></tr>
+            <tr><td><b>0</b></td><td>Neutral &mdash; no financial or material change.</td></tr>
+            <tr><td><b>1</b></td><td>Slight gain &mdash; minor financial or material benefit.</td></tr>
+            <tr><td><b>2 to 4</b></td><td>Notable gain &mdash; clear financial or material benefit (e.g., good deal, useful resource acquired).</td></tr>
+            <tr><td><b>5</b></td><td>Major gain &mdash; exceptional financial or material benefit (e.g., large earnings, major opportunity secured).</td></tr>
+          </tbody>
+        </table>`,
+      attrGuide: `
+        <p style="margin-bottom:10px"><b>Task:</b> Evaluate how much each utterance contributed to the agent's financial or material outcome.</p>
+        <table class="score-guide-table">
+          <thead><tr><th>Score</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td><b>0</b></td><td>No impact on financial/material outcome.</td></tr>
+            <tr><td><b>1</b></td><td>Minor impact &mdash; slightly influenced the financial outcome.</td></tr>
+            <tr><td><b>2</b></td><td>Significant impact &mdash; directly led to a financial gain or loss.</td></tr>
+            <tr><td><b>3</b></td><td>Critical &mdash; the single most impactful utterance for the financial outcome.</td></tr>
+          </tbody>
+        </table>`,
+    },
+  ];
+
+  const dimScores = {};
+  const dimAttrScores = {};
+  DIMENSIONS.forEach(d => {
+    dimScores[d.key] = ann?.dimension_scores?.[d.key] || {};
+    dimAttrScores[d.key] = ann?.dimension_attributions?.[d.key] || {};
+  });
+
+  const aiSug = state.aiSuggestion;
+
+  function aiScoreHint(dimKey, agentName) {
+    if (!aiSug) return '';
+    const d = aiSug.dimension_scores?.[dimKey]?.[agentName];
+    if (!d) return '';
+    return `<div class="ai-hint">
+      <span class="ai-badge">AI Suggestion</span> Score: <span class="ai-score">${d.score}</span>
+      <span class="ai-reasoning-label">Reasoning:</span>
+      <span class="ai-reasoning">${d.reasoning || 'No reasoning provided.'}</span>
+    </div>`;
+  }
+
+  function aiAttrHint(dimKey, turnKey) {
+    if (!aiSug) return '';
+    const d = aiSug.dimension_attributions?.[dimKey]?.[turnKey];
+    if (!d) return '';
+    return `<div class="ai-hint">
+      <span class="ai-badge">AI</span> Score: <span class="ai-score">${d.score}</span>
+      <span class="ai-reasoning-label">Reasoning:</span>
+      <span class="ai-reasoning">${d.reasoning || 'No reasoning provided.'}</span>
+    </div>`;
+  }
+
+  function renderDimScoreSection(dim, idx) {
+    const scores = dimScores[dim.key];
+    return `
+    <div class="annotation-section">
+      <h3>${idx + 1}a. ${dim.label} &mdash; Score <span style="font-weight:400;font-size:12px;color:var(--text-muted)">[${dim.min} to ${dim.max}]</span></h3>
+      <p class="description">${dim.description}</p>
+      <details class="score-guide-details">
+        <summary>Scoring Guidelines</summary>
+        <div class="score-guide-content">${dim.scoreGuide}</div>
+      </details>
+      ${agents.map((a, i) => {
+        const val = scores[a] ?? dim.defaultVal;
+        return `
+        <div class="goal-score-block">
+          <div class="agent-label" style="color: var(--agent${i+1})">${a}</div>
+          ${dim.key === 'goal' ? `<div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;font-style:italic">${data.goals[a] || ''}</div>` : ''}
+          <div class="score-slider">
+            <input type="range" min="${dim.min}" max="${dim.max}" value="${val}" data-dim="${dim.key}" data-agent="${a}" class="dim-slider">
+            <span class="score-value dim-val" data-dim="${dim.key}" data-agent="${a}">${val}</span>
+          </div>
+          <div class="score-labels"><span>${dim.min}</span><span>${dim.max}</span></div>
+          ${aiScoreHint(dim.key, a)}
+        </div>`;
+      }).join('')}
+    </div>`;
+  }
+
+  function renderDimAttrSection(dim, idx) {
+    const scores = dimAttrScores[dim.key];
+
+    const localCounters = {};
+    agents.forEach(a => { localCounters[a] = 0; });
+
+    function renderFullConversationForAgent(agentName, agentIdx) {
+      const counters = {};
+      agents.forEach(a => { counters[a] = 0; });
+
+      return data.turns.map((t, globalIdx) => {
+        const localIdx = counters[t.speaker] ?? 0;
+        counters[t.speaker] = localIdx + 1;
+        const ai = agentIndex[t.speaker] ?? 0;
+
+        if (t.speaker === agentName) {
+          const key = `agent_${agentIdx+1}_turn_${localIdx}`;
+          const val = scores[key] ?? 0;
+          return `
+            <div class="attr-turn">
+              <span class="turn-label" style="color:var(--agent${ai+1})">Turn ${globalIdx}</span>
+              <span class="turn-preview" title="${t.utterance.replace(/"/g, '&quot;')}">${t.utterance}</span>
+              <input type="range" min="0" max="3" value="${val}" data-dim="${dim.key}" data-key="${key}" class="dim-attr-slider">
+              <span class="attr-value dim-attr-val" data-dim="${dim.key}" data-key="${key}">${val}</span>
+            </div>
+            ${aiAttrHint(dim.key, key)}`;
+        } else {
+          return `
+            <div class="attr-turn context-only">
+              <span class="turn-label" style="color:var(--agent${ai+1})">Turn ${globalIdx}</span>
+              <span class="turn-preview" title="${t.utterance.replace(/"/g, '&quot;')}">${t.speaker}: ${t.utterance}</span>
+              <span class="attr-placeholder"></span>
+            </div>`;
+        }
+      }).join('');
+    }
+
+    return `
+    <div class="annotation-section">
+      <h3>${idx + 1}b. ${dim.label} &mdash; Attribution <span style="font-weight:400;font-size:12px;color:var(--text-muted)">[0 to 3]</span></h3>
+      <p class="description">For each agent, score how much each utterance contributed to the <em>${dim.label}</em> outcome. The other agent's turns are shown for context (dashed border, no slider).</p>
+      <details class="score-guide-details">
+        <summary>Attribution Guidelines</summary>
+        <div class="score-guide-content">${dim.attrGuide}</div>
+      </details>
+      ${agents.map((a, i) => `
+        <div class="attribution-block">
+          <div class="agent-label">${a}</div>
+          ${renderFullConversationForAgent(a, i)}
+        </div>
+      `).join('')}
+    </div>`;
+  }
+
+  main.innerHTML = `
+    <div class="episode-header">
+      <h2>${data.codename}</h2>
+      <div class="meta">${data.scenario}</div>
+      <div class="meta">Episode: ${data.id} &middot; Split: ${data.split}</div>
+    </div>
+
+    <div class="section">
+      <h3>Agents &amp; Goals</h3>
+      ${data.agents.map((a, i) => `
+        <div class="agent-card">
+          <div class="agent-name" style="color: var(--agent${i+1})">${a.name}</div>
+          <div>${a.background}</div>
+          <div class="agent-goal">${data.goals[a.name] || 'No goal specified'}</div>
+        </div>
+      `).join('')}
+    </div>
+
+    <div class="section">
+      <h3>Conversation</h3>
+      <div class="conversation">
+        ${data.turns.map((t, i) => {
+          const ai = agentIndex[t.speaker] ?? 0;
+          return `
+            <div class="turn agent-${ai} ${t.is_action ? 'action' : ''}">
+              <div class="turn-number">${i}</div>
+              <div class="turn-content">
+                <div class="turn-speaker">${t.speaker}</div>
+                <div class="turn-text">${t.utterance}</div>
+              </div>
+            </div>`;
+        }).join('')}
+      </div>
+    </div>
+
+    ${state.aiEnabled && state.aiOn ? `
+    <div class="ai-bar" id="ai-bar">
+      <span class="ai-status" id="ai-status">${aiSug ? 'AI suggestions loaded. Review the hints below each slider.' : 'Click "Ask AI" to get suggested scores and reasoning.'}</span>
+      ${!aiSug ? `<button class="btn-ai" id="btn-ai-ask">Ask AI</button>` : ''}
+      ${aiSug ? `<button class="ai-apply-btn" id="btn-ai-apply">Apply AI Scores</button>` : ''}
+    </div>` : ''}
+
+    ${DIMENSIONS.map((d, i) => renderDimScoreSection(d, i) + renderDimAttrSection(d, i)).join('')}
+
+    <div class="action-bar">
+      <button class="btn btn-outline" id="btn-prev">Previous</button>
+      <button class="btn btn-outline" id="btn-next">Next</button>
+      <span class="spacer"></span>
+      <span class="save-status" id="save-status"></span>
+      <button class="btn btn-primary" id="btn-save">Save Annotation</button>
+    </div>
+  `;
+
+  main.querySelectorAll('.dim-slider').forEach(sl => {
+    sl.addEventListener('input', () => {
+      main.querySelector(`.dim-val[data-dim="${sl.dataset.dim}"][data-agent="${sl.dataset.agent}"]`).textContent = sl.value;
+    });
+  });
+
+  main.querySelectorAll('.dim-attr-slider').forEach(sl => {
+    sl.addEventListener('input', () => {
+      main.querySelector(`.dim-attr-val[data-dim="${sl.dataset.dim}"][data-key="${sl.dataset.key}"]`).textContent = sl.value;
+    });
+  });
+
+  document.getElementById('btn-save').addEventListener('click', saveCurrentAnnotation);
+  document.getElementById('btn-prev').addEventListener('click', () => navigateEpisode(-1));
+  document.getElementById('btn-next').addEventListener('click', () => navigateEpisode(1));
+
+  const btnAiAsk = document.getElementById('btn-ai-ask');
+  if (btnAiAsk) {
+    btnAiAsk.addEventListener('click', async () => {
+      btnAiAsk.disabled = true;
+      btnAiAsk.classList.add('loading');
+      btnAiAsk.textContent = 'Asking AI...';
+      const statusEl = document.getElementById('ai-status');
+      statusEl.textContent = 'Waiting for AI response (this may take 15-30s)...';
+      try {
+        const res = await fetch(`${API}/api/ai-suggest/${state.split}/${state.currentEpisode}`, { method: 'POST' });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || 'AI request failed');
+        }
+        state.aiSuggestion = await res.json();
+        renderEpisode(state.currentData, state.annotation);
+      } catch (e) {
+        statusEl.textContent = 'AI error: ' + e.message;
+        btnAiAsk.disabled = false;
+        btnAiAsk.classList.remove('loading');
+        btnAiAsk.textContent = 'Retry';
+      }
+    });
+  }
+
+  const btnAiApply = document.getElementById('btn-ai-apply');
+  if (btnAiApply) {
+    btnAiApply.addEventListener('click', () => {
+      if (!aiSug) return;
+      for (const [dimKey, agentScores] of Object.entries(aiSug.dimension_scores || {})) {
+        for (const [agentName, info] of Object.entries(agentScores)) {
+          const sl = main.querySelector(`.dim-slider[data-dim="${dimKey}"][data-agent="${agentName}"]`);
+          const valEl = main.querySelector(`.dim-val[data-dim="${dimKey}"][data-agent="${agentName}"]`);
+          if (sl && valEl && info.score !== undefined) {
+            sl.value = info.score;
+            valEl.textContent = info.score;
+          }
+        }
+      }
+      for (const [dimKey, turnScores] of Object.entries(aiSug.dimension_attributions || {})) {
+        for (const [turnKey, info] of Object.entries(turnScores)) {
+          const sl = main.querySelector(`.dim-attr-slider[data-dim="${dimKey}"][data-key="${turnKey}"]`);
+          const valEl = main.querySelector(`.dim-attr-val[data-dim="${dimKey}"][data-key="${turnKey}"]`);
+          if (sl && valEl && info.score !== undefined) {
+            sl.value = info.score;
+            valEl.textContent = info.score;
+          }
+        }
+      }
+      btnAiApply.textContent = 'Applied!';
+      setTimeout(() => { btnAiApply.textContent = 'Apply AI Scores'; }, 1500);
+    });
+  }
+}
+
+async function saveCurrentAnnotation() {
+  if (!state.annotator) {
+    alert('Please enter your annotator name first.');
+    return;
+  }
+  if (!state.currentEpisode) return;
+
+  const dimensionScores = {};
+  document.querySelectorAll('.dim-slider').forEach(sl => {
+    const dim = sl.dataset.dim;
+    if (!dimensionScores[dim]) dimensionScores[dim] = {};
+    dimensionScores[dim][sl.dataset.agent] = parseInt(sl.value);
+  });
+
+  const dimensionAttributions = {};
+  document.querySelectorAll('.dim-attr-slider').forEach(sl => {
+    const dim = sl.dataset.dim;
+    if (!dimensionAttributions[dim]) dimensionAttributions[dim] = {};
+    dimensionAttributions[dim][sl.dataset.key] = parseInt(sl.value);
+  });
+
+  const body = {
+    annotator: state.annotator,
+    dimension_scores: dimensionScores,
+    dimension_attributions: dimensionAttributions,
+  };
+
+  const res = await fetch(`${API}/api/annotation/${state.split}/${state.currentEpisode}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+
+  if (res.ok) {
+    const statusEl = document.getElementById('save-status');
+    statusEl.textContent = 'Saved!';
+    setTimeout(() => { statusEl.textContent = ''; }, 2000);
+    await loadEpisodes();
+    renderEpisodeList();
+  }
+}
+
+function navigateEpisode(direction) {
+  const idx = state.episodes.findIndex(e => e.id === state.currentEpisode);
+  const next = idx + direction;
+  if (next >= 0 && next < state.episodes.length) {
+    selectEpisode(state.episodes[next].id);
+  }
+}
+
+init();
+</script>
+</body>
+</html>

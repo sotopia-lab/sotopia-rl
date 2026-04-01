@@ -1,0 +1,88 @@
+{
+  "episode_id": "01JTYE0E5PGKE232AZ2VBQH7GA",
+  "split": "split_1",
+  "annotator": "jason",
+  "agent_1_name": "Mia Davis",
+  "agent_2_name": "Benjamin Jackson",
+  "dimension_scores": {
+    "goal": {
+      "Mia Davis": 2,
+      "Benjamin Jackson": 10
+    },
+    "believability": {
+      "Mia Davis": 9,
+      "Benjamin Jackson": 10
+    },
+    "knowledge": {
+      "Mia Davis": 0,
+      "Benjamin Jackson": 0
+    },
+    "secret": {
+      "Mia Davis": 0,
+      "Benjamin Jackson": 0
+    },
+    "relationship": {
+      "Mia Davis": -2,
+      "Benjamin Jackson": -4
+    },
+    "social_rules": {
+      "Mia Davis": 0,
+      "Benjamin Jackson": 0
+    },
+    "financial": {
+      "Mia Davis": 0,
+      "Benjamin Jackson": 0
+    }
+  },
+  "dimension_attributions": {
+    "goal": {
+      "agent_1_turn_0": 1,
+      "agent_1_turn_1": 3,
+      "agent_1_turn_2": 0,
+      "agent_2_turn_0": 3,
+      "agent_2_turn_1": 1
+    },
+    "believability": {
+      "agent_1_turn_0": 2,
+      "agent_1_turn_1": 1,
+      "agent_1_turn_2": 1,
+      "agent_2_turn_0": 1,
+      "agent_2_turn_1": 1
+    },
+    "knowledge": {
+      "agent_1_turn_0": 0,
+      "agent_1_turn_1": 0,
+      "agent_1_turn_2": 0,
+      "agent_2_turn_0": 0,
+      "agent_2_turn_1": 0
+    },
+    "secret": {
+      "agent_1_turn_0": 0,
+      "agent_1_turn_1": 0,
+      "agent_1_turn_2": 0,
+      "agent_2_turn_0": 0,
+      "agent_2_turn_1": 0
+    },
+    "relationship": {
+      "agent_1_turn_0": 1,
+      "agent_1_turn_1": 3,
+      "agent_1_turn_2": 0,
+      "agent_2_turn_0": 1,
+      "agent_2_turn_1": 1
+    },
+    "social_rules": {
+      "agent_1_turn_0": 0,
+      "agent_1_turn_1": 0,
+      "agent_1_turn_2": 0,
+      "agent_2_turn_0": 0,
+      "agent_2_turn_1": 0
+    },
+    "financial": {
+      "agent_1_turn_0": 0,
+      "agent_1_turn_1": 0,
+      "agent_1_turn_2": 0,
+      "agent_2_turn_0": 0,
+      "agent_2_turn_1": 0
+    }
+  }
+}
